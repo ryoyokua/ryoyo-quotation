@@ -23,7 +23,7 @@
 <button data-go="flat">床・屋上・壁<br><small>平場・立上り・控除</small></button>
 <button data-go="material">材料数量<br><small>kg / L / 荷姿</small></button>
 </div></div>
-<div class="notice"><b>概算ルール：</b>大きい面積を正確に拾い、細部は必要に応じて追加率で安全側に見ます。正式数量は現場・仕様書で再確認してください。</div>
+<p class="notice"><strong>概算数量について：</strong> 本アプリは防水工事の概算数量を算出するためのものです。立上り・仕切り・役物などは必要に応じて別途拾い、最終的な施工数量は現場・仕様書・施工条件を確認のうえ決定してください。</p>
 </section>
 
 <section id="roof" class="view">
@@ -72,7 +72,7 @@
 <label>床パネル奥行(m)<input id="panelD" type="number" value="1" step=".01"></label></div>
 <div class="checks"><label><input id="tankFloor" type="checkbox" checked>床</label><label><input id="tankWalls" type="checkbox" checked>壁</label>
 <label><input id="tankCeiling" type="checkbox">天井</label><label><input id="tankInternal" type="checkbox" checked>内部継目</label><label><input id="tankCorners" type="checkbox" checked>入隅・四隅</label></div>
-<label>シール延長追加率<select id="sealExtra"><option value="0">0%</option><option value=".05">5%</option><option value=".1" selected>10%</option><option value=".15">15%</option><option value=".2">20%</option></select></label>
+<label>シール延長面積補正率（廃止済み）<select id="sealExtra"><option value="0">0%</option><option value=".05">5%</option><option value=".1" selected>10%</option><option value=".15">15%</option><option value=".2">20%</option></select></label>
 <button class="primary" id="calcTank">計算</button></div>
 <div class="card result"><h3>結果</h3><div class="metrics"><div><span>施工面積</span><strong id="tankArea">—</strong></div><div><span>パネル</span><strong id="tankPanels">—</strong></div><div><span>シール延長</span><strong id="tankSeal">—</strong></div></div>
 <div class="tablewrap"><table><thead><tr><th>部位</th><th>面積</th><th>パネル</th><th>内部継目</th><th>入隅等</th></tr></thead><tbody id="tankRows"></tbody></table></div>
