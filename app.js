@@ -1,4 +1,4 @@
-const S={materials:"ryoyo_materials_v1",waves:"ryoyo_waves_v1",projects:"ryoyo_projects_v1",endpoint:"ryoyo_gas_endpoint_v1"};
+const S={materials:"ryoyo_materials_v1",waves:"ryoyo_waves_v1",seals:"ryoyo_seal_products_v1",projects:"ryoyo_projects_v1",endpoint:"ryoyo_gas_endpoint_v1"};
 
 const DEFAULT_MATERIALS=[
 {id:"n-st",series:"NUKOTE",name:"ST",feature:"標準型",usage:1,unit:"L",packages:[380,38],packageUnit:"L"},
@@ -36,6 +36,10 @@ const DEFAULT_WAVES=[
 {name:"その他",factor:null,note:"現場条件に応じて入力"}
 ];
 
+const DEFAULT_SEALS=[
+{name:"未登録（手入力）",volume:320,note:"製品登録前の仮入力用"}
+];
+
 const HELP={
 roof:`<p><b>基本式：</b>平面面積 × 勾配係数 × 波型係数</p>
 <p>入力した寸法は丸めずに計算し、最後に「採用面積」だけ1㎡または0.1㎡単位で切り上げます。立上り・仕切り・役物などは必要に応じて別途拾います。材料のロスは材料計算画面で設定します。</p>
@@ -70,7 +74,7 @@ material:`<p><b>理論量＝施工面積×標準使用量</b></p><p><b>必要量
 <p>ロス率は案件ごとに選択。材料もアプリで強制せず、担当者が現場ごとに選択します。</p>`
 };
 
-let materials=load(S.materials,DEFAULT_MATERIALS),waves=load(S.waves,DEFAULT_WAVES),projects=load(S.projects,[]);
+let materials=load(S.materials,DEFAULT_MATERIALS),waves=load(S.waves,DEFAULT_WAVES),seals=load(S.seals,DEFAULT_SEALS),projects=load(S.projects,[]);
 
 // 屋根材マスタが空・破損していても必ず初期値へ復旧
 if(!Array.isArray(waves) || waves.length===0){
@@ -150,6 +154,26 @@ $("calcRoof").onclick=calcRoof;
 $("roofRound").addEventListener("change",calcRoof);
 $("roofSun").addEventListener("change",()=>{$("roofSunCustomWrap").classList.toggle("hidden",$("roofSun").value!=="custom");calcRoof()});
 $("roofSunCustom").addEventListener("input",calcRoof);
+
+
+function renderSealSelect(){
+  if(!Array.isArray(seals) || seals.length===0){
+    seals=structuredClone(DEFAULT_SEALS);
+    save(S.seals,seals);
+  }
+  const sel=$("sealProduct");
+  if(!sel) return;
+  const prev=sel.value;
+  sel.innerHTML=seals.map((s,i)=>`<option value="${i}">${esc(s.name)}</option>`).join("");
+  if(prev!=="" && Number(prev)<seals.length) sel.value=prev;
+  sel.onchange=()=>{
+    const s=seals[Number(sel.value)];
+    if(s && s.volume) $("sealVolume").value=s.volume;
+    calcSealCount(false);
+  };
+  const first=seals[Number(sel.value)||0];
+  if(first && first.volume) $("sealVolume").value=first.volume;
+}
 
 // tank
 function calcTank(){
@@ -261,6 +285,40 @@ $("calcTank").onclick=calcTank;
   $(id).addEventListener("change",calcTank);
 });
 
+
+function calcSealCount(showAlert=true){
+  if(!$("sealVolume") || !$("sealWidth") || !$("sealDepth")) return;
+
+  if(!state.tankSeal){
+    $("sealEach").textContent="—";
+    $("sealCount").textContent="—";
+    $("sealCountReserve").textContent="—";
+    if(showAlert) alert("先に貯水槽の寸法・施工範囲を確認してください");
+    return;
+  }
+
+  const volume=n("sealVolume");
+  const width=n("sealWidth");
+  const depth=n("sealDepth");
+  const each=(volume>0 && width>0 && depth>0) ? volume/(width*depth) : 0;
+
+  if(!each){
+    $("sealEach").textContent="—";
+    $("sealCount").textContent="—";
+    $("sealCountReserve").textContent="—";
+    if(showAlert) alert("容量・目地幅・目地深さを確認してください");
+    return;
+  }
+
+  const count=Math.ceil(state.tankSeal/each);
+  const reserveRate=Number($("sealReserve").value);
+  const withReserve=Math.ceil(count*(1+reserveRate));
+
+  $("sealEach").textContent=`${fmt(each,2)}m`;
+  $("sealCount").textContent=`${count}本`;
+  $("sealCountReserve").textContent=`${withReserve}本`;
+}
+
 $("sealReserve").addEventListener("change",()=>calcSealCount(false));
 
 // flat
@@ -310,6 +368,44 @@ $("addMaterial").onclick=()=>openMatEdit(-1);$("closeMaterial").onclick=()=>$("m
 $("saveMaterialEdit").onclick=()=>{let i=Number($("editIndex").value),m={id:i>=0?materials[i].id:"custom-"+Date.now(),series:$("editSeries").value.trim(),name:$("editName").value.trim(),feature:$("editFeature").value.trim(),usage:$("editUsage").value===""?null:n("editUsage"),unit:$("editUnit").value,packages:$("editPackages").value.split(",").map(x=>Number(x.trim())).filter(Boolean),packageUnit:$("editPackageUnit").value};if(!m.name)return alert("製品名を入力してください");if(i>=0)materials[i]={...materials[i],...m};else materials.push(m);save(S.materials,materials);$("materialDialog").close();renderMaster();renderMaterialSelect()};
 $("saveMaster").onclick=()=>{document.querySelectorAll(".wn").forEach(x=>waves[Number(x.dataset.i)].name=x.value);document.querySelectorAll(".wf").forEach(x=>waves[Number(x.dataset.i)].factor=x.value===""?null:Number(x.value));document.querySelectorAll(".wno").forEach(x=>waves[Number(x.dataset.i)].note=x.value);save(S.waves,waves);renderWaveSelect();alert("保存しました")};
 
+
+function renderSealMaster(){
+  const body=$("sealMaster");
+  if(!body) return;
+  body.innerHTML=seals.map((s,i)=>`<tr>
+    <td>${esc(s.name)}</td>
+    <td>${s.volume??""}</td>
+    <td>${esc(s.note||"")}</td>
+    <td><button class="secondary editseal" data-i="${i}">編集</button></td>
+  </tr>`).join("");
+  document.querySelectorAll(".editseal").forEach(b=>b.onclick=()=>openSealEdit(Number(b.dataset.i)));
+}
+function openSealEdit(i){
+  const s=i>=0?seals[i]:{name:"",volume:320,note:""};
+  $("editSealIndex").value=i;
+  $("editSealName").value=s.name||"";
+  $("editSealVolume").value=s.volume||"";
+  $("editSealNote").value=s.note||"";
+  $("sealDialog").showModal();
+}
+if($("addSealProduct")) $("addSealProduct").onclick=()=>openSealEdit(-1);
+if($("closeSealDialog")) $("closeSealDialog").onclick=()=>$("sealDialog").close();
+if($("saveSealEdit")) $("saveSealEdit").onclick=()=>{
+  const i=Number($("editSealIndex").value);
+  const item={
+    name:$("editSealName").value.trim(),
+    volume:Number($("editSealVolume").value)||0,
+    note:$("editSealNote").value.trim()
+  };
+  if(!item.name) return alert("製品名を入力してください");
+  if(!item.volume) return alert("容量を入力してください");
+  if(i>=0) seals[i]=item; else seals.push(item);
+  save(S.seals,seals);
+  $("sealDialog").close();
+  renderSealMaster();
+  renderSealSelect();
+};
+
 // projects
 $("gasEndpoint").value=localStorage.getItem(S.endpoint)||"";$("saveEndpoint").onclick=()=>{localStorage.setItem(S.endpoint,$("gasEndpoint").value.trim());alert("保存しました")};
 $("saveProject").onclick=async()=>{
@@ -319,4 +415,9 @@ $("saveProject").onclick=async()=>{
 };
 function renderProjects(){$("projectList").innerHTML=projects.length?projects.map(p=>`<div class="project"><b>${esc(p.name)}</b><br><small>${new Date(p.createdAt).toLocaleString("ja-JP")} ${p.owner?"｜"+esc(p.owner):""}</small><p>${fmt(p.material.area)}㎡ ｜ ${esc(p.material.name)} ｜ ${fmt(p.material.required)}${p.material.unit}${p.tankSeal?` ｜ シール${fmt(p.tankSeal,1)}m`:""}</p>${p.memo?`<p>${esc(p.memo)}</p>`:""}</div>`).join(""):"<p>まだ案件はありません。</p>"}
 
-renderWaveSelect();renderMaterialSelect();renderMaster();renderProjects();addFlat({type:"平場",name:"A面",a:10,b:8,q:1});calcRoof();calcTank();calcFlat();calcMat();
+renderWaveSelect();renderMaterialSelect();renderMaster();renderSealSelect();renderSealMaster();renderProjects();addFlat({type:"平場",name:"A面",a:10,b:8,q:1});calcRoof();calcTank();calcFlat();calcMat();
+if($("calcSealCount")) $("calcSealCount").onclick=()=>calcSealCount(true);
+["sealVolume","sealWidth","sealDepth"].forEach(id=>{
+  if($(id)) $(id).addEventListener("input",()=>calcSealCount(false));
+});
+if($("sealReserve")) $("sealReserve").addEventListener("change",()=>calcSealCount(false));

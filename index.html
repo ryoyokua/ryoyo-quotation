@@ -95,11 +95,44 @@
 
 <button class="secondary send" data-source="tank">材料計算へ送る</button></div></div>
 <div class="card"><h3>シーリング材 必要本数</h3>
-<div class="toggle"><button class="active" data-sealmode="direct">1本あたり○m</button><button data-sealmode="volume">容量・目地寸法から自動計算</button></div>
-<div id="sealDirect" class="sealmode active"><label>1本あたり施工可能長さ (m)<input id="sealPerTube" type="number" value="10" step=".1"></label></div>
-<div id="sealVolumeBox" class="active sealmode"><div class="formgrid"><label>容量(mL)<input id="sealVolume" type="number" value="320"></label><label>目地幅(mm)<input id="sealWidth" type="number" value="10"></label><label>目地深さ(mm)<input id="sealDepth" type="number" value="10"></label></div></div>
-<label>予備率<select id="sealReserve"><option value="0">0%</option><option value=".05">5%</option><option value=".1" selected>10%</option><option value=".15">15%</option><option value=".2">20%</option></select></label>
-<button class="primary" id="calcSealCount">必要本数を計算</button><div class="metrics"><div><span>1本あたり</span><strong id="sealEach">—</strong></div><div><span>必要本数</span><strong id="sealCount">—</strong></div><div><span>予備込み</span><strong id="sealCountReserve">—</strong></div></div></div>
+<div class="info"><b>計算方法：</b> 使用する製品を選択し、容量・目地幅・目地深さから1本あたりの施工可能長さを自動計算します。</div>
+
+<div class="formgrid" style="margin-top:12px">
+<label>シーリング材
+<select id="sealProduct"></select>
+<small>製品は「マスタ」画面から登録できます</small>
+</label>
+<label>容量 (mL)
+<input id="sealVolume" type="number" value="320" min="1" step="1">
+<small>製品選択で自動入力。必要時は変更可能</small>
+</label>
+<label>目地幅 (mm)
+<input id="sealWidth" type="number" value="10" min="0.1" step="0.1">
+</label>
+<label>目地深さ (mm)
+<input id="sealDepth" type="number" value="10" min="0.1" step="0.1">
+</label>
+<label>予備率
+<select id="sealReserve">
+<option value="0">0%</option>
+<option value=".05">5%</option>
+<option value=".1" selected>10%</option>
+<option value=".15">15%</option>
+<option value=".2">20%</option>
+</select>
+</label>
+</div>
+
+<div class="info" style="margin-top:10px">
+1本あたり施工可能長さ ＝ 容量(mL) ÷［目地幅(mm) × 目地深さ(mm)］
+</div>
+
+<button class="primary" id="calcSealCount">必要本数を計算</button>
+<div class="metrics">
+<div><span>1本あたり</span><strong id="sealEach">—</strong></div>
+<div><span>必要本数</span><strong id="sealCount">—</strong></div>
+<div><span>予備込み</span><strong id="sealCountReserve">—</strong></div>
+</div></div>
 </section>
 
 <section id="flat" class="view">
@@ -128,6 +161,18 @@
 <div class="card"><div class="headrow"><h3>材料マスタ</h3><button class="secondary" id="addMaterial">＋材料追加</button></div>
 <div class="tablewrap"><table><thead><tr><th>シリーズ</th><th>製品</th><th>特徴</th><th>使用量</th><th>単位</th><th>通常荷姿</th><th></th></tr></thead><tbody id="materialMaster"></tbody></table></div></div>
 <div class="card"><h3>屋根材・波型係数</h3><div class="tablewrap"><table><thead><tr><th>屋根材</th><th>係数</th><th>備考</th></tr></thead><tbody id="waveMaster"></tbody></table></div><button class="primary" id="saveMaster">マスタ保存</button></div>
+<div class="card">
+<div class="headrow">
+<div><h3>シーリング材マスタ</h3><p>製品名と容量を登録します。目地幅・目地深さは現場ごとに入力します。</p></div>
+<button class="secondary" id="addSealProduct">＋シーリング材追加</button>
+</div>
+<div class="tablewrap">
+<table>
+<thead><tr><th>製品名</th><th>容量(mL)</th><th>備考</th><th></th></tr></thead>
+<tbody id="sealMaster"></tbody>
+</table>
+</div>
+</div>
 </section>
 
 <section id="projects" class="view">
@@ -142,5 +187,18 @@
 <dialog id="materialDialog"><div class="dialoghead"><h3>材料マスタ編集</h3><button id="closeMaterial">×</button></div><div class="dialogbody">
 <input type="hidden" id="editIndex"><div class="formgrid"><label>シリーズ<input id="editSeries"></label><label>製品名<input id="editName"></label><label>特徴<input id="editFeature"></label><label>標準使用量<input id="editUsage" type="number" step=".001"></label><label>使用量単位<select id="editUnit"><option value="L">L/㎡</option><option value="kg">kg/㎡</option><option value="">未設定</option></select></label><label>通常荷姿(カンマ区切り)<input id="editPackages" placeholder="400,36"></label><label>荷姿単位<select id="editPackageUnit"><option value="L">L</option><option value="kg">kg</option><option value="">未設定</option></select></label></div>
 <button class="primary" id="saveMaterialEdit">保存</button></div></dialog>
+<dialog id="sealDialog">
+<div class="dialoghead"><h3>シーリング材マスタ編集</h3><button id="closeSealDialog">×</button></div>
+<div class="dialogbody">
+<input type="hidden" id="editSealIndex">
+<div class="formgrid">
+<label>製品名<input id="editSealName"></label>
+<label>容量(mL)<input id="editSealVolume" type="number" min="1" step="1"></label>
+<label>備考<input id="editSealNote"></label>
+</div>
+<button class="primary" id="saveSealEdit">保存</button>
+</div>
+</dialog>
+
 <script src="app.js"></script>
 </body></html>
