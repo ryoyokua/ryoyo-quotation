@@ -37,15 +37,16 @@ const DEFAULT_WAVES=[
 ];
 
 const HELP={
-roof:`<p><b>基本式：</b>水平投影面積 × 勾配係数 × 波型係数</p>
+roof:`<p><b>基本式：</b>平面面積 × 勾配係数 × 波型係数</p>
 <p>入力した寸法は丸めずに計算し、最後に「採用面積」だけ1㎡または0.1㎡単位で切り上げます。立上り・仕切り・役物などは必要に応じて別途拾います。材料のロスは材料計算画面で設定します。</p>
-<table><tr><th>項目</th><th>意味</th></tr><tr><td>水平投影面積</td><td>真上から見た長さ×幅</td></tr>
+<table><tr><th>項目</th><th>意味</th></tr><tr><td>平面面積</td><td>図面・真上から見た長さ×幅</td></tr>
 <tr><td>勾配係数</td><td>斜面で増える面積を補正。3寸=約1.044、3.5寸=約1.059、4寸=約1.077</td></tr>
 <tr><td>波型係数</td><td>大波1.140、小波1.150を初期値として自動入力。必要時は上書き可能</td></tr>
 </table>
 <p>L字や段違いはA面・B面・C面に分けて計算します。</p>`,
-tank:`<p>シーリングは<b>パネル枚数×4辺ではありません。</b>隣り合うパネルの境界だけを拾います。</p>
-<pre>4m×3m床・1mパネル
+tank:`<p><b>貯水槽は「面積」と「シーリング」を別々に拾います。</b></p>
+<p>シーリングは「パネル枚数×4辺」ではありません。<b>隣り合うパネル同士の境界線だけ</b>を拾います。</p>
+<pre>4m×3mの床・1mパネル
 ┌─┬─┬─┬─┐
 │ │ │ │ │
 ├─┼─┼─┼─┤
@@ -53,8 +54,16 @@ tank:`<p>シーリングは<b>パネル枚数×4辺ではありません。</b>�
 ├─┼─┼─┼─┤
 │ │ │ │ │
 └─┴─┴─┴─┘</pre>
-<p>縦：3本×3m＝9m<br>横：2本×4m＝8m<br>床と壁の入隅：(4+3)×2＝14m<br><b>合計31m</b></p>
-<p>マンホール・配管貫通・内部柱・補強材などは別途確認します。</p>`,
+<table>
+<tr><th>拾う部分</th><th>考え方</th><th>例</th></tr>
+<tr><td>床の縦継目</td><td>列数−1</td><td>4列 → 3本 × 3m = 9m</td></tr>
+<tr><td>床の横継目</td><td>段数−1</td><td>3段 → 2本 × 4m = 8m</td></tr>
+<tr><td>床と壁の入隅</td><td>床の外周</td><td>(4+3)×2 = 14m</td></tr>
+<tr><td>壁のパネル継目</td><td>各壁で列間・段間を拾う</td><td>長辺壁・短辺壁ごとに計算</td></tr>
+<tr><td>壁四隅</td><td>高さ×4箇所</td><td>高さ2m → 8m</td></tr>
+</table>
+<p><b>シーリング施工長さ</b>＝上記を施工対象ごとに合計した長さです。</p>
+<p>マンホール、配管貫通、内部柱、補強材、特殊なパネル割などはこの自動計算に含めず、必要に応じて別途確認します。</p>`,
 flat:`<table><tr><th>部位</th><th>式</th></tr><tr><td>平場</td><td>長さ×幅</td></tr><tr><td>壁</td><td>幅×高さ×面数</td></tr>
 <tr><td>立上り</td><td>周長×高さ</td></tr><tr><td>仕切り</td><td>長さ×高さ×面数</td></tr><tr><td>設備基礎</td><td>周長×高さ</td></tr><tr><td>控除</td><td>未施工面積をマイナス</td></tr></table>`,
 material:`<p><b>理論量＝施工面積×標準使用量</b></p><p><b>必要量＝理論量×（1＋ロス率）</b></p>
@@ -62,6 +71,17 @@ material:`<p><b>理論量＝施工面積×標準使用量</b></p><p><b>必要量
 };
 
 let materials=load(S.materials,DEFAULT_MATERIALS),waves=load(S.waves,DEFAULT_WAVES),projects=load(S.projects,[]);
+
+// 屋根材マスタが空・破損していても必ず初期値へ復旧
+if(!Array.isArray(waves) || waves.length===0){
+  waves=structuredClone(DEFAULT_WAVES);
+}
+for(const def of DEFAULT_WAVES){
+  if(!waves.some(w=>w && w.name===def.name)){
+    waves.push(structuredClone(def));
+  }
+}
+
 let state={roofArea:0,tankArea:0,tankSeal:0,flatArea:0,material:null,sealMode:"direct"};
 const $=id=>document.getElementById(id), n=id=>Number($(id).value)||0;
 const fmt=(v,d=2)=>Number(v).toLocaleString("ja-JP",{minimumFractionDigits:d,maximumFractionDigits:d});
@@ -84,12 +104,27 @@ document.querySelectorAll(".help").forEach(b=>b.onclick=()=>{$("helpTitle").text
 $("closeHelp").onclick=()=>$("helpDialog").close();
 
 function renderWaveSelect(){
-  $("roofWaveType").innerHTML=waves.map((w,i)=>`<option value="${i}">${esc(w.name)}</option>`).join("");
-  $("roofWaveType").onchange=()=>{
-    const w=waves[Number($("roofWaveType").value)];
-    if(w?.factor!=null)$("roofWaveFactor").value=Number(w.factor).toFixed(3);
+  if(!Array.isArray(waves) || waves.length===0){
+    waves=structuredClone(DEFAULT_WAVES);
+    save(S.waves,waves);
+  }
+  const sel=$("roofWaveType");
+  const previous=sel.value;
+  sel.innerHTML=waves.map((w,i)=>`<option value="${i}">${esc((w&&w.name)||`屋根材${i+1}`)}</option>`).join("");
+  if(previous!=="" && Number(previous)<waves.length) sel.value=previous;
+
+  sel.onchange=()=>{
+    const w=waves[Number(sel.value)];
+    if(w && w.factor!=null){
+      $("roofWaveFactor").value=Number(w.factor).toFixed(3);
+    }
     calcRoof();
   };
+
+  const first=waves[Number(sel.value)||0];
+  if(first && first.factor!=null){
+    $("roofWaveFactor").value=Number(first.factor).toFixed(3);
+  }
 }
 function getRoofSun(){return $("roofSun").value==="custom" ? n("roofSunCustom") : Number($("roofSun").value)}
 function ceilUnit(value,unit){if(!unit||unit<=0)return value;return Math.ceil((value-1e-12)/unit)*unit}
@@ -102,7 +137,7 @@ function calcRoof(){
   $("roofArea").textContent=roundUnit===1?`${fmt(adopted,0)}㎡`:`${fmt(adopted,1)}㎡`;
   $("roofRawArea").textContent=`${fmt(raw,2)}㎡`;
   $("roofDetail").innerHTML=
-    `<div class="resultline"><span>水平投影面積</span><b>${fmt(projection,2)}㎡</b></div>`+
+    `<div class="resultline"><span>平面面積</span><b>${fmt(projection,2)}㎡</b></div>`+
     `<div class="resultline"><span>勾配</span><b>${fmt(sun,1)}寸</b></div>`+
     `<div class="resultline"><span>勾配係数</span><b>${fmt(slope,3)}</b></div>`+
     `<div class="resultline"><span>波型係数</span><b>${fmt(wave,3)}</b></div>`;
@@ -119,28 +154,152 @@ $("roofSunCustom").addEventListener("input",calcRoof);
 // tank
 function calcTank(){
   const L=n("tankL"),W=n("tankW"),H=n("tankH"),pw=n("panelW"),ph=n("panelH"),pd=n("panelD");
-  if(!pw||!ph||!pd)return alert("パネル寸法を入力してください");
-  const floor=$("tankFloor").checked,walls=$("tankWalls").checked,ceil=$("tankCeiling").checked,int=$("tankInternal").checked,cor=$("tankCorners").checked,e=Number($("sealExtra").value);
-  const nx=Math.ceil(L/pw),ny=Math.ceil(W/pd),nz=Math.ceil(H/ph),sx=Math.ceil(W/pw);
-  const fa=floor?L*W:0,la=walls?2*L*H:0,sa=walls?2*W*H:0,ca=ceil?L*W:0;
-  const fp=floor?nx*ny:0,lp=walls?2*nx*nz:0,sp=walls?2*sx*nz:0,cp=ceil?nx*ny:0;
-  const fi=floor&&int?(nx-1)*W+(ny-1)*L:0,fc=floor&&cor?2*(L+W):0;
-  const li=walls&&int?2*((nx-1)*H+(nz-1)*L):0,si=walls&&int?2*((sx-1)*H+(nz-1)*W):0,wc=walls&&cor?4*H:0;
-  const ci=ceil&&int?(nx-1)*W+(ny-1)*L:0,cc=ceil&&cor?2*(L+W):0;
-  const base=fi+fc+li+si+wc+ci+cc,seal=base*(1+e),area=fa+la+sa+ca,panels=fp+lp+sp+cp;
-  state.tankArea=area;state.tankSeal=seal;$("tankArea").textContent=`${fmt(area)}㎡`;$("tankPanels").textContent=`${fmt(panels,0)}枚`;$("tankSeal").textContent=`${fmt(seal,1)}m`;
-  const rows=[["床",fa,fp,fi,fc],["長辺壁×2",la,lp,li,0],["短辺壁×2",sa,sp,si,wc],["天井",ca,cp,ci,cc]];
-  $("tankRows").innerHTML=rows.map(r=>`<tr><td>${r[0]}</td><td>${fmt(r[1])}㎡</td><td>${fmt(r[2],0)}枚</td><td>${fmt(r[3],1)}m</td><td>${fmt(r[4],1)}m</td></tr>`).join("");
+  if(!pw||!ph||!pd){
+    $("tankArea").textContent="—";
+    $("tankPanels").textContent="—";
+    $("tankSeal").textContent="—";
+    return;
+  }
+
+  const floor=$("tankFloor").checked;
+  const walls=$("tankWalls").checked;
+  const ceil=$("tankCeiling").checked;
+  const internal=$("tankInternal").checked;
+  const corners=$("tankCorners").checked;
+
+  const nx=Math.ceil(L/pw);       // 長さ方向パネル数
+  const ny=Math.ceil(W/pd);       // 床・天井の幅方向パネル数
+  const nz=Math.ceil(H/ph);       // 壁の高さ方向パネル数
+  const sx=Math.ceil(W/pw);       // 短辺壁の横方向パネル数
+
+  // 面積
+  const floorArea=floor?L*W:0;
+  const longWallArea=walls?2*L*H:0;
+  const shortWallArea=walls?2*W*H:0;
+  const ceilingArea=ceil?L*W:0;
+
+  // パネル枚数
+  const floorPanels=floor?nx*ny:0;
+  const longWallPanels=walls?2*nx*nz:0;
+  const shortWallPanels=walls?2*sx*nz:0;
+  const ceilingPanels=ceil?nx*ny:0;
+
+  // パネル継目
+  const floorVertical=floor&&internal?Math.max(nx-1,0)*W:0;
+  const floorHorizontal=floor&&internal?Math.max(ny-1,0)*L:0;
+  const floorSeams=floorVertical+floorHorizontal;
+
+  const longWallVertical=walls&&internal?2*Math.max(nx-1,0)*H:0;
+  const longWallHorizontal=walls&&internal?2*Math.max(nz-1,0)*L:0;
+  const longWallSeams=longWallVertical+longWallHorizontal;
+
+  const shortWallVertical=walls&&internal?2*Math.max(sx-1,0)*H:0;
+  const shortWallHorizontal=walls&&internal?2*Math.max(nz-1,0)*W:0;
+  const shortWallSeams=shortWallVertical+shortWallHorizontal;
+
+  const ceilingVertical=ceil&&internal?Math.max(nx-1,0)*W:0;
+  const ceilingHorizontal=ceil&&internal?Math.max(ny-1,0)*L:0;
+  const ceilingSeams=ceilingVertical+ceilingHorizontal;
+
+  // 入隅・四隅
+  const floorWallCorner=(floor&&walls&&corners)?2*(L+W):0;
+  const wallVerticalCorners=(walls&&corners)?4*H:0;
+  const ceilingWallCorner=(ceil&&walls&&corners)?2*(L+W):0;
+
+  const area=floorArea+longWallArea+shortWallArea+ceilingArea;
+  const panels=floorPanels+longWallPanels+shortWallPanels+ceilingPanels;
+  const sealLength=
+    floorSeams+longWallSeams+shortWallSeams+ceilingSeams+
+    floorWallCorner+wallVerticalCorners+ceilingWallCorner;
+
+  state.tankArea=area;
+  state.tankSeal=sealLength;
+
+  $("tankArea").textContent=`${fmt(area)}㎡`;
+  $("tankPanels").textContent=`${fmt(panels,0)}枚`;
+  $("tankSeal").textContent=`${fmt(sealLength,1)}m`;
+
+  const rows=[
+    ["床",floorArea,floorPanels,floorSeams,floorWallCorner],
+    ["長辺壁×2",longWallArea,longWallPanels,longWallSeams,0],
+    ["短辺壁×2",shortWallArea,shortWallPanels,shortWallSeams,wallVerticalCorners],
+    ["天井",ceilingArea,ceilingPanels,ceilingSeams,ceilingWallCorner]
+  ];
+  $("tankRows").innerHTML=rows.map(r=>`<tr>
+    <td>${r[0]}</td>
+    <td>${fmt(r[1])}㎡</td>
+    <td>${fmt(r[2],0)}枚</td>
+    <td>${fmt(r[3],1)}m</td>
+    <td>${fmt(r[4],1)}m</td>
+  </tr>`).join("");
+
+  $("tankSealBreakdown").innerHTML=`
+    <div class="resultline"><span>床：縦方向パネル継目</span><b>${fmt(floorVertical,1)}m</b></div>
+    <div class="resultline"><span>床：横方向パネル継目</span><b>${fmt(floorHorizontal,1)}m</b></div>
+    <div class="resultline"><span>長辺壁×2：縦方向パネル継目</span><b>${fmt(longWallVertical,1)}m</b></div>
+    <div class="resultline"><span>長辺壁×2：横方向パネル継目</span><b>${fmt(longWallHorizontal,1)}m</b></div>
+    <div class="resultline"><span>短辺壁×2：縦方向パネル継目</span><b>${fmt(shortWallVertical,1)}m</b></div>
+    <div class="resultline"><span>短辺壁×2：横方向パネル継目</span><b>${fmt(shortWallHorizontal,1)}m</b></div>
+    ${ceil?`<div class="resultline"><span>天井：縦方向パネル継目</span><b>${fmt(ceilingVertical,1)}m</b></div>
+    <div class="resultline"><span>天井：横方向パネル継目</span><b>${fmt(ceilingHorizontal,1)}m</b></div>`:""}
+    <div class="resultline"><span>床－壁 入隅</span><b>${fmt(floorWallCorner,1)}m</b></div>
+    <div class="resultline"><span>壁四隅</span><b>${fmt(wallVerticalCorners,1)}m</b></div>
+    ${ceil?`<div class="resultline"><span>天井－壁 入隅</span><b>${fmt(ceilingWallCorner,1)}m</b></div>`:""}
+    <div class="resultline"><span><b>合計 シーリング施工長さ</b></span><b>${fmt(sealLength,1)}m</b></div>
+  `;
+
+  // シーリング本数側も入力済みなら同時更新
+  calcSealCount(false);
 }
 $("calcTank").onclick=calcTank;
-document.querySelectorAll("[data-sealmode]").forEach(b=>b.onclick=()=>{state.sealMode=b.dataset.sealmode;document.querySelectorAll("[data-sealmode]").forEach(x=>x.classList.toggle("active",x===b));$("sealDirect").classList.toggle("active",state.sealMode==="direct");$("sealVolumeBox").classList.toggle("active",state.sealMode==="volume")});
-$("calcSealCount").onclick=()=>{
-  if(!state.tankSeal)return alert("先に貯水槽を計算してください");
-  let each=state.sealMode==="direct"?n("sealPerTube"):n("sealVolume")/(n("sealWidth")*n("sealDepth"));
-  if(!each)return alert("入力値を確認してください");
-  const count=Math.ceil(state.tankSeal/each),reserve=Math.ceil(count*(1+Number($("sealReserve").value)));
-  $("sealEach").textContent=`${fmt(each,2)}m`;$("sealCount").textContent=`${count}本`;$("sealCountReserve").textContent=`${reserve}本`;
-};
+
+// 貯水槽は入力・選択変更と同時にリアルタイム再計算
+["tankL","tankW","tankH","panelW","panelH","panelD"].forEach(id=>{
+  $(id).addEventListener("input",calcTank);
+});
+["tankFloor","tankWalls","tankCeiling","tankInternal","tankCorners"].forEach(id=>{
+  $(id).addEventListener("change",calcTank);
+});
+document.querySelectorAll("[data-sealmode]").forEach(b=>b.onclick=()=>{state.sealMode=b.dataset.sealmode;document.querySelectorAll("[data-sealmode]").forEach(x=>x.classList.toggle("active",x===b));$("sealDirect").classList.toggle("active",state.sealMode==="direct");$("sealVolumeBox").classList.toggle("active",state.sealMode==="volume");calcSealCount(false)});
+function calcSealCount(showAlert=true){
+  if(!state.tankSeal){
+    $("sealEach").textContent="—";
+    $("sealCount").textContent="—";
+    $("sealCountReserve").textContent="—";
+    if(showAlert) alert("先に貯水槽を計算してください");
+    return;
+  }
+
+  let each=0;
+  if(state.sealMode==="direct"){
+    each=n("sealPerTube");
+  }else{
+    const volume=n("sealVolume"),width=n("sealWidth"),depth=n("sealDepth");
+    each=(width&&depth)?volume/(width*depth):0;
+  }
+
+  if(!each){
+    $("sealEach").textContent="—";
+    $("sealCount").textContent="—";
+    $("sealCountReserve").textContent="—";
+    if(showAlert) alert("入力値を確認してください");
+    return;
+  }
+
+  const count=Math.ceil(state.tankSeal/each);
+  const reserveRate=Number($("sealReserve").value);
+  const reserve=Math.ceil(count*(1+reserveRate));
+
+  $("sealEach").textContent=`${fmt(each,2)}m`;
+  $("sealCount").textContent=`${count}本`;
+  $("sealCountReserve").textContent=`${reserve}本`;
+}
+$("calcSealCount").onclick=()=>calcSealCount(true);
+
+["sealPerTube","sealVolume","sealWidth","sealDepth"].forEach(id=>{
+  $(id).addEventListener("input",()=>calcSealCount(false));
+});
+$("sealReserve").addEventListener("change",()=>calcSealCount(false));
 
 // flat
 const types={"平場":1,"壁":1,"立上り":1,"仕切り":1,"設備基礎":1,"直接入力":1,"控除":-1};

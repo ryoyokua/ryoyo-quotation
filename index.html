@@ -30,8 +30,8 @@
 <div class="title"><div><span class="badge">ROOF</span><h2>屋根の概算面積</h2></div><button class="help" data-help="roof">？拾い方</button></div>
 <div class="twocol">
 <div class="card"><h3>入力</h3><div class="formgrid">
-<label>水平長さ L(m)<input id="roofL" type="number" value="10" step=".01"></label>
-<label>水平幅 W(m)<input id="roofW" type="number" value="10" step=".01"></label>
+<label>長さ L(m)<input id="roofL" type="number" value="10" step=".01"><small>図面・真上から見た平面寸法</small></label>
+<label>幅 W(m)<input id="roofW" type="number" value="10" step=".01"><small>図面・真上から見た平面寸法</small></label>
 <label>面数<input id="roofFaces" type="number" value="1" min="1"></label>
 <label>勾配
 <select id="roofSun">
@@ -46,8 +46,16 @@
 <option value="custom">直接入力</option>
 </select></label>
 <label id="roofSunCustomWrap" class="hidden">勾配 直接入力(寸)<input id="roofSunCustom" type="number" value="3" step=".1"></label>
-<label>屋根材<select id="roofWaveType"></select></label>
+<label>屋根材
+<select id="roofWaveType">
+<option value="0">平板・折板（係数なし）</option>
+<option value="1">大波スレート</option>
+<option value="2">小波スレート</option>
+<option value="3">波板</option>
+<option value="4">その他</option>
+</select></label>
 <label>波型係数<input id="roofWaveFactor" type="number" value="1" step=".001"><small>屋根材選択で自動入力。必要時は上書き可</small></label>
+<div class="info" style="grid-column:1/-1"><b>寸法入力：</b>斜面そのものを実測した長さではなく、図面・平面上の長さと幅を入力します。</div>
 <label>採用面積の丸め
 <select id="roofRound">
 <option value="1" selected>1㎡単位で切り上げ</option>
@@ -71,18 +79,27 @@
 <label>パネル高さ(m)<input id="panelH" type="number" value="1" step=".01"></label>
 <label>床パネル奥行(m)<input id="panelD" type="number" value="1" step=".01"></label></div>
 <div class="checks"><label><input id="tankFloor" type="checkbox" checked>床</label><label><input id="tankWalls" type="checkbox" checked>壁</label>
-<label><input id="tankCeiling" type="checkbox">天井</label><label><input id="tankInternal" type="checkbox" checked>内部継目</label><label><input id="tankCorners" type="checkbox" checked>入隅・四隅</label></div>
-<label>シール延長面積補正率（廃止済み）<select id="sealExtra"><option value="0">0%</option><option value=".05">5%</option><option value=".1" selected>10%</option><option value=".15">15%</option><option value=".2">20%</option></select></label>
+<label><input id="tankCeiling" type="checkbox">天井</label><label><input id="tankInternal" type="checkbox" checked>パネル継目</label><label><input id="tankCorners" type="checkbox" checked>入隅・四隅</label></div>
 <button class="primary" id="calcTank">計算</button></div>
-<div class="card result"><h3>結果</h3><div class="metrics"><div><span>施工面積</span><strong id="tankArea">—</strong></div><div><span>パネル</span><strong id="tankPanels">—</strong></div><div><span>シール延長</span><strong id="tankSeal">—</strong></div></div>
-<div class="tablewrap"><table><thead><tr><th>部位</th><th>面積</th><th>パネル</th><th>内部継目</th><th>入隅等</th></tr></thead><tbody id="tankRows"></tbody></table></div>
+<div class="card result"><h3>結果</h3><div class="metrics"><div><span>施工面積</span><strong id="tankArea">—</strong></div><div><span>パネル</span><strong id="tankPanels">—</strong></div><div><span>シーリング施工長さ</span><strong id="tankSeal">—</strong></div></div>
+<div class="tablewrap"><table><thead><tr><th>部位</th><th>面積</th><th>パネル</th><th>パネル継目</th><th>入隅・四隅</th></tr></thead><tbody id="tankRows"></tbody></table></div>
+
+<div class="info" style="margin-top:14px">
+<b>シーリング施工長さの内訳</b>
+<div id="tankSealBreakdown" style="margin-top:8px"></div>
+</div>
+
+<div class="info" style="margin-top:10px">
+<b>シーリング施工長さとは：</b> パネル同士の継目、床と壁の入隅、壁同士の四隅など、シーリングを施工する部分の合計長さです。
+</div>
+
 <button class="secondary send" data-source="tank">材料計算へ送る</button></div></div>
-<div class="card"><h3>シーリング材 本数計算</h3>
+<div class="card"><h3>シーリング材 必要本数</h3>
 <div class="toggle"><button class="active" data-sealmode="direct">1本あたり○m</button><button data-sealmode="volume">容量・目地寸法</button></div>
-<div id="sealDirect" class="sealmode active"><label>1本あたり施工可能長さ(m)<input id="sealPerTube" type="number" value="10" step=".1"></label></div>
+<div id="sealDirect" class="sealmode active"><label>1本あたり施工可能長さ (m)<input id="sealPerTube" type="number" value="10" step=".1"></label></div>
 <div id="sealVolumeBox" class="sealmode"><div class="formgrid"><label>容量(mL)<input id="sealVolume" type="number" value="320"></label><label>目地幅(mm)<input id="sealWidth" type="number" value="10"></label><label>目地深さ(mm)<input id="sealDepth" type="number" value="10"></label></div></div>
 <label>予備率<select id="sealReserve"><option value="0">0%</option><option value=".05">5%</option><option value=".1" selected>10%</option><option value=".15">15%</option><option value=".2">20%</option></select></label>
-<button class="primary" id="calcSealCount">本数計算</button><div class="metrics"><div><span>1本あたり</span><strong id="sealEach">—</strong></div><div><span>必要本数</span><strong id="sealCount">—</strong></div><div><span>予備込み</span><strong id="sealCountReserve">—</strong></div></div></div>
+<button class="primary" id="calcSealCount">必要本数を計算</button><div class="metrics"><div><span>1本あたり</span><strong id="sealEach">—</strong></div><div><span>必要本数</span><strong id="sealCount">—</strong></div><div><span>予備込み</span><strong id="sealCountReserve">—</strong></div></div></div>
 </section>
 
 <section id="flat" class="view">
