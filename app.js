@@ -77,7 +77,7 @@ material:`<p><b>使用材料を複数追加し、一括で必要量と発注セ�
 <tr><td>面積連動</td><td>RS-アクトPU等</td><td>面積 × 標準使用量 ×（1＋ロス率）</td></tr>
 <tr><td>厚み別</td><td>HR480NSG-L</td><td>15 / 20 / 25mmの基準使用量</td></tr>
 </table>
-<p>最終結果は材料の役割分けをせず、<b>製品名　荷姿 × セット数</b>として表示します。</p>`
+<p>「使用材料を選択」で追加・変更した内容は、下の「必要材料一覧」にリアルタイムで反映します。最終結果は材料の役割分けをせず、<b>製品名　荷姿 × セット数</b>として表示します。</p>`
 };
 
 let materials=load(S.materials,DEFAULT_MATERIALS),waves=load(S.waves,DEFAULT_WAVES),seals=load(S.seals,DEFAULT_SEALS),projects=load(S.projects,[]);
@@ -92,7 +92,7 @@ for(const def of DEFAULT_WAVES){
   }
 }
 
-let state={roofArea:0,tankArea:0,tankSeal:0,flatArea:0,material:null,sealMode:"volume"};
+let state={roofArea:0,flatArea:0,tankArea:0,tankSeal:0,vesselArea:0,pipeArea:0,productArea:0,otherArea:100,material:null,sealMode:"volume"};
 const $=id=>document.getElementById(id), n=id=>Number($(id).value)||0;
 const fmt=(v,d=2)=>Number(v).toLocaleString("ja-JP",{minimumFractionDigits:d,maximumFractionDigits:d});
 function load(k,f){try{let v=localStorage.getItem(k);return v?JSON.parse(v):structuredClone(f)}catch{return structuredClone(f)}}
@@ -336,6 +336,38 @@ function addFlat(d={type:"平場",name:"",a:"",b:"",q:1}){
 function calcFlat(){let t=0;[...$("flatRows").children].forEach(tr=>{let type=tr.querySelector(".ft").value,a=Number(tr.querySelector(".fa").value)||0,b=Number(tr.querySelector(".fb").value)||0,q=Number(tr.querySelector(".fq").value)||1;let v=type==="直接入力"?a*q:a*b*q;v*=types[type];tr.querySelector(".fo").textContent=`${fmt(v)}㎡`;t+=v});state.flatArea=Math.max(0,t);$("flatArea").textContent=`${fmt(state.flatArea)}㎡`}
 $("addFlat").onclick=()=>addFlat();
 
+// タンク・槽類
+function calcVessel(){
+  const shape=$("vesselShape").value,scope=$("vesselScope").value,q=Math.max(1,n("vesselQty"));
+  let area=0,formula="";
+  if(shape==="cylinder"){
+    const D=n("vesselD"),H=n("vesselH"),side=Math.PI*D*H,disc=Math.PI*D*D/4;
+    area=(scope==="side"?side:scope==="inside"?side+disc:side+2*disc)*q;
+    formula=`円筒：側面 π×${fmt(D)}×${fmt(H)}${scope==="side"?"":scope==="inside"?" ＋ 底面":" ＋ 上下面"} × ${q}基`;
+  }else{
+    const L=n("vesselL"),W=n("vesselW"),H=n("vesselRH"),side=2*(L+W)*H,base=L*W;
+    area=(scope==="side"?side:scope==="inside"?side+base:side+2*base)*q;
+    formula=`角型：側面 2×(${fmt(L)}＋${fmt(W)})×${fmt(H)}${scope==="side"?"":scope==="inside"?" ＋ 底面":" ＋ 上下面"} × ${q}基`;
+  }
+  state.vesselArea=area;$("vesselArea").textContent=`${fmt(area)}㎡`;$("vesselFormula").textContent=formula+`\n= ${fmt(area)}㎡`;
+}
+function updateVesselFields(){const c=$("vesselShape").value==="cylinder";document.querySelectorAll(".vessel-cylinder").forEach(x=>x.classList.toggle("hidden",!c));document.querySelectorAll(".vessel-rect").forEach(x=>x.classList.toggle("hidden",c));calcVessel()}
+["vesselD","vesselH","vesselL","vesselW","vesselRH","vesselQty"].forEach(id=>$(id).addEventListener("input",calcVessel));
+$("vesselShape").addEventListener("change",updateVesselFields);$("vesselScope").addEventListener("change",calcVessel);
+
+// 配管
+function calcPipe(){const D=n("pipeD")/1000,L=n("pipeL"),q=Math.max(1,n("pipeQty")),area=Math.PI*D*L*q;state.pipeArea=area;$("pipeArea").textContent=`${fmt(area)}㎡`;$("pipeFormula").textContent=`π × 外径 ${fmt(D,3)}m × 長さ ${fmt(L)}m × ${q}本 = ${fmt(area)}㎡`;}
+["pipeD","pipeL","pipeQty"].forEach(id=>$(id).addEventListener("input",calcPipe));
+
+// 製品・部品塗装
+function updateProductFields(){const sh=$("productShape").value;document.querySelectorAll(".product-ab").forEach(x=>x.classList.toggle("hidden",!["plate","box"].includes(sh)));document.querySelectorAll(".product-c").forEach(x=>x.classList.toggle("hidden",!["box","cylinder"].includes(sh)));document.querySelectorAll(".product-d").forEach(x=>x.classList.toggle("hidden",sh!=="cylinder"));document.querySelectorAll(".product-direct").forEach(x=>x.classList.toggle("hidden",sh!=="direct"));calcProduct()}
+function calcProduct(){const sh=$("productShape").value,q=Math.max(1,n("productQty"));let one=0,formula="";if(sh==="plate"){one=n("productA")*n("productB");formula=`${fmt(n("productA"))} × ${fmt(n("productB"))}`;}else if(sh==="box"){const a=n("productA"),b=n("productB"),c=n("productC");one=2*(a*b+a*c+b*c);formula=`2 × (L×W ＋ L×H ＋ W×H)`;}else if(sh==="cylinder"){const d=n("productD"),h=n("productC")||1;one=Math.PI*d*h+Math.PI*d*d/2;formula=`円筒外面（側面＋両端）`;}else{one=n("productDirect");formula=`直接入力 ${fmt(one)}㎡`;}const area=one*q;state.productArea=area;$("productArea").textContent=`${fmt(area)}㎡`;$("productFormula").textContent=`${formula} × ${q}個 = ${fmt(area)}㎡`;}
+$("productShape").addEventListener("change",updateProductFields);["productQty","productA","productB","productC","productD","productDirect"].forEach(id=>$(id).addEventListener("input",calcProduct));
+
+// その他
+function calcOther(){state.otherArea=Math.max(0,n("otherAreaInput"));$("otherArea").textContent=`${fmt(state.otherArea)}㎡`;}
+$("otherAreaInput").addEventListener("input",calcOther);
+
 // material
 let specRows=[];
 
@@ -490,9 +522,12 @@ if($("matArea")) $("matArea").addEventListener("input",calcAllSpecMaterials);
 if($("goProject")) $("goProject").onclick=()=>show("projects");
 
 document.querySelectorAll(".send").forEach(b=>b.onclick=()=>{
-  let a=b.dataset.source==="roof"?state.roofArea:b.dataset.source==="tank"?state.tankArea:state.flatArea;
-  if(!a)return alert("先に面積を計算してください");
-  $("matArea").value=a.toFixed(2);calcAllSpecMaterials();show("material");
+  const map={roof:state.roofArea,flat:state.flatArea,tank:state.tankArea,vessel:state.vesselArea,pipe:state.pipeArea,product:state.productArea,other:state.otherArea};
+  const a=map[b.dataset.source]||0;
+  if(!a)return alert("先に施工面積を計算してください");
+  $("matArea").value=Number(a).toFixed(2);
+  calcAllSpecMaterials();
+  show("material");
 });
 
 // master
@@ -608,7 +643,7 @@ renderSealSelect();
 renderSealMaster();
 renderProjects();
 addFlat({type:"平場",name:"A面",a:10,b:8,q:1});
-calcRoof();calcTank();calcFlat();
+calcRoof();calcTank();calcFlat();updateVesselFields();calcPipe();updateProductFields();calcOther();
 addSpecMaterial(0);
 if($("calcSealCount"))$("calcSealCount").onclick=()=>calcSealCount(true);
 ["sealVolume","sealWidth","sealDepth"].forEach(id=>{if($(id))$(id).addEventListener("input",()=>calcSealCount(false));});

@@ -19,7 +19,8 @@
 <header><div><small>菱洋株式会社 社内用</small><h1>防水数量 かんたん計算</h1></div></header>
 <nav>
 <button data-view="home" class="active">HOME</button><button data-view="roof">屋根</button>
-<button data-view="tank">貯水槽</button><button data-view="flat">床・屋上・壁</button>
+<button data-view="flat">屋上・床・壁</button><button data-view="tank">貯水槽</button>
+<button data-view="vessel">タンク・槽類</button><button data-view="pipe">配管</button><button data-view="product">製品・部品塗装</button><button data-view="other">その他</button>
 <button data-view="material">材料</button><button data-view="master">マスタ</button><button data-view="projects">案件</button>
 </nav>
 <main>
@@ -27,10 +28,14 @@
 <div class="card hero"><span class="badge">概算専用</span><h2>何を計算しますか？</h2>
 <p>寸法を入力して、概算施工面積・材料量・パネル枚数・シーリング延長・必要本数を計算します。単価・原価・見積金額は扱いません。</p>
 <div class="grid4">
-<button data-go="roof">屋根<br><small>勾配・波型係数</small></button>
-<button data-go="tank">貯水槽<br><small>パネル・シーリング</small></button>
-<button data-go="flat">床・屋上・壁<br><small>平場・立上り・控除</small></button>
-<button data-go="material">材料数量<br><small>kg / L / 荷姿</small></button>
+<button data-go="roof">1. 屋根<br><small>勾配・波型係数</small></button>
+<button data-go="flat">2. 屋上・床・壁<br><small>平場・立上り・控除</small></button>
+<button data-go="tank">3. 貯水槽<br><small>パネル・シーリング</small></button>
+<button data-go="vessel">4. タンク・槽類<br><small>円筒・角型</small></button>
+<button data-go="pipe">5. 配管<br><small>外径・長さ・本数</small></button>
+<button data-go="product">6. 製品・部品塗装<br><small>形状・寸法・個数</small></button>
+<button data-go="other">7. その他<br><small>直接入力・基本形状</small></button>
+<button data-go="material">材料計算<br><small>必要量・荷姿</small></button>
 </div></div>
 <p class="notice"><strong>概算数量について：</strong> 本アプリは防水工事の概算数量を算出するためのものです。立上り・仕切り・役物などは必要に応じて別途拾い、最終的な施工数量は現場・仕様書・施工条件を確認のうえ決定してください。</p>
 </section>
@@ -145,14 +150,57 @@
 </section>
 
 <section id="flat" class="view">
-<div class="title"><div><span class="badge">FLAT</span><h2>床・屋上・壁</h2></div><button class="help" data-help="flat">？拾い方</button></div>
+<div class="title"><div><span class="badge">FLAT</span><h2>屋上・床・壁</h2></div><button class="help" data-help="flat">？拾い方</button></div>
 <div class="card"><div class="headrow"><p>部位を追加して拾います。</p><button class="secondary" id="addFlat">＋部位追加</button></div>
 <div class="tablewrap"><table><thead><tr><th>種別</th><th>名称</th><th>長さ</th><th>幅/高さ</th><th>数量</th><th>面積</th><th></th></tr></thead><tbody id="flatRows"></tbody></table></div>
 <div class="big"><span>概算施工面積</span><strong id="flatArea">0.00㎡</strong></div><button class="secondary send" data-source="flat">材料計算へ送る</button></div>
 </section>
 
+<section id="vessel" class="view">
+<div class="title"><div><span class="badge">TANK / VESSEL</span><h2>タンク・槽類</h2></div></div>
+<div class="twocol"><div class="card"><h3>入力</h3><div class="formgrid">
+<label>形状<select id="vesselShape"><option value="cylinder">円筒</option><option value="rect">角型</option></select></label>
+<label>施工範囲<select id="vesselScope"><option value="outside">外面（側面＋上下面）</option><option value="side">側面のみ</option><option value="inside">内面（側面＋底面）</option></select></label>
+<label class="vessel-cylinder">直径 D(m)<input id="vesselD" type="number" value="2" step=".01"></label>
+<label class="vessel-cylinder">高さ H(m)<input id="vesselH" type="number" value="3" step=".01"></label>
+<label class="vessel-rect hidden">長さ L(m)<input id="vesselL" type="number" value="4" step=".01"></label>
+<label class="vessel-rect hidden">幅 W(m)<input id="vesselW" type="number" value="3" step=".01"></label>
+<label class="vessel-rect hidden">高さ H(m)<input id="vesselRH" type="number" value="2" step=".01"></label>
+<label>基数<input id="vesselQty" type="number" value="1" min="1" step="1"></label>
+</div></div><div class="card result"><h3>結果</h3><div class="big"><span>施工面積</span><strong id="vesselArea">—</strong></div><pre id="vesselFormula"></pre><button class="secondary send" data-source="vessel">材料計算へ送る</button></div></div>
+</section>
+
+<section id="pipe" class="view">
+<div class="title"><div><span class="badge">PIPE</span><h2>配管</h2></div></div>
+<div class="twocol"><div class="card"><h3>入力</h3><div class="formgrid">
+<label>外径 (mm)<input id="pipeD" type="number" value="100" step=".1"></label>
+<label>長さ (m)<input id="pipeL" type="number" value="10" step=".01"></label>
+<label>本数<input id="pipeQty" type="number" value="1" min="1" step="1"></label>
+</div><div class="info">直管外面の概算です。エルボ・フランジ・バルブ等は必要に応じて別途拾います。</div></div>
+<div class="card result"><h3>結果</h3><div class="big"><span>施工面積</span><strong id="pipeArea">—</strong></div><pre id="pipeFormula"></pre><button class="secondary send" data-source="pipe">材料計算へ送る</button></div></div>
+</section>
+
+<section id="product" class="view">
+<div class="title"><div><span class="badge">PRODUCT</span><h2>製品・部品塗装</h2></div></div>
+<div class="twocol"><div class="card"><h3>入力</h3><div class="formgrid">
+<label>形状<select id="productShape"><option value="plate">板・平面</option><option value="box">直方体</option><option value="cylinder">円筒</option><option value="direct">面積直接入力</option></select></label>
+<label>個数<input id="productQty" type="number" value="1" min="1" step="1"></label>
+<label class="product-ab">長さ L(m)<input id="productA" type="number" value="1" step=".01"></label>
+<label class="product-ab">幅 W(m)<input id="productB" type="number" value="1" step=".01"></label>
+<label class="product-c hidden">高さ H(m)<input id="productC" type="number" value="1" step=".01"></label>
+<label class="product-d hidden">直径 D(m)<input id="productD" type="number" value="1" step=".01"></label>
+<label class="product-direct hidden">1個あたり施工面積 (㎡)<input id="productDirect" type="number" value="1" step=".01"></label>
+</div></div><div class="card result"><h3>結果</h3><div class="big"><span>施工面積</span><strong id="productArea">—</strong></div><pre id="productFormula"></pre><button class="secondary send" data-source="product">材料計算へ送る</button></div></div>
+</section>
+
+<section id="other" class="view">
+<div class="title"><div><span class="badge">OTHER</span><h2>その他</h2></div></div>
+<div class="card"><h3>施工面積を直接入力</h3><div class="formgrid"><label>施工面積 (㎡)<input id="otherAreaInput" type="number" value="100" min="0" step=".01"></label></div>
+<div class="big"><span>施工面積</span><strong id="otherArea">100.00㎡</strong></div><button class="secondary send" data-source="other">材料計算へ送る</button></div>
+</section>
+
 <section id="material" class="view">
-<div class="title"><div><span class="badge">MATERIAL</span><h2>仕様材料 一括計算</h2></div><button class="help" data-help="material">？計算方法</button></div>
+<div class="title"><div><span class="badge">MATERIAL</span><h2>必要材料 一括計算</h2></div><button class="help" data-help="material">？計算方法</button></div>
 
 <div class="card">
 <h3>施工条件</h3>
@@ -163,7 +211,7 @@
 
 <div class="card">
 <div class="headrow">
-<div><h3>使用材料</h3><p>今回使う材料を複数追加してください。役割による固定分類はしません。</p></div>
+<div><h3>使用材料を選択</h3><p>今回使う材料を追加してください。選択・入力内容は下の必要材料一覧へ自動反映します。</p></div>
 <button class="secondary" id="addSpecMaterial">＋ 使用材料を追加</button>
 </div>
 <div id="specMaterialRows"></div>
@@ -171,15 +219,14 @@
 
 <div class="card result">
 <div class="headrow">
-<div><h3>仕様材料</h3><p>現場で準備する材料・セット数を一覧表示します。</p></div>
-<button class="primary" id="calcAllMaterials">すべて再計算</button>
+<div><h3>必要材料一覧</h3><p>現場で準備する材料・セット数を自動表示します。</p></div>
 </div>
 <div id="specSummary" class="spec-summary"></div>
 <details style="margin-top:14px">
 <summary><b>計算根拠を見る</b></summary>
 <div id="specDetails" style="margin-top:10px"></div>
 </details>
-<button class="primary" id="goProject">この仕様を案件保存</button>
+<button class="primary" id="goProject">この内容を案件保存</button>
 </div>
 </section>
 
