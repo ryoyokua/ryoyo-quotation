@@ -607,18 +607,18 @@ function scheduleMultiRefresh(){
 function addSourceToMaterial(src){
  const a=sourceArea(src);
  if(!a){alert("先に施工面積を計算してください");return;}
+
  const titleEl=$(src+"Title");
  const title=(titleEl?.value||"").trim()||defaultCalcTitle(src);
 
- // 既存項目は一切消さず、新規項目として追加する
- const inherited=(Array.isArray(specRows)&&specRows.length)?currentConfigs().map(x=>({...x})):[];
+ // 追加済みデータは一切消さず、新しい計算として追加する
  const item={
    id:Date.now()+Math.floor(Math.random()*100000),
    source:src,
    label:SOURCE_LABELS[src]||src,
-   title,
+   title:title,
    area:a,
-   materialConfigs:inherited
+   materialConfigs:[]
  };
  projectItems.push(item);
  selectedCalcItemId=item.id;
@@ -627,33 +627,37 @@ function addSourceToMaterial(src){
 
  $("matArea").value=Number(a).toFixed(2);
 
- // 材料UIは直前設定を維持。初回だけ標準材料を1行追加。
- if(!Array.isArray(specRows)||!specRows.length){
-   specRows=[];
-   addSpecMaterial(0);
- }else{
+ // 現在の材料設定があれば引き継ぐ。無ければ標準材料を1行作る。
+ if(Array.isArray(specRows) && specRows.length){
+   item.materialConfigs=currentConfigs().map(x=>({...x}));
    renderSpecRows();
    calcAllSpecMaterials();
+ }else{
+   specRows=[];
+   addSpecMaterial(0);
+   item.materialConfigs=currentConfigs().map(x=>({...x}));
  }
- item.materialConfigs=currentConfigs().map(x=>({...x}));
 
  $("currentWorkItemLabel").textContent=`${title}｜${fmt(a)}㎡`;
  if(titleEl)titleEl.value="";
+
  renderProjectDraft();
  renderMaterialCalcList();
+ updateProjectStatus();
  show("material");
 }
-
 // 各数量ページの「材料計算へ追加」は必ずこの1本の処理を通す
-document.querySelectorAll("button.send[data-source]").forEach(btn=>{
- btn.onclick=()=>{
-   try{
-     addSourceToMaterial(btn.dataset.source);
-   }catch(err){
-     console.error(err);
-     alert("材料計算への追加処理でエラーが発生しました。ページを再読み込みして再度お試しください。");
-   }
- };
+document.addEventListener("click",function(e){
+ const btn=e.target.closest("button.send[data-source]");
+ if(!btn)return;
+ e.preventDefault();
+ e.stopPropagation();
+ try{
+   addSourceToMaterial(btn.dataset.source);
+ }catch(err){
+   console.error("addSourceToMaterial error",err);
+   alert("材料計算への追加処理でエラーが発生しました。");
+ }
 });
 
 function updateProjectStatus(){
