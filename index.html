@@ -122,6 +122,65 @@ input,select,textarea,button{max-width:100%}
 }
 </style>
 
+
+<style>
+.project-status-bar{
+  position:sticky;
+  top:0;
+  z-index:20;
+  padding:8px 14px;
+  background:rgba(247,249,252,.96);
+  border-bottom:1px solid var(--bd);
+  backdrop-filter:blur(8px);
+}
+.project-status-bar button{
+  width:min(1180px,100%);
+  margin:0 auto;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  border:1px solid var(--bd);
+  border-radius:12px;
+  padding:10px 14px;
+  background:#fff;
+  color:inherit;
+  text-align:left;
+  cursor:pointer;
+}
+.project-status-title{
+  flex:0 0 auto;
+  font-size:12px;
+  font-weight:800;
+  color:var(--muted);
+}
+#projectStatusName{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+#projectStatusMeta{
+  margin-left:auto;
+  flex:0 0 auto;
+  font-size:13px;
+  color:var(--muted);
+}
+@media(max-width:700px){
+  .project-status-bar{padding:7px 10px}
+  .project-status-bar button{
+    display:grid;
+    grid-template-columns:auto 1fr;
+    gap:2px 8px;
+    padding:9px 11px;
+  }
+  #projectStatusMeta{
+    grid-column:1 / -1;
+    margin-left:0;
+    font-size:12px;
+  }
+}
+</style>
+
 </head>
 <body>
 <header><div><small>菱洋株式会社 社内用</small><h1>防水数量 かんたん計算</h1></div></header>
@@ -129,8 +188,16 @@ input,select,textarea,button{max-width:100%}
 <button data-view="home" class="active">HOME</button><button data-view="roof">屋根</button>
 <button data-view="flat">屋上・床・壁</button><button data-view="tank">貯水槽</button>
 <button data-view="vessel">他タンク</button><button data-view="pipe">配管</button><button data-view="product">製品・部品塗装</button><button data-view="other">面積直接入力</button>
-<button data-view="material">材料</button><button data-view="master">マスタ</button><button data-view="projects">案件</button>
+<button data-view="material">材料計算</button><button data-view="master">マスタ</button><button data-view="projects">案件</button>
 </nav>
+<div id="projectStatusBar" class="project-status-bar">
+  <button id="projectStatusOpen" type="button">
+    <span class="project-status-title">編集中の案件</span>
+    <strong id="projectStatusName">新規案件</strong>
+    <span id="projectStatusMeta">施工対象 0件 ｜ 合計 0.00㎡</span>
+  </button>
+</div>
+
 <main>
 <section id="home" class="view active">
 <div class="card hero"><span class="badge">概算専用</span><h2>何を計算しますか？</h2>
@@ -338,7 +405,7 @@ input,select,textarea,button{max-width:100%}
 </section>
 
 <section id="material" class="view">
-<div class="title"><div><span class="badge">MATERIAL</span><h2>必要材料 一括計算</h2></div><div class="card"><div class="headrow"><div><b>施工対象ごとの材料仕様</b><p class="muted" id="currentWorkItemLabel">単独計算</p></div><button class="secondary" id="addCurrentToProject">この施工対象を案件に追加</button></div></div><button class="help" data-help="material">？計算方法</button></div>
+<div class="title"><div><span class="badge">MATERIAL</span><h2>材料計算</h2></div><div class="card"><div class="headrow"><div><b>施工対象ごとの材料仕様</b><p class="muted" id="currentWorkItemLabel">単独計算</p></div><button class="secondary" id="addCurrentToProject">この施工対象を案件に追加</button></div></div><button class="help" data-help="material">？計算方法</button></div>
 
 <div class="card">
 <h3>施工条件</h3>
@@ -388,7 +455,7 @@ input,select,textarea,button{max-width:100%}
 </div>
 </section>
 
-<section id="projects" class="view"><div class="title"><div><span class="badge">PROJECTS</span><h2>案件</h2></div></div>
+<section id="projects" class="view"><div class="title"><div><span class="badge">PROJECTS</span><h2>案件</h2><p>複数の施工対象と、それぞれの材料仕様を1案件にまとめて管理します。</p></div></div>
 <div class="card"><input type="hidden" id="editingProjectId"><div class="formgrid"><label>案件名<input id="projectName"></label><label>顧客名<input id="projectCustomer"></label><label>現場名<input id="projectSite"></label><label>担当者<input id="projectOwner"></label><label>メモ<textarea id="projectMemo"></textarea></label></div><button class="primary" id="saveProject">案件を保存 / 更新</button><button class="secondary" id="newProject">案件を新規作成</button><p class="muted">新規作成は編集中の内容だけをクリアします。保存済み案件は削除されません。</p></div>
 <div class="card"><div class="headrow"><h3>現在の案件｜施工対象</h3><b id="projectTotalArea">合計 0㎡</b></div><div id="currentProjectItems"></div></div>
 <div class="card"><h3>案件全体の必要材料一覧</h3><div id="projectMaterialSummary"></div></div>
