@@ -361,7 +361,7 @@ function calcFlat(){
 }
 $("addFlat").onclick=()=>addFlat();if($("flatRound"))$("flatRound").addEventListener("change",calcFlat);
 
-// タンク・槽類
+// 他タンク
 function calcVessel(){
   const shape=$("vesselShape").value,scope=$("vesselScope").value,q=Math.max(1,n("vesselQty"));
   let area=0,formula="";
@@ -763,7 +763,7 @@ function renderProjects(){
      ?p.specificationMaterials.map(m=>`${esc(m.name)}：${esc(m.order||`${fmt(m.required)}${m.unit}`)}`).join("<br>")
      :"";
    const customerSite=[p.customer,p.site].filter(Boolean).map(esc).join(" ｜ ");
-   const source=p.sourceDetails?.source?`<span class="badge">${esc({roof:"屋根",flat:"屋上・床・壁",tank:"貯水槽",vessel:"タンク・槽類",pipe:"配管",product:"製品・部品塗装",other:"その他"}[p.sourceDetails.source]||p.sourceDetails.source)}</span>`:"";
+   const source=p.sourceDetails?.source?`<span class="badge">${esc({roof:"屋根",flat:"屋上・床・壁",tank:"貯水槽",vessel:"他タンク",pipe:"配管",product:"製品・部品塗装",other:"その他"}[p.sourceDetails.source]||p.sourceDetails.source)}</span>`:"";
    return `<div class="project">
      <div class="headrow"><div><b>${esc(p.name)}</b> ${source}<br><small>${new Date(p.createdAt).toLocaleString("ja-JP")} ${p.owner?"｜"+esc(p.owner):""}</small></div>
      <button class="secondary openproject" data-id="${p.id}">開く・編集</button></div>
