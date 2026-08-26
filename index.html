@@ -81,23 +81,23 @@
 <div class="checks"><label><input id="tankFloor" type="checkbox" checked>床</label><label><input id="tankWalls" type="checkbox" checked>壁</label>
 <label><input id="tankCeiling" type="checkbox">天井</label><label><input id="tankInternal" type="checkbox" checked>パネル継目</label><label><input id="tankCorners" type="checkbox" checked>入隅・四隅</label></div>
 <button class="primary" id="calcTank">計算</button></div>
-<div class="card result"><h3>結果</h3><div class="metrics"><div><span>施工面積</span><strong id="tankArea">—</strong></div><div><span>パネル</span><strong id="tankPanels">—</strong></div><div><span>シーリング施工長さ</span><strong id="tankSeal">—</strong></div></div>
+<div class="card result"><h3>結果</h3><div class="metrics"><div><span>施工面積</span><strong id="tankArea">—</strong></div><div><span>パネル</span><strong id="tankPanels">—</strong></div><div><span>シール延長</span><strong id="tankSeal">—</strong></div></div>
 <div class="tablewrap"><table><thead><tr><th>部位</th><th>面積</th><th>パネル</th><th>パネル継目</th><th>入隅・四隅</th></tr></thead><tbody id="tankRows"></tbody></table></div>
 
 <div class="info" style="margin-top:14px">
-<b>シーリング施工長さの内訳</b>
+<b>シール延長の内訳</b>
 <div id="tankSealBreakdown" style="margin-top:8px"></div>
 </div>
 
 <div class="info" style="margin-top:10px">
-<b>シーリング施工長さとは：</b> パネル同士の継目、床と壁の入隅、壁同士の四隅など、シーリングを施工する部分の合計長さです。
+<b>シール延長とは：</b> パネル同士の継目、床と壁の入隅、壁同士の四隅など、シーリングを施工する部分の合計長さです。
 </div>
 
 <button class="secondary send" data-source="tank">材料計算へ送る</button></div></div>
 <div class="card"><h3>シーリング材 必要本数</h3>
-<div class="toggle"><button class="active" data-sealmode="direct">1本あたり○m</button><button data-sealmode="volume">容量・目地寸法</button></div>
+<div class="toggle"><button class="active" data-sealmode="direct">1本あたり○m</button><button data-sealmode="volume">容量・目地寸法から自動計算</button></div>
 <div id="sealDirect" class="sealmode active"><label>1本あたり施工可能長さ (m)<input id="sealPerTube" type="number" value="10" step=".1"></label></div>
-<div id="sealVolumeBox" class="sealmode"><div class="formgrid"><label>容量(mL)<input id="sealVolume" type="number" value="320"></label><label>目地幅(mm)<input id="sealWidth" type="number" value="10"></label><label>目地深さ(mm)<input id="sealDepth" type="number" value="10"></label></div></div>
+<div id="sealVolumeBox" class="active sealmode"><div class="formgrid"><label>容量(mL)<input id="sealVolume" type="number" value="320"></label><label>目地幅(mm)<input id="sealWidth" type="number" value="10"></label><label>目地深さ(mm)<input id="sealDepth" type="number" value="10"></label></div></div>
 <label>予備率<select id="sealReserve"><option value="0">0%</option><option value=".05">5%</option><option value=".1" selected>10%</option><option value=".15">15%</option><option value=".2">20%</option></select></label>
 <button class="primary" id="calcSealCount">必要本数を計算</button><div class="metrics"><div><span>1本あたり</span><strong id="sealEach">—</strong></div><div><span>必要本数</span><strong id="sealCount">—</strong></div><div><span>予備込み</span><strong id="sealCountReserve">—</strong></div></div></div>
 </section>

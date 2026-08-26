@@ -62,7 +62,7 @@ tank:`<p><b>貯水槽は「面積」と「シーリング」を別々に拾い�
 <tr><td>壁のパネル継目</td><td>各壁で列間・段間を拾う</td><td>長辺壁・短辺壁ごとに計算</td></tr>
 <tr><td>壁四隅</td><td>高さ×4箇所</td><td>高さ2m → 8m</td></tr>
 </table>
-<p><b>シーリング施工長さ</b>＝上記を施工対象ごとに合計した長さです。</p>
+<p><b>シール延長</b>＝上記を施工対象ごとに合計した長さです。</p>
 <p>マンホール、配管貫通、内部柱、補強材、特殊なパネル割などはこの自動計算に含めず、必要に応じて別途確認します。</p>`,
 flat:`<table><tr><th>部位</th><th>式</th></tr><tr><td>平場</td><td>長さ×幅</td></tr><tr><td>壁</td><td>幅×高さ×面数</td></tr>
 <tr><td>立上り</td><td>周長×高さ</td></tr><tr><td>仕切り</td><td>長さ×高さ×面数</td></tr><tr><td>設備基礎</td><td>周長×高さ</td></tr><tr><td>控除</td><td>未施工面積をマイナス</td></tr></table>`,
@@ -82,7 +82,7 @@ for(const def of DEFAULT_WAVES){
   }
 }
 
-let state={roofArea:0,tankArea:0,tankSeal:0,flatArea:0,material:null,sealMode:"direct"};
+let state={roofArea:0,tankArea:0,tankSeal:0,flatArea:0,material:null,sealMode:"volume"};
 const $=id=>document.getElementById(id), n=id=>Number($(id).value)||0;
 const fmt=(v,d=2)=>Number(v).toLocaleString("ja-JP",{minimumFractionDigits:d,maximumFractionDigits:d});
 function load(k,f){try{let v=localStorage.getItem(k);return v?JSON.parse(v):structuredClone(f)}catch{return structuredClone(f)}}
@@ -245,7 +245,7 @@ function calcTank(){
     <div class="resultline"><span>床－壁 入隅</span><b>${fmt(floorWallCorner,1)}m</b></div>
     <div class="resultline"><span>壁四隅</span><b>${fmt(wallVerticalCorners,1)}m</b></div>
     ${ceil?`<div class="resultline"><span>天井－壁 入隅</span><b>${fmt(ceilingWallCorner,1)}m</b></div>`:""}
-    <div class="resultline"><span><b>合計 シーリング施工長さ</b></span><b>${fmt(sealLength,1)}m</b></div>
+    <div class="resultline"><span><b>合計 シール延長</b></span><b>${fmt(sealLength,1)}m</b></div>
   `;
 
   // シーリング本数側も入力済みなら同時更新
@@ -260,45 +260,7 @@ $("calcTank").onclick=calcTank;
 ["tankFloor","tankWalls","tankCeiling","tankInternal","tankCorners"].forEach(id=>{
   $(id).addEventListener("change",calcTank);
 });
-document.querySelectorAll("[data-sealmode]").forEach(b=>b.onclick=()=>{state.sealMode=b.dataset.sealmode;document.querySelectorAll("[data-sealmode]").forEach(x=>x.classList.toggle("active",x===b));$("sealDirect").classList.toggle("active",state.sealMode==="direct");$("sealVolumeBox").classList.toggle("active",state.sealMode==="volume");calcSealCount(false)});
-function calcSealCount(showAlert=true){
-  if(!state.tankSeal){
-    $("sealEach").textContent="—";
-    $("sealCount").textContent="—";
-    $("sealCountReserve").textContent="—";
-    if(showAlert) alert("先に貯水槽を計算してください");
-    return;
-  }
 
-  let each=0;
-  if(state.sealMode==="direct"){
-    each=n("sealPerTube");
-  }else{
-    const volume=n("sealVolume"),width=n("sealWidth"),depth=n("sealDepth");
-    each=(width&&depth)?volume/(width*depth):0;
-  }
-
-  if(!each){
-    $("sealEach").textContent="—";
-    $("sealCount").textContent="—";
-    $("sealCountReserve").textContent="—";
-    if(showAlert) alert("入力値を確認してください");
-    return;
-  }
-
-  const count=Math.ceil(state.tankSeal/each);
-  const reserveRate=Number($("sealReserve").value);
-  const reserve=Math.ceil(count*(1+reserveRate));
-
-  $("sealEach").textContent=`${fmt(each,2)}m`;
-  $("sealCount").textContent=`${count}本`;
-  $("sealCountReserve").textContent=`${reserve}本`;
-}
-$("calcSealCount").onclick=()=>calcSealCount(true);
-
-["sealPerTube","sealVolume","sealWidth","sealDepth"].forEach(id=>{
-  $(id).addEventListener("input",()=>calcSealCount(false));
-});
 $("sealReserve").addEventListener("change",()=>calcSealCount(false));
 
 // flat
