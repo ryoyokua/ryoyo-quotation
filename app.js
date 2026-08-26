@@ -586,10 +586,10 @@ function updateProjectStatus(){
   if(!$("projectStatusBar") || !$("projectStatusMeta")) return;
   const total=projectItems.reduce((s,x)=>s+Number(x.area||0),0);
   $("projectStatusBar").classList.toggle("hidden",projectItems.length===0);
-  $("projectStatusName").textContent="計算結果";
+  $("projectStatusName").textContent="材料計算";
   $("projectStatusMeta").textContent=`施工対象 ${projectItems.length}件 ｜ 合計 ${fmt(total)}㎡`;
 }
-if($("projectStatusOpen"))$("projectStatusOpen").onclick=()=>show("projects");
+if($("projectStatusOpen"))$("projectStatusOpen").onclick=()=>show("material");
 
 function currentConfigs(){return specRows.map(r=>{const m=materials[r.materialIndex]||materials[0];return{materialId:m.id,thickness:r.thickness,foamThickness:r.foamThickness,loss:r.loss,usageOverride:r.usageOverride??null,manualUsage:r.manualUsage??null};});}
 function rowsFromConfigs(cs){return(cs||[]).map((c,i)=>{let mi=materials.findIndex(m=>m.id===c.materialId);if(mi<0)mi=0;const m=materials[mi];return{id:"p"+Date.now()+i,materialIndex:mi,thickness:c.thickness??m.standardThickness??2,foamThickness:c.foamThickness??m.standardThickness??25,loss:c.loss??m.defaultLoss??.2,usageOverride:c.usageOverride??null,manualUsage:c.manualUsage??null};});}
@@ -680,12 +680,28 @@ if($("saveSealEdit"))$("saveSealEdit").onclick=()=>{
 // projects
 $("gasEndpoint").value=localStorage.getItem(S.endpoint)||"";
 $("saveEndpoint").onclick=()=>{localStorage.setItem(S.endpoint,$("gasEndpoint").value.trim());alert("保存しました")};
+if($("clearMultiCalc"))$("clearMultiCalc").onclick=()=>{
+ if(!projectItems.length)return;
+ if(!confirm("複数計算の施工対象・材料仕様をすべてクリアしますか？\\n保存済み案件は削除されません。"))return;
+ projectItems=[];editingWorkItemId=null;renderProjectDraft();updateProjectStatus();
+};
+if($("goProjectFromMulti"))$("goProjectFromMulti").onclick=()=>{
+ if(!projectItems.length)return alert("先に施工対象を複数計算へ追加してください。");
+ show("projects");
+ if($("projectSaveFields"))$("projectSaveFields").classList.remove("hidden");
+ if($("projectName"))$("projectName").focus();
+};
 if($("toggleProjectSave"))$("toggleProjectSave").onclick=()=>{
   $("projectSaveFields").classList.toggle("hidden");
   if(!$("projectSaveFields").classList.contains("hidden"))$("projectName").focus();
 };
-$("saveProject").onclick=async()=>{if(!projectItems.length)return alert("先に施工対象を計算結果へ追加してください。");const id=+$("editingProjectId").value||null,p={id:id||Date.now(),createdAt:id?(projects.find(x=>x.id===id)?.createdAt||new Date().toISOString()):new Date().toISOString(),name:$("projectName").value||"名称未設定",customer:$("projectCustomer").value,site:$("projectSite").value,owner:$("projectOwner").value,memo:$("projectMemo").value,area:projectItems.reduce((a,x)=>a+Number(x.area||0),0),workItems:JSON.parse(JSON.stringify(projectItems))};if(id){const i=projects.findIndex(x=>x.id===id);if(i>=0)projects[i]=p;else projects.unshift(p);}else projects.unshift(p);save(S.projects,projects);$("editingProjectId").value=p.id;renderProjects();updateProjectStatus();alert(id?"案件を更新しました":"案件を保存しました");};
-function resetProjectForm(ask=true){if(ask&&!confirm("現在の計算結果をクリアしますか？\n保存済み案件は削除されません。"))return;$("editingProjectId").value="";["projectName","projectCustomer","projectSite","projectOwner","projectMemo"].forEach(id=>$(id).value="");projectItems=[];editingWorkItemId=null;if($("projectSaveFields"))$("projectSaveFields").classList.add("hidden");renderProjectDraft();updateProjectStatus();}
+$("saveProject").onclick=async()=>{if(!projectItems.length)return alert("先に材料計算で施工対象を複数計算へ追加してください。");const id=+$("editingProjectId").value||null,p={id:id||Date.now(),createdAt:id?(projects.find(x=>x.id===id)?.createdAt||new Date().toISOString()):new Date().toISOString(),name:$("projectName").value||"名称未設定",customer:$("projectCustomer").value,site:$("projectSite").value,owner:$("projectOwner").value,memo:$("projectMemo").value,area:projectItems.reduce((a,x)=>a+Number(x.area||0),0),workItems:JSON.parse(JSON.stringify(projectItems))};if(id){const i=projects.findIndex(x=>x.id===id);if(i>=0)projects[i]=p;else projects.unshift(p);}else projects.unshift(p);save(S.projects,projects);$("editingProjectId").value=p.id;renderProjects();updateProjectStatus();alert(id?"案件を更新しました":"案件を保存しました");};
+function resetProjectForm(ask=true){
+ if(ask&&!confirm("案件入力欄をクリアしますか？\n材料計算の複数計算結果・保存済み案件は削除されません。"))return;
+ $("editingProjectId").value="";
+ ["projectName","projectCustomer","projectSite","projectOwner","projectMemo"].forEach(id=>$(id).value="");
+ if($("projectSaveFields"))$("projectSaveFields").classList.add("hidden");
+}
 $("newProject").onclick=()=>resetProjectForm(true);
 function openProject(id){const p=projects.find(x=>x.id===id);if(!p)return;$("editingProjectId").value=p.id;["Name","Customer","Site","Owner","Memo"].forEach(k=>$("project"+k).value=p[k.toLowerCase()]||"");projectItems=JSON.parse(JSON.stringify(p.workItems||[]));if($("projectSaveFields"))$("projectSaveFields").classList.remove("hidden");renderProjectDraft();updateProjectStatus();show("projects");}
 function deleteProject(id){const p=projects.find(x=>x.id===id);if(!p||!confirm(`「${p.name}」を削除しますか？`))return;projects=projects.filter(x=>x.id!==id);save(S.projects,projects);renderProjects();}
