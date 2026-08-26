@@ -609,14 +609,39 @@ document.querySelectorAll(".send").forEach(b=>b.onclick=()=>{
  if(!a)return alert("先に施工面積を計算してください");
  const titleEl=$(src+"Title");
  const title=(titleEl?.value||"").trim()||defaultCalcTitle(src);
- const item={id:Date.now()+Math.floor(Math.random()*1000),source:src,label:SOURCE_LABELS[src],title,area:a,materialConfigs:[]};
- projectItems.push(item);selectedCalcItemId=item.id;editingWorkItemId=item.id;state.lastSource=src;
- $("matArea").value=Number(a).toFixed(2);specRows=[];
- addSpecMaterial(0);
- item.materialConfigs=currentConfigs();
+
+ // 新しい項目を追加しても、現在の材料設定はリセットしない。
+ // 直前の材料設定を初期値として引き継ぎ、タイトルごとに後から変更可能。
+ const inheritedConfigs=currentConfigs();
+ const item={
+   id:Date.now()+Math.floor(Math.random()*1000),
+   source:src,
+   label:SOURCE_LABELS[src],
+   title,
+   area:a,
+   materialConfigs:inheritedConfigs
+ };
+
+ projectItems.push(item);
+ selectedCalcItemId=item.id;
+ editingWorkItemId=item.id;
+ state.lastSource=src;
+
+ $("matArea").value=Number(a).toFixed(2);
+
+ if(!specRows.length){
+   addSpecMaterial(0);
+   item.materialConfigs=currentConfigs();
+ }else{
+   // 現在の材料UIをそのまま維持し、追加した面積だけで再計算
+   calcAllSpecMaterials();
+ }
+
  $("currentWorkItemLabel").textContent=`${title}｜${fmt(a)}㎡`;
  if(titleEl)titleEl.value="";
- renderProjectDraft();updateProjectStatus();show("material");
+ renderProjectDraft();
+ updateProjectStatus();
+ show("material");
 });
 
 function updateProjectStatus(){
