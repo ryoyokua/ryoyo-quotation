@@ -99,6 +99,29 @@
 }
 </style>
 
+
+<style>
+html,body{max-width:100%;overflow-x:hidden}
+*{box-sizing:border-box}
+img,svg,canvas{max-width:100%}
+nav{overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap}
+nav button{flex:0 0 auto}
+input,select,textarea,button{max-width:100%}
+@media(max-width:700px){
+  main{width:100%;padding-left:14px!important;padding-right:14px!important}
+  .card,.result,.hero{width:100%;min-width:0}
+  .twocol,.formgrid,.grid3,.grid4{grid-template-columns:1fr!important}
+  .headrow{flex-wrap:wrap}
+  .headrow button{width:100%}
+  .metrics{grid-template-columns:1fr!important}
+  .tablewrap{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  dialog{width:calc(100vw - 24px);max-width:calc(100vw - 24px)}
+  .spec-material-row .formgrid{grid-template-columns:1fr!important}
+  #tank .tablewrap table,#master .tablewrap table{min-width:720px}
+  .send,.primary,.secondary{min-height:42px}
+}
+</style>
+
 </head>
 <body>
 <header><div><small>菱洋株式会社 社内用</small><h1>防水数量 かんたん計算</h1></div></header>
@@ -155,11 +178,11 @@
 </select></label>
 <label>波型係数<input id="roofWaveFactor" type="number" value="1" step=".001"><small>屋根材選択で自動入力。必要時は上書き可</small></label>
 <div class="info" style="grid-column:1/-1"><b>寸法入力：</b>斜面そのものを実測した長さではなく、図面・平面上の長さと幅を入力します。</div>
-<label>採用面積の丸め
+<label>面積の端数処理
 <select id="roofRound">
 <option value="1" selected>1㎡単位で切り上げ</option>
 <option value="0.1">0.1㎡単位で切り上げ</option>
-<option value="0">丸めない</option>
+<option value="0">端数処理なし</option>
 </select></label>
 </div><button class="primary" id="calcRoof">計算</button></div>
 <div class="card result"><h3>結果</h3><div class="big"><span>採用面積</span><strong id="roofArea">—</strong></div>
@@ -176,7 +199,12 @@
 <label>高さ H(m)<input id="tankH" type="number" value="2" step=".01"></label>
 <label>パネル幅(m)<input id="panelW" type="number" value="1" step=".01"></label>
 <label>パネル高さ(m)<input id="panelH" type="number" value="1" step=".01"></label>
-<label>床パネル奥行(m)<input id="panelD" type="number" value="1" step=".01"></label></div>
+<label>床パネル奥行(m)<input id="panelD" type="number" value="1" step=".01"></label><label>面積の端数処理
+<select id="tankRound">
+<option value="0">端数処理なし</option>
+<option value="0.1">0.1㎡単位で切り上げ</option>
+<option value="1" selected>1㎡単位で切り上げ</option>
+</select></label></div>
 <div class="checks"><label><input id="tankFloor" type="checkbox" checked>床</label><label><input id="tankWalls" type="checkbox" checked>壁</label>
 <label><input id="tankCeiling" type="checkbox">天井</label><label><input id="tankInternal" type="checkbox" checked>パネル継目</label><label><input id="tankCorners" type="checkbox" checked>入隅・四隅</label></div>
 <button class="primary" id="calcTank">計算</button></div>
@@ -236,7 +264,12 @@
 
 <section id="flat" class="view">
 <div class="title"><div><span class="badge">FLAT</span><h2>屋上・床・壁</h2></div><button class="help" data-help="flat">？拾い方</button></div>
-<div class="card"><div class="headrow"><p>部位を追加して拾います。</p><button class="secondary" id="addFlat">＋部位追加</button></div>
+<div class="card"><div class="headrow"><p>部位を追加して拾います。</p><button class="secondary" id="addFlat">＋部位追加</button></div><div class="formgrid" style="margin-bottom:12px"><label>面積の端数処理
+<select id="flatRound">
+<option value="0">端数処理なし</option>
+<option value="0.1">0.1㎡単位で切り上げ</option>
+<option value="1" selected>1㎡単位で切り上げ</option>
+</select></label></div>
 <div class="tablewrap"><table><thead><tr><th>種別</th><th>名称</th><th>長さ</th><th>幅/高さ</th><th>数量</th><th>面積</th><th></th></tr></thead><tbody id="flatRows"></tbody></table></div>
 <div class="big"><span>概算施工面積</span><strong id="flatArea">0.00㎡</strong></div><button class="secondary send" data-source="flat">材料計算へ送る</button></div>
 </section>
@@ -251,7 +284,12 @@
 <label class="vessel-rect hidden">長さ L(m)<input id="vesselL" type="number" value="4" step=".01"></label>
 <label class="vessel-rect hidden">幅 W(m)<input id="vesselW" type="number" value="3" step=".01"></label>
 <label class="vessel-rect hidden">高さ H(m)<input id="vesselRH" type="number" value="2" step=".01"></label>
-<label>基数<input id="vesselQty" type="number" value="1" min="1" step="1"></label>
+<label>基数<input id="vesselQty" type="number" value="1" min="1" step="1"></label><label>面積の端数処理
+<select id="vesselRound">
+<option value="0">端数処理なし</option>
+<option value="0.1">0.1㎡単位で切り上げ</option>
+<option value="1" selected>1㎡単位で切り上げ</option>
+</select></label>
 </div><button class="primary" id="calcVesselBtn">計算</button></div><div class="card result"><h3>結果</h3><div class="big"><span>施工面積</span><strong id="vesselArea">—</strong></div><pre id="vesselFormula"></pre><button class="secondary send" data-source="vessel">材料計算へ送る</button></div></div>
 </section>
 
@@ -260,7 +298,12 @@
 <div class="twocol"><div class="card"><h3>入力</h3><div class="formgrid">
 <label>外径 (mm)<input id="pipeD" type="number" value="100" step=".1"></label>
 <label>長さ (m)<input id="pipeL" type="number" value="10" step=".01"></label>
-<label>本数<input id="pipeQty" type="number" value="1" min="1" step="1"></label>
+<label>本数<input id="pipeQty" type="number" value="1" min="1" step="1"></label><label>面積の端数処理
+<select id="pipeRound">
+<option value="0">端数処理なし</option>
+<option value="0.1">0.1㎡単位で切り上げ</option>
+<option value="1" selected>1㎡単位で切り上げ</option>
+</select></label>
 </div><div class="info">直管外面の概算です。エルボ・フランジ・バルブ等は必要に応じて別途拾います。</div><button class="primary" id="calcPipeBtn">計算</button></div>
 <div class="card result"><h3>結果</h3><div class="big"><span>施工面積</span><strong id="pipeArea">—</strong></div><pre id="pipeFormula"></pre><button class="secondary send" data-source="pipe">材料計算へ送る</button></div></div>
 </section>
@@ -274,13 +317,23 @@
 <label class="product-ab">幅 W(m)<input id="productB" type="number" value="1" step=".01"></label>
 <label class="product-c hidden">高さ H(m)<input id="productC" type="number" value="1" step=".01"></label>
 <label class="product-d hidden">直径 D(m)<input id="productD" type="number" value="1" step=".01"></label>
-<label class="product-direct hidden">1個あたり施工面積 (㎡)<input id="productDirect" type="number" value="1" step=".01"></label>
+<label class="product-direct hidden">1個あたり施工面積 (㎡)<input id="productDirect" type="number" value="1" step=".01"></label><label>面積の端数処理
+<select id="productRound">
+<option value="0">端数処理なし</option>
+<option value="0.1">0.1㎡単位で切り上げ</option>
+<option value="1" selected>1㎡単位で切り上げ</option>
+</select></label>
 </div><button class="primary" id="calcProductBtn">計算</button></div><div class="card result"><h3>結果</h3><div class="big"><span>施工面積</span><strong id="productArea">—</strong></div><pre id="productFormula"></pre><button class="secondary send" data-source="product">材料計算へ送る</button></div></div>
 </section>
 
 <section id="other" class="view">
 <div class="title"><div><span class="badge">OTHER</span><h2>その他</h2></div></div>
-<div class="card"><h3>施工面積を直接入力</h3><div class="formgrid"><label>施工面積 (㎡)<input id="otherAreaInput" type="number" value="100" min="0" step=".01"></label></div><button class="primary" id="calcOtherBtn">計算</button>
+<div class="card"><h3>施工面積を直接入力</h3><div class="formgrid"><label>施工面積 (㎡)<input id="otherAreaInput" type="number" value="100" min="0" step=".01"></label><label>面積の端数処理
+<select id="otherRound">
+<option value="0">端数処理なし</option>
+<option value="0.1">0.1㎡単位で切り上げ</option>
+<option value="1" selected>1㎡単位で切り上げ</option>
+</select></label></div><button class="primary" id="calcOtherBtn">計算</button>
 <div class="big"><span>施工面積</span><strong id="otherArea">100.00㎡</strong></div><button class="secondary send" data-source="other">材料計算へ送る</button></div>
 </section>
 
@@ -319,7 +372,7 @@
 <div class="title"><div><span class="badge">MASTER</span><h2>材料・係数マスタ</h2></div></div>
 <div class="notice">数量計算に必要な情報だけ登録。単価・原価・見積金額は登録しません。</div>
 <div class="card"><div class="headrow"><h3>材料マスタ</h3><button class="secondary" id="addMaterial">＋材料追加</button></div>
-<div class="tablewrap"><table><thead><tr><th>シリーズ</th><th>製品</th><th>特徴</th><th>計算方式</th><th>基準使用量</th><th>通常荷姿</th><th></th></tr></thead><tbody id="materialMaster"></tbody></table></div></div>
+<div class="tablewrap"><table><thead><tr><th>シリーズ</th><th>製品</th><th>特徴</th><th>計算方式</th><th>基準使用量</th><th>標準膜厚</th><th>標準ロス率</th><th>通常荷姿</th><th></th></tr></thead><tbody id="materialMaster"></tbody></table></div></div>
 <div class="card"><h3>屋根材・波型係数</h3><div class="tablewrap"><table><thead><tr><th>屋根材</th><th>係数</th><th>備考</th></tr></thead><tbody id="waveMaster"></tbody></table></div><button class="primary" id="saveMaster">マスタ保存</button></div>
 <div class="card">
 <div class="headrow">
@@ -337,7 +390,18 @@
 
 <section id="projects" class="view">
 <div class="title"><div><span class="badge">PROJECTS</span><h2>案件履歴</h2></div></div>
-<div class="card"><div class="formgrid"><label>案件名<input id="projectName" placeholder="○○工場"></label><label>担当者<input id="projectOwner"></label><label>メモ<textarea id="projectMemo" rows="3"></textarea></label></div><button class="primary" id="saveProject">現在の材料計算を保存</button></div>
+<div class="card">
+<input type="hidden" id="editingProjectId">
+<div class="formgrid">
+<label>案件名<input id="projectName" placeholder="○○改修工事"></label>
+<label>顧客名<input id="projectCustomer" placeholder="○○株式会社"></label>
+<label>現場名<input id="projectSite" placeholder="○○工場 / ○○施設"></label>
+<label>担当者<input id="projectOwner"></label>
+<label>メモ<textarea id="projectMemo" rows="3"></textarea></label>
+</div>
+<button class="primary" id="saveProject">現在の内容を保存</button>
+<button class="secondary" id="newProject">新規案件として入力</button>
+</div>
 <div class="card"><h3>保存済み</h3><div id="projectList"></div></div>
 <div class="card"><h3>Google Sheets連携</h3><label>Apps Script WebアプリURL<input id="gasEndpoint" placeholder="https://script.google.com/macros/s/.../exec"></label><button class="primary" id="saveEndpoint">URL保存</button></div>
 </section>
@@ -351,7 +415,7 @@
 <option value="foam">発泡ウレタン厚み別</option>
 <option value="manual">案件ごとに使用量入力</option>
 </select></label>
-<label>基準使用量<input id="editUsage" type="number" step=".001"></label>
+<label>基準使用量<input id="editUsage" type="number" step=".001"></label><label>標準膜厚(mm)<input id="editStandardThickness" type="number" min="0" step=".1"></label><label>標準ロス率(%)<input id="editDefaultLoss" type="number" min="0" max="100" step="1"></label>
 <label>使用量単位<select id="editUnit"><option value="L">L</option><option value="kg">kg</option><option value="">未設定</option></select></label><label>通常荷姿(カンマ区切り)<input id="editPackages" placeholder="400,36"></label><label>荷姿単位<select id="editPackageUnit"><option value="L">L</option><option value="kg">kg</option><option value="">未設定</option></select></label></div>
 <button class="primary" id="saveMaterialEdit">保存</button></div></dialog>
 <dialog id="sealDialog">

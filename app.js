@@ -1,31 +1,31 @@
 const S={materials:"ryoyo_materials_v1",waves:"ryoyo_waves_v1",seals:"ryoyo_seal_products_v1",projects:"ryoyo_projects_v1",endpoint:"ryoyo_gas_endpoint_v1"};
 
 const DEFAULT_MATERIALS=[
-{id:"n-st",series:"NUKOTE",name:"ST",feature:"標準型",usage:1,unit:"L",packages:[380,38],packageUnit:"L",calcMode:"thickness"},
-{id:"n-xt",series:"NUKOTE",name:"XT",feature:"耐薬品性能型",usage:1,unit:"L",packages:[380,38],packageUnit:"L",calcMode:"thickness"},
-{id:"n-al",series:"NUKOTE",name:"AL",feature:"耐紫外線型",usage:1,unit:"L",packages:[380,38],packageUnit:"L",calcMode:"thickness"},
-{id:"n-fr",series:"NUKOTE",name:"FR",feature:"難燃型",usage:1,unit:"L",packages:[380],packageUnit:"L",calcMode:"thickness"},
-{id:"n-htd",series:"NUKOTE",name:"HTD",feature:"高強化型",usage:1,unit:"L",packages:[380,38],packageUnit:"L",calcMode:"thickness"},
-{id:"n-har",series:"NUKOTE",name:"HAR",feature:"耐摩耗型",usage:1,unit:"L",packages:[380,38],packageUnit:"L",calcMode:"thickness"},
-{id:"n-lp",series:"NUKOTE",name:"LP",feature:"常温硬化",usage:1,unit:"L",packages:[38],packageUnit:"L",calcMode:"thickness"},
-{id:"n-bg",series:"NUKOTE",name:"BG",feature:"手塗り",usage:1,unit:"L",packages:[19,3.8],packageUnit:"L",calcMode:"thickness"},
-{id:"n-jf",series:"NUKOTE",name:"JF-HM",feature:"手塗り",usage:1,unit:"L",packages:[3.8],packageUnit:"L",calcMode:"thickness"},
-{id:"n-pa",series:"NUKOTE",name:"PA",feature:"手塗り",usage:1,unit:"L",packages:[38,7.6],packageUnit:"L",calcMode:"thickness"},
-{id:"n-ep",series:"NUKOTE",name:"EP-primeⅡ",feature:"エポキシ系プライマー",usage:0.2,unit:"L",packages:[38,7.6],packageUnit:"L",calcMode:"area"},
-{id:"n-pp",series:"NUKOTE",name:"Poly PrimeⅡ",feature:"ウレタン系プライマー",usage:0.225,unit:"L",packages:[38,7.6],packageUnit:"L",calcMode:"area"},
-{id:"n-fp",series:"NUKOTE",name:"FP1",feature:"1液",usage:0.05,unit:"L",packages:[3.8],packageUnit:"L",calcMode:"area"},
-{id:"pg4069",series:"PG",name:"PG 406-9",feature:"標準型",usage:1,unit:"L",packages:[400,36],packageUnit:"L",calcMode:"thickness"},
-{id:"pg430",series:"PG",name:"PG 430",feature:"屋根用",usage:1,unit:"L",packages:[400,36],packageUnit:"L",calcMode:"thickness"},
-{id:"pg409",series:"PG",name:"PG 409",feature:"衝撃・耐摩耗",usage:1,unit:"L",packages:[400,36],packageUnit:"L",calcMode:"thickness"},
-{id:"pg408",series:"PG",name:"PG 408",feature:"耐薬品",usage:1,unit:"L",packages:[400,36],packageUnit:"L",calcMode:"thickness"},
-{id:"pg411",series:"PG",name:"PG 411",feature:"脂肪族",usage:1,unit:"L",packages:[400,36],packageUnit:"L",calcMode:"thickness"},
-{id:"pg301",series:"PG",name:"PG 301",feature:"手塗り A:B=1:1",usage:null,unit:"L",packages:[40],packageUnit:"L",calcMode:"manual"},
-{id:"pg80920",series:"PG",name:"PG 809-20",feature:"手塗り A:B=1:1",usage:null,unit:"L",packages:[40],packageUnit:"L",calcMode:"manual"},
-{id:"pg80940",series:"PG",name:"PG 809-40",feature:"手塗り A:B=1:1",usage:null,unit:"L",packages:[40],packageUnit:"L",calcMode:"manual"},
-{id:"spu",series:"SPU",name:"SPU-8010",feature:"難燃性ポリウレア",usage:1,unit:"L",packages:[380,38],packageUnit:"L",calcMode:"thickness"},
-{id:"hr480",series:"発泡ウレタン",name:"HR480NSG-L",feature:"断熱発泡ウレタン",usage:1.75,unit:"kg",packages:[420],packageUnit:"L",foam:true,calcMode:"foam"},
-{id:"act",series:"RSPU",name:"RS-アクトPUプライマー",feature:"PUプライマー",usage:0.25,unit:"kg",packages:[17],packageUnit:"kg",calcMode:"area"},
-{id:"task",series:"RSPU",name:"RS-タスクPUプライマー",feature:"PUプライマー",usage:0.12,unit:"kg",packages:[5],packageUnit:"kg",calcMode:"area"}
+{id:"n-st",series:"NUKOTE",name:"ST",feature:"標準型",usage:1,unit:"L",packages:[380,38],packageUnit:"L",calcMode:"thickness",standardThickness:2.0,defaultLoss:0.20},
+{id:"n-xt",series:"NUKOTE",name:"XT",feature:"耐薬品性能型",usage:1,unit:"L",packages:[380,38],packageUnit:"L",calcMode:"thickness",standardThickness:2.0,defaultLoss:0.20},
+{id:"n-al",series:"NUKOTE",name:"AL",feature:"耐紫外線型",usage:1,unit:"L",packages:[380,38],packageUnit:"L",calcMode:"thickness",standardThickness:2.0,defaultLoss:0.20},
+{id:"n-fr",series:"NUKOTE",name:"FR",feature:"難燃型",usage:1,unit:"L",packages:[380],packageUnit:"L",calcMode:"thickness",standardThickness:2.0,defaultLoss:0.20},
+{id:"n-htd",series:"NUKOTE",name:"HTD",feature:"高強化型",usage:1,unit:"L",packages:[380,38],packageUnit:"L",calcMode:"thickness",standardThickness:2.0,defaultLoss:0.20},
+{id:"n-har",series:"NUKOTE",name:"HAR",feature:"耐摩耗型",usage:1,unit:"L",packages:[380,38],packageUnit:"L",calcMode:"thickness",standardThickness:2.0,defaultLoss:0.20},
+{id:"n-lp",series:"NUKOTE",name:"LP",feature:"常温硬化",usage:1,unit:"L",packages:[38],packageUnit:"L",calcMode:"thickness",standardThickness:2.0,defaultLoss:0.20},
+{id:"n-bg",series:"NUKOTE",name:"BG",feature:"手塗り",usage:1,unit:"L",packages:[19,3.8],packageUnit:"L",calcMode:"thickness",standardThickness:2.0,defaultLoss:0.20},
+{id:"n-jf",series:"NUKOTE",name:"JF-HM",feature:"手塗り",usage:1,unit:"L",packages:[3.8],packageUnit:"L",calcMode:"thickness",standardThickness:2.0,defaultLoss:0.20},
+{id:"n-pa",series:"NUKOTE",name:"PA",feature:"手塗り",usage:1,unit:"L",packages:[38,7.6],packageUnit:"L",calcMode:"thickness",standardThickness:2.0,defaultLoss:0.20},
+{id:"n-ep",series:"NUKOTE",name:"EP-primeⅡ",feature:"エポキシ系プライマー",usage:0.2,unit:"L",packages:[38,7.6],packageUnit:"L",calcMode:"area",standardThickness:null,defaultLoss:0.20},
+{id:"n-pp",series:"NUKOTE",name:"Poly PrimeⅡ",feature:"ウレタン系プライマー",usage:0.225,unit:"L",packages:[38,7.6],packageUnit:"L",calcMode:"area",standardThickness:null,defaultLoss:0.20},
+{id:"n-fp",series:"NUKOTE",name:"FP1",feature:"1液",usage:0.05,unit:"L",packages:[3.8],packageUnit:"L",calcMode:"area",standardThickness:null,defaultLoss:0.20},
+{id:"pg4069",series:"PG",name:"PG 406-9",feature:"標準型",usage:1,unit:"L",packages:[400,36],packageUnit:"L",calcMode:"thickness",standardThickness:2.0,defaultLoss:0.20},
+{id:"pg430",series:"PG",name:"PG 430",feature:"屋根用",usage:1,unit:"L",packages:[400,36],packageUnit:"L",calcMode:"thickness",standardThickness:2.0,defaultLoss:0.20},
+{id:"pg409",series:"PG",name:"PG 409",feature:"衝撃・耐摩耗",usage:1,unit:"L",packages:[400,36],packageUnit:"L",calcMode:"thickness",standardThickness:2.0,defaultLoss:0.20},
+{id:"pg408",series:"PG",name:"PG 408",feature:"耐薬品",usage:1,unit:"L",packages:[400,36],packageUnit:"L",calcMode:"thickness",standardThickness:2.0,defaultLoss:0.20},
+{id:"pg411",series:"PG",name:"PG 411",feature:"脂肪族",usage:1,unit:"L",packages:[400,36],packageUnit:"L",calcMode:"thickness",standardThickness:2.0,defaultLoss:0.20},
+{id:"pg301",series:"PG",name:"PG 301",feature:"手塗り A:B=1:1",usage:null,unit:"L",packages:[40],packageUnit:"L",calcMode:"manual",standardThickness:null,defaultLoss:0.20},
+{id:"pg80920",series:"PG",name:"PG 809-20",feature:"手塗り A:B=1:1",usage:null,unit:"L",packages:[40],packageUnit:"L",calcMode:"manual",standardThickness:null,defaultLoss:0.20},
+{id:"pg80940",series:"PG",name:"PG 809-40",feature:"手塗り A:B=1:1",usage:null,unit:"L",packages:[40],packageUnit:"L",calcMode:"manual",standardThickness:null,defaultLoss:0.20},
+{id:"spu",series:"SPU",name:"SPU-8010",feature:"難燃性ポリウレア",usage:1,unit:"L",packages:[380,38],packageUnit:"L",calcMode:"thickness",standardThickness:2.0,defaultLoss:0.20},
+{id:"hr480",series:"発泡ウレタン",name:"HR480NSG-L",feature:"断熱発泡ウレタン",usage:1.75,unit:"kg",packages:[420],packageUnit:"L",foam:true,calcMode:"foam",standardThickness:25,defaultLoss:0.20},
+{id:"act",series:"RSPU",name:"RS-アクトPUプライマー",feature:"PUプライマー",usage:0.25,unit:"kg",packages:[17],packageUnit:"kg",calcMode:"area",standardThickness:null,defaultLoss:0.20},
+{id:"task",series:"RSPU",name:"RS-タスクPUプライマー",feature:"PUプライマー",usage:0.12,unit:"kg",packages:[5],packageUnit:"kg",calcMode:"area",standardThickness:null,defaultLoss:0.20}
 ];
 
 const DEFAULT_WAVES=[
@@ -42,7 +42,7 @@ const DEFAULT_SEALS=[
 
 const HELP={
 roof:`<p><b>基本式：</b>平面面積 × 勾配係数 × 波型係数</p>
-<p>入力した寸法は丸めずに計算し、最後に「採用面積」だけ1㎡または0.1㎡単位で切り上げます。立上り・仕切り・役物などは必要に応じて別途拾います。材料のロスは材料計算画面で設定します。</p>
+<p>入力した寸法は丸めずに計算し、最後に「面積の端数処理」で、端数処理なし・0.1㎡単位切り上げ・1㎡単位切り上げを選べます。立上り・仕切り・役物などは必要に応じて別途拾います。材料のロスは材料計算画面で設定します。</p>
 <table><tr><th>項目</th><th>意味</th></tr><tr><td>平面面積</td><td>図面・真上から見た長さ×幅</td></tr>
 <tr><td>勾配係数</td><td>斜面で増える面積を補正。3寸=約1.044、3.5寸=約1.059、4寸=約1.077</td></tr>
 <tr><td>波型係数</td><td>大波1.140、小波1.150を初期値として自動入力。必要時は上書き可能</td></tr>
@@ -77,7 +77,7 @@ material:`<p><b>使用材料を複数追加し、一括で必要量と発注セ�
 <tr><td>面積連動</td><td>RS-アクトPU等</td><td>面積 × 標準使用量 ×（1＋ロス率）</td></tr>
 <tr><td>厚み別</td><td>HR480NSG-L</td><td>15 / 20 / 25mmの基準使用量</td></tr>
 </table>
-<p>「使用材料を選択」で追加・変更した内容は、下の「必要材料一覧」にリアルタイムで反映します。最終結果は材料の役割分けをせず、<b>製品名　荷姿 × セット数</b>として表示します。</p>`
+<p>「使用材料を選択」で追加・変更した内容は、下の「必要材料一覧」にリアルタイムで反映します。380L / 38Lなど複数荷姿がある製品は、必要量を下回らない範囲で荷姿を組み合わせて自動計算します。</p><p>最終結果は材料の役割分けをせず、<b>製品名　荷姿 × セット数</b>として表示します。</p>`
 };
 
 let materials=load(S.materials,DEFAULT_MATERIALS),waves=load(S.waves,DEFAULT_WAVES),seals=load(S.seals,DEFAULT_SEALS),projects=load(S.projects,[]);
@@ -92,7 +92,7 @@ for(const def of DEFAULT_WAVES){
   }
 }
 
-let state={roofArea:0,flatArea:0,tankArea:0,tankSeal:0,vesselArea:0,pipeArea:0,productArea:0,otherArea:100,material:null,sealMode:"volume"};
+let state={roofArea:0,roofRawArea:0,flatArea:0,flatRawArea:0,flatRows:[],tankArea:0,tankRawArea:0,tankPanels:0,tankSeal:0,vesselArea:0,vesselRawArea:0,pipeArea:0,pipeRawArea:0,productArea:0,productRawArea:0,otherArea:100,otherRawArea:100,lastSource:null,material:null,sealMode:"volume"};
 const $=id=>document.getElementById(id), n=id=>Number($(id).value)||0;
 const fmt=(v,d=2)=>Number(v).toLocaleString("ja-JP",{minimumFractionDigits:d,maximumFractionDigits:d});
 function load(k,f){try{let v=localStorage.getItem(k);return v?JSON.parse(v):structuredClone(f)}catch{return structuredClone(f)}}
@@ -105,6 +105,14 @@ for(const w of waves){
   if(w.name==="小波スレート" && w.factor==null) w.factor=1.150;
 }
 save(S.waves,waves);
+// 材料マスタの追加項目を既存ブラウザデータへ補完
+for(const m of materials){
+  const def=DEFAULT_MATERIALS.find(x=>x.id===m.id);
+  if(m.defaultLoss==null) m.defaultLoss=def?.defaultLoss ?? 0.20;
+  if(m.standardThickness==null) m.standardThickness=def?.standardThickness ?? (m.calcMode==="thickness"?2.0:(m.calcMode==="foam"?25:null));
+}
+save(S.materials,materials);
+
 
 function show(v){document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id===v));document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("active",x.dataset.view===v));scrollTo({top:0,behavior:"smooth"})}
 document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>show(b.dataset.view));
@@ -138,12 +146,13 @@ function renderWaveSelect(){
 }
 function getRoofSun(){return $("roofSun").value==="custom" ? n("roofSunCustom") : Number($("roofSun").value)}
 function ceilUnit(value,unit){if(!unit||unit<=0)return value;return Math.ceil((value-1e-12)/unit)*unit}
+function adoptedArea(value,roundId){const el=$(roundId);const unit=el?Number(el.value):0;return ceilUnit(value,unit)}
 function calcRoof(){
   const projection=n("roofL")*n("roofW")*Math.max(1,n("roofFaces"));
   const sun=getRoofSun(), slope=Math.sqrt(1+(sun/10)**2);
   const wave=Math.max(.001,n("roofWaveFactor"));
   const raw=projection*slope*wave,roundUnit=Number($("roofRound").value),adopted=ceilUnit(raw,roundUnit);
-  state.roofArea=adopted;
+  state.roofRawArea=raw;state.roofArea=adopted;
   $("roofArea").textContent=roundUnit===1?`${fmt(adopted,0)}㎡`:`${fmt(adopted,1)}㎡`;
   $("roofRawArea").textContent=`${fmt(raw,2)}㎡`;
   $("roofDetail").innerHTML=
@@ -242,10 +251,13 @@ function calcTank(){
     floorSeams+longWallSeams+shortWallSeams+ceilingSeams+
     floorWallCorner+wallVerticalCorners+ceilingWallCorner;
 
-  state.tankArea=area;
+  const adopted=adoptedArea(area,"tankRound");
+  state.tankRawArea=area;
+  state.tankArea=adopted;
   state.tankSeal=sealLength;
+  state.tankPanels=panels;
 
-  $("tankArea").textContent=`${fmt(area)}㎡`;
+  $("tankArea").textContent=`${fmt(adopted)}㎡`;
   $("tankPanels").textContent=`${fmt(panels,0)}枚`;
   $("tankSeal").textContent=`${fmt(sealLength,1)}m`;
 
@@ -287,6 +299,7 @@ $("calcTank").onclick=calcTank;
 ["tankL","tankW","tankH","panelW","panelH","panelD"].forEach(id=>{
   $(id).addEventListener("input",calcTank);
 });
+if($("tankRound"))$("tankRound").addEventListener("change",calcTank);
 ["tankFloor","tankWalls","tankCeiling","tankInternal","tankCorners"].forEach(id=>{
   $(id).addEventListener("change",calcTank);
 });
@@ -333,8 +346,20 @@ function addFlat(d={type:"平場",name:"",a:"",b:"",q:1}){
  const tr=document.createElement("tr");tr.innerHTML=`<td data-label="種別"><select class="ft">${Object.keys(types).map(x=>`<option ${x===d.type?"selected":""}>${x}</option>`).join("")}</select></td><td data-label="名称"><input class="fn" value="${esc(d.name)}"></td><td data-label="長さ"><input class="fa" type="number" step=".01" value="${d.a}"></td><td data-label="幅 / 高さ"><input class="fb" type="number" step=".01" value="${d.b}"></td><td data-label="数量"><input class="fq" type="number" min="1" value="${d.q}"></td><td class="fo" data-label="面積">0㎡</td><td data-label=""><button class="delete">削除</button></td>`;
  $("flatRows").appendChild(tr);tr.querySelectorAll("input,select").forEach(x=>x.oninput=calcFlat);tr.querySelector(".delete").onclick=()=>{tr.remove();calcFlat()};calcFlat();
 }
-function calcFlat(){let t=0;[...$("flatRows").children].forEach(tr=>{let type=tr.querySelector(".ft").value,a=Number(tr.querySelector(".fa").value)||0,b=Number(tr.querySelector(".fb").value)||0,q=Number(tr.querySelector(".fq").value)||1;let v=type==="直接入力"?a*q:a*b*q;v*=types[type];tr.querySelector(".fo").textContent=`${fmt(v)}㎡`;t+=v});state.flatArea=Math.max(0,t);$("flatArea").textContent=`${fmt(state.flatArea)}㎡`}
-$("addFlat").onclick=()=>addFlat();
+function calcFlat(){
+ let t=0,rows=[];
+ [...$("flatRows").children].forEach(tr=>{
+   const type=tr.querySelector(".ft").value,name=tr.querySelector(".fn").value;
+   const a=Number(tr.querySelector(".fa").value)||0,b=Number(tr.querySelector(".fb").value)||0,q=Number(tr.querySelector(".fq").value)||1;
+   let v=type==="直接入力"?a*q:a*b*q;v*=types[type];
+   tr.querySelector(".fo").textContent=`${fmt(v)}㎡`;t+=v;
+   rows.push({type,name,a,b,q,area:v});
+ });
+ const raw=Math.max(0,t),adopted=adoptedArea(raw,"flatRound");
+ state.flatRawArea=raw;state.flatArea=adopted;state.flatRows=rows;
+ $("flatArea").textContent=`${fmt(adopted)}㎡`;
+}
+$("addFlat").onclick=()=>addFlat();if($("flatRound"))$("flatRound").addEventListener("change",calcFlat);
 
 // タンク・槽類
 function calcVessel(){
@@ -349,24 +374,30 @@ function calcVessel(){
     area=(scope==="side"?side:scope==="inside"?side+base:side+2*base)*q;
     formula=`角型：側面 2×(${fmt(L)}＋${fmt(W)})×${fmt(H)}${scope==="side"?"":scope==="inside"?" ＋ 底面":" ＋ 上下面"} × ${q}基`;
   }
-  state.vesselArea=area;$("vesselArea").textContent=`${fmt(area)}㎡`;$("vesselFormula").textContent=formula+`\n= ${fmt(area)}㎡`;
+  const adopted=adoptedArea(area,"vesselRound");state.vesselRawArea=area;state.vesselArea=adopted;$("vesselArea").textContent=`${fmt(adopted)}㎡`;$("vesselFormula").textContent=formula+`\n= ${fmt(area)}㎡`;
 }
 function updateVesselFields(){const c=$("vesselShape").value==="cylinder";document.querySelectorAll(".vessel-cylinder").forEach(x=>x.classList.toggle("hidden",!c));document.querySelectorAll(".vessel-rect").forEach(x=>x.classList.toggle("hidden",c));calcVessel()}
 ["vesselD","vesselH","vesselL","vesselW","vesselRH","vesselQty"].forEach(id=>$(id).addEventListener("input",calcVessel));
 $("vesselShape").addEventListener("change",updateVesselFields);$("vesselScope").addEventListener("change",calcVessel);if($("calcVesselBtn"))$("calcVesselBtn").onclick=calcVessel;
 
 // 配管
-function calcPipe(){const D=n("pipeD")/1000,L=n("pipeL"),q=Math.max(1,n("pipeQty")),area=Math.PI*D*L*q;state.pipeArea=area;$("pipeArea").textContent=`${fmt(area)}㎡`;$("pipeFormula").textContent=`π × 外径 ${fmt(D,3)}m × 長さ ${fmt(L)}m × ${q}本 = ${fmt(area)}㎡`;}
+function calcPipe(){const D=n("pipeD")/1000,L=n("pipeL"),q=Math.max(1,n("pipeQty")),area=Math.PI*D*L*q;const adopted=adoptedArea(area,"pipeRound");state.pipeRawArea=area;state.pipeArea=adopted;$("pipeArea").textContent=`${fmt(adopted)}㎡`;$("pipeFormula").textContent=`π × 外径 ${fmt(D,3)}m × 長さ ${fmt(L)}m × ${q}本 = ${fmt(area)}㎡`;}
 ["pipeD","pipeL","pipeQty"].forEach(id=>$(id).addEventListener("input",calcPipe));if($("calcPipeBtn"))$("calcPipeBtn").onclick=calcPipe;
 
 // 製品・部品塗装
 function updateProductFields(){const sh=$("productShape").value;document.querySelectorAll(".product-ab").forEach(x=>x.classList.toggle("hidden",!["plate","box"].includes(sh)));document.querySelectorAll(".product-c").forEach(x=>x.classList.toggle("hidden",!["box","cylinder"].includes(sh)));document.querySelectorAll(".product-d").forEach(x=>x.classList.toggle("hidden",sh!=="cylinder"));document.querySelectorAll(".product-direct").forEach(x=>x.classList.toggle("hidden",sh!=="direct"));calcProduct()}
-function calcProduct(){const sh=$("productShape").value,q=Math.max(1,n("productQty"));let one=0,formula="";if(sh==="plate"){one=n("productA")*n("productB");formula=`${fmt(n("productA"))} × ${fmt(n("productB"))}`;}else if(sh==="box"){const a=n("productA"),b=n("productB"),c=n("productC");one=2*(a*b+a*c+b*c);formula=`2 × (L×W ＋ L×H ＋ W×H)`;}else if(sh==="cylinder"){const d=n("productD"),h=n("productC")||1;one=Math.PI*d*h+Math.PI*d*d/2;formula=`円筒外面（側面＋両端）`;}else{one=n("productDirect");formula=`直接入力 ${fmt(one)}㎡`;}const area=one*q;state.productArea=area;$("productArea").textContent=`${fmt(area)}㎡`;$("productFormula").textContent=`${formula} × ${q}個 = ${fmt(area)}㎡`;}
+function calcProduct(){const sh=$("productShape").value,q=Math.max(1,n("productQty"));let one=0,formula="";if(sh==="plate"){one=n("productA")*n("productB");formula=`${fmt(n("productA"))} × ${fmt(n("productB"))}`;}else if(sh==="box"){const a=n("productA"),b=n("productB"),c=n("productC");one=2*(a*b+a*c+b*c);formula=`2 × (L×W ＋ L×H ＋ W×H)`;}else if(sh==="cylinder"){const d=n("productD"),h=n("productC")||1;one=Math.PI*d*h+Math.PI*d*d/2;formula=`円筒外面（側面＋両端）`;}else{one=n("productDirect");formula=`直接入力 ${fmt(one)}㎡`;}const area=one*q;const adopted=adoptedArea(area,"productRound");state.productRawArea=area;state.productArea=adopted;$("productArea").textContent=`${fmt(adopted)}㎡`;$("productFormula").textContent=`${formula} × ${q}個 = ${fmt(area)}㎡`;}
 $("productShape").addEventListener("change",updateProductFields);["productQty","productA","productB","productC","productD","productDirect"].forEach(id=>$(id).addEventListener("input",calcProduct));if($("calcProductBtn"))$("calcProductBtn").onclick=calcProduct;
 
 // その他
 function calcOther(){state.otherArea=Math.max(0,n("otherAreaInput"));$("otherArea").textContent=`${fmt(state.otherArea)}㎡`;}
 $("otherAreaInput").addEventListener("input",calcOther);
+
+
+["vesselRound"].forEach(id=>{if($(id))$(id).addEventListener("change",calcVessel);});
+["pipeRound"].forEach(id=>{if($(id))$(id).addEventListener("change",calcPipe);});
+["productRound"].forEach(id=>{if($(id))$(id).addEventListener("change",calcProduct);});
+["otherRound"].forEach(id=>{if($(id))$(id).addEventListener("change",calcOther);});
 
 // material
 let specRows=[];
@@ -381,7 +412,10 @@ function addSpecMaterial(prefillIndex=0){
   specRows.push({
     id:"spec-"+Date.now()+"-"+Math.random().toString(16).slice(2),
     materialIndex:Math.max(0,Math.min(prefillIndex,materials.length-1)),
-    thickness:2.0, foamThickness:25, loss:0.20, manualUsage:null, usageOverride:null
+    thickness:(materials[Math.max(0,Math.min(prefillIndex,materials.length-1))]?.standardThickness??2.0),
+    foamThickness:(materials[Math.max(0,Math.min(prefillIndex,materials.length-1))]?.standardThickness??25),
+    loss:(materials[Math.max(0,Math.min(prefillIndex,materials.length-1))]?.defaultLoss??0.20),
+    manualUsage:null, usageOverride:null
   });
   renderSpecRows();
   calcAllSpecMaterials();
@@ -409,7 +443,7 @@ function renderSpecRows(){
     if(mode==="thickness"){
       fields=`<label>膜厚 (mm)
         <input class="spec-thickness" data-id="${r.id}" type="number" min="0.1" step="0.1" value="${r.thickness}">
-        <small class="standard-note">標準：2.0mm</small>
+        <small class="standard-note">標準：${Number(m.standardThickness??2).toFixed(1)}mm</small>
       </label>`;
     }else if(mode==="foam"){
       fields=`<label>発泡ウレタン厚み
@@ -418,7 +452,7 @@ function renderSpecRows(){
           <option value="20" ${r.foamThickness==20?"selected":""}>20mm</option>
           <option value="15" ${r.foamThickness==15?"selected":""}>15mm</option>
         </select>
-        <small class="standard-note">標準：25mm　※25mm=1.75kg/㎡ / 20mm=1.40kg/㎡ / 15mm=1.20kg/㎡</small>
+        <small class="standard-note">標準：${m.standardThickness??25}mm　※25mm=1.75kg/㎡ / 20mm=1.40kg/㎡ / 15mm=1.20kg/㎡</small>
       </label>`;
     }else if(mode==="manual"){
       fields=`<label>使用量 (${m.unit||"L"}/㎡)
@@ -441,15 +475,20 @@ function renderSpecRows(){
       </select></label>
       ${fields}
       <label>ロス率<select class="spec-loss" data-id="${r.id}">
-      ${[0,.05,.1,.15,.2,.25,.3].map(x=>`<option value="${x}" ${Math.abs(x-r.loss)<1e-9?"selected":""}>${Math.round(x*100)}%</option>`).join("")}
-      </select></label>
+      ${[0,.05,.1,.15,.2,.25,.3,.35,.4].map(x=>`<option value="${x}" ${Math.abs(x-r.loss)<1e-9?"selected":""}>${Math.round(x*100)}%</option>`).join("")}
+      </select><small class="standard-note">標準：${Math.round((m.defaultLoss??0.20)*100)}%</small></label>
       </div></div>`;
   }).join("");
 
   document.querySelectorAll(".spec-delete").forEach(b=>b.onclick=()=>removeSpecMaterial(b.dataset.id));
   document.querySelectorAll(".spec-product").forEach(el=>el.onchange=()=>{
     const r=specRows.find(x=>x.id===el.dataset.id); if(!r) return;
-    r.materialIndex=Number(el.value);r.thickness=2.0;r.foamThickness=25;r.manualUsage=null;r.usageOverride=null;
+    r.materialIndex=Number(el.value);
+    const nm=materials[r.materialIndex];
+    r.thickness=nm?.standardThickness??2.0;
+    r.foamThickness=nm?.standardThickness??25;
+    r.loss=nm?.defaultLoss??0.20;
+    r.manualUsage=null;r.usageOverride=null;
     renderSpecRows();calcAllSpecMaterials();
   });
   document.querySelectorAll(".spec-thickness").forEach(el=>el.oninput=()=>{const r=specRows.find(x=>x.id===el.dataset.id);if(r){r.thickness=Number(el.value)||0;calcAllSpecMaterials();}});
@@ -536,7 +575,6 @@ function calcAllSpecMaterials(){
 }
 
 if($("addSpecMaterial")) $("addSpecMaterial").onclick=()=>addSpecMaterial(0);
-if($("calcAllMaterials")) $("calcAllMaterials").onclick=calcAllSpecMaterials;
 if($("matArea")) $("matArea").addEventListener("input",calcAllSpecMaterials);
 if($("goProject")) $("goProject").onclick=()=>show("projects");
 
@@ -544,6 +582,7 @@ document.querySelectorAll(".send").forEach(b=>b.onclick=()=>{
   const map={roof:state.roofArea,flat:state.flatArea,tank:state.tankArea,vessel:state.vesselArea,pipe:state.pipeArea,product:state.productArea,other:state.otherArea};
   const a=map[b.dataset.source]||0;
   if(!a)return alert("先に施工面積を計算してください");
+  state.lastSource=b.dataset.source;
   $("matArea").value=Number(a).toFixed(2);
   calcAllSpecMaterials();
   show("material");
@@ -557,19 +596,21 @@ function renderMaster(){
    const ul=mode==="thickness"?(m.usage!=null?`${m.usage}${m.unit}/㎡/mm`:"未設定"):
             mode==="area"?(m.usage!=null?`${m.usage}${m.unit}/㎡`:"未設定"):
             mode==="foam"?"15/20/25mm別":"案件ごと";
-   return `<tr><td>${esc(m.series)}</td><td>${esc(m.name)}</td><td>${esc(m.feature||"")}</td><td>${ml}</td><td>${ul}</td><td>${m.packages?.join(" / ")||"—"} ${m.packageUnit||""}</td><td><button class="secondary editmat" data-i="${i}">編集</button></td></tr>`;
+   return `<tr><td>${esc(m.series)}</td><td>${esc(m.name)}</td><td>${esc(m.feature||"")}</td><td>${ml}</td><td>${ul}</td><td>${m.standardThickness!=null?m.standardThickness+"mm":"—"}</td><td>${Math.round((m.defaultLoss??0.20)*100)}%</td><td>${m.packages?.join(" / ")||"—"} ${m.packageUnit||""}</td><td><button class="secondary editmat" data-i="${i}">編集</button></td></tr>`;
  }).join("");
  document.querySelectorAll(".editmat").forEach(b=>b.onclick=()=>openMatEdit(Number(b.dataset.i)));
  $("waveMaster").innerHTML=waves.map((w,i)=>`<tr><td><input class="wn" data-i="${i}" value="${esc(w.name)}"></td><td><input class="wf" data-i="${i}" type="number" step="0.001" value="${w.factor??""}"></td><td><input class="wno" data-i="${i}" value="${esc(w.note||"")}"></td></tr>`).join("");
 }
 function openMatEdit(i){
- const m=i>=0?materials[i]:{series:"",name:"",feature:"",calcMode:"manual",usage:null,unit:"",packages:[],packageUnit:""};
+ const m=i>=0?materials[i]:{series:"",name:"",feature:"",calcMode:"manual",usage:null,standardThickness:null,defaultLoss:0.20,unit:"",packages:[],packageUnit:""};
  $("editIndex").value=i;
  $("editSeries").value=m.series||"";
  $("editName").value=m.name||"";
  $("editFeature").value=m.feature||"";
  $("editCalcMode").value=getMaterialCalcMode(m);
  $("editUsage").value=m.usage??"";
+ $("editStandardThickness").value=m.standardThickness??"";
+ $("editDefaultLoss").value=Math.round((m.defaultLoss??0.20)*100);
  $("editUnit").value=m.unit||"";
  $("editPackages").value=(m.packages||[]).join(",");
  $("editPackageUnit").value=m.packageUnit||"";
@@ -586,6 +627,8 @@ $("saveMaterialEdit").onclick=()=>{
    feature:$("editFeature").value.trim(),
    calcMode:$("editCalcMode").value,
    usage:$("editUsage").value===""?null:n("editUsage"),
+   standardThickness:$("editStandardThickness").value===""?null:n("editStandardThickness"),
+   defaultLoss:Math.max(0,n("editDefaultLoss"))/100,
    unit:$("editUnit").value,
    packages:$("editPackages").value.split(",").map(x=>Number(x.trim())).filter(Boolean),
    packageUnit:$("editPackageUnit").value
@@ -626,33 +669,111 @@ if($("saveSealEdit"))$("saveSealEdit").onclick=()=>{
 $("gasEndpoint").value=localStorage.getItem(S.endpoint)||"";
 $("saveEndpoint").onclick=()=>{localStorage.setItem(S.endpoint,$("gasEndpoint").value.trim());alert("保存しました")};
 $("saveProject").onclick=async()=>{
- if(!state.specMaterials||!state.specMaterials.length)return alert("先に仕様材料を計算してください");
+ if(!state.specMaterials||!state.specMaterials.length)return alert("先に必要材料を計算してください");
+
  const mats=state.specMaterials.map(x=>({
+   materialId:x.material.id,
    name:`${x.material.series} ${x.material.name}`,
    required:x.required,unit:x.material.unit,loss:x.row.loss,order:x.order,
    thickness:x.mode==="thickness"?x.row.thickness:null,
-   foamThickness:x.mode==="foam"?x.row.foamThickness:null
+   foamThickness:x.mode==="foam"?x.row.foamThickness:null,
+   usageOverride:x.row.usageOverride??null,
+   manualUsage:x.row.manualUsage??null
  }));
- const p={
-   id:Date.now(),createdAt:new Date().toISOString(),
-   name:$("projectName").value.trim()||"名称未設定",
-   owner:$("projectOwner").value.trim(),memo:$("projectMemo").value.trim(),
-   roofArea:state.roofArea||null,tankArea:state.tankArea||null,tankSeal:state.tankSeal||null,flatArea:state.flatArea||null,
-   area:n("matArea"),specificationMaterials:mats
+
+ const sourceDetails={
+   source:state.lastSource||null,
+   roof:{area:state.roofArea||null,rawArea:state.roofRawArea||null},
+   flat:{area:state.flatArea||null,rawArea:state.flatRawArea||null,rows:state.flatRows||[]},
+   tank:{area:state.tankArea||null,rawArea:state.tankRawArea||null,panels:state.tankPanels||null,seal:state.tankSeal||null},
+   vessel:{area:state.vesselArea||null,rawArea:state.vesselRawArea||null},
+   pipe:{area:state.pipeArea||null,rawArea:state.pipeRawArea||null},
+   product:{area:state.productArea||null,rawArea:state.productRawArea||null},
+   other:{area:state.otherArea||null,rawArea:state.otherRawArea||null}
  };
- projects.unshift(p);save(S.projects,projects);renderProjects();
+
+ const editingId=Number($("editingProjectId").value)||null;
+ const p={
+   id:editingId||Date.now(),createdAt:editingId?(projects.find(x=>x.id===editingId)?.createdAt||new Date().toISOString()):new Date().toISOString(),
+   updatedAt:new Date().toISOString(),
+   name:$("projectName").value.trim()||"名称未設定",
+   customer:$("projectCustomer").value.trim(),
+   site:$("projectSite").value.trim(),
+   owner:$("projectOwner").value.trim(),
+   memo:$("projectMemo").value.trim(),
+   area:n("matArea"),
+   sourceDetails,
+   specificationMaterials:mats
+ };
+
+ if(editingId){
+   const idx=projects.findIndex(x=>x.id===editingId);
+   if(idx>=0)projects[idx]=p;else projects.unshift(p);
+ }else{
+   projects.unshift(p);
+ }
+ save(S.projects,projects);renderProjects();
+ $("editingProjectId").value=p.id;
+
  const ep=localStorage.getItem(S.endpoint);
  if(ep)fetch(ep,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"saveProject",project:p})}).catch(()=>{});
- alert("案件を保存しました");
+ alert(editingId?"案件を更新しました":"案件を保存しました");
 };
+
+function resetProjectForm(){
+ $("editingProjectId").value="";
+ $("projectName").value="";
+ $("projectCustomer").value="";
+ $("projectSite").value="";
+ $("projectOwner").value="";
+ $("projectMemo").value="";
+}
+if($("newProject"))$("newProject").onclick=resetProjectForm;
+
+function openProject(id){
+ const p=projects.find(x=>x.id===id);if(!p)return;
+ $("editingProjectId").value=p.id;
+ $("projectName").value=p.name||"";
+ $("projectCustomer").value=p.customer||"";
+ $("projectSite").value=p.site||"";
+ $("projectOwner").value=p.owner||"";
+ $("projectMemo").value=p.memo||"";
+ $("matArea").value=Number(p.area||0).toFixed(2);
+
+ specRows=(p.specificationMaterials||[]).map((m,i)=>{
+   const mi=Math.max(0,materials.findIndex(x=>x.id===m.materialId));
+   const mat=materials[mi]||materials[0];
+   return {
+     id:"restore-"+Date.now()+"-"+i,
+     materialIndex:mi,
+     thickness:m.thickness??mat.standardThickness??2,
+     foamThickness:m.foamThickness??mat.standardThickness??25,
+     loss:m.loss??mat.defaultLoss??0.20,
+     usageOverride:m.usageOverride??null,
+     manualUsage:m.manualUsage??null
+   };
+ });
+ if(!specRows.length)addSpecMaterial(0);else{renderSpecRows();calcAllSpecMaterials();}
+ show("material");
+}
+
 function renderProjects(){
  $("projectList").innerHTML=projects.length?projects.map(p=>{
-   if(Array.isArray(p.specificationMaterials)){
-     const mats=p.specificationMaterials.map(m=>`${esc(m.name)}：${esc(m.order||`${fmt(m.required)}${m.unit}`)}`).join("<br>");
-     return `<div class="project"><b>${esc(p.name)}</b><br><small>${new Date(p.createdAt).toLocaleString("ja-JP")} ${p.owner?"｜"+esc(p.owner):""}</small><p>施工面積 ${fmt(p.area||0)}㎡${p.tankSeal?` ｜ シール延長 ${fmt(p.tankSeal,1)}m`:""}</p><p>${mats}</p>${p.memo?`<p>${esc(p.memo)}</p>`:""}</div>`;
-   }
-   return `<div class="project"><b>${esc(p.name)}</b><br><small>${new Date(p.createdAt).toLocaleString("ja-JP")} ${p.owner?"｜"+esc(p.owner):""}</small>${p.memo?`<p>${esc(p.memo)}</p>`:""}</div>`;
+   const mats=Array.isArray(p.specificationMaterials)
+     ?p.specificationMaterials.map(m=>`${esc(m.name)}：${esc(m.order||`${fmt(m.required)}${m.unit}`)}`).join("<br>")
+     :"";
+   const customerSite=[p.customer,p.site].filter(Boolean).map(esc).join(" ｜ ");
+   const source=p.sourceDetails?.source?`<span class="badge">${esc({roof:"屋根",flat:"屋上・床・壁",tank:"貯水槽",vessel:"タンク・槽類",pipe:"配管",product:"製品・部品塗装",other:"その他"}[p.sourceDetails.source]||p.sourceDetails.source)}</span>`:"";
+   return `<div class="project">
+     <div class="headrow"><div><b>${esc(p.name)}</b> ${source}<br><small>${new Date(p.createdAt).toLocaleString("ja-JP")} ${p.owner?"｜"+esc(p.owner):""}</small></div>
+     <button class="secondary openproject" data-id="${p.id}">開く・編集</button></div>
+     ${customerSite?`<p>${customerSite}</p>`:""}
+     <p>施工面積 ${fmt(p.area||0)}㎡${p.sourceDetails?.tank?.seal?` ｜ シール延長 ${fmt(p.sourceDetails.tank.seal,1)}m`:""}</p>
+     ${mats?`<p>${mats}</p>`:""}
+     ${p.memo?`<p>${esc(p.memo)}</p>`:""}
+   </div>`;
  }).join(""):"<p>まだ案件はありません。</p>";
+ document.querySelectorAll(".openproject").forEach(b=>b.onclick=()=>openProject(Number(b.dataset.id)));
 }
 
 // init
