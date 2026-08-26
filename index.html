@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#17365D">
+<title>菱洋 防水数量計算</title>
+<link rel="manifest" href="manifest.json"><link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header><div><small>菱洋株式会社 社内用</small><h1>防水数量 かんたん計算</h1></div></header>
+<nav>
+<button data-view="home" class="active">HOME</button><button data-view="roof">屋根</button>
+<button data-view="tank">貯水槽</button><button data-view="flat">床・屋上・壁</button>
+<button data-view="material">材料</button><button data-view="master">マスタ</button><button data-view="projects">案件</button>
+</nav>
+<main>
+<section id="home" class="view active">
+<div class="card hero"><span class="badge">概算専用</span><h2>何を計算しますか？</h2>
+<p>寸法を入力して、概算施工面積・材料量・パネル枚数・シーリング延長・必要本数を計算します。単価・原価・見積金額は扱いません。</p>
+<div class="grid4">
+<button data-go="roof">屋根<br><small>勾配・波型係数</small></button>
+<button data-go="tank">貯水槽<br><small>パネル・シーリング</small></button>
+<button data-go="flat">床・屋上・壁<br><small>平場・立上り・控除</small></button>
+<button data-go="material">材料数量<br><small>kg / L / 荷姿</small></button>
+</div></div>
+<div class="notice"><b>概算ルール：</b>大きい面積を正確に拾い、細部は必要に応じて追加率で安全側に見ます。正式数量は現場・仕様書で再確認してください。</div>
+</section>
+
+<section id="roof" class="view">
+<div class="title"><div><span class="badge">ROOF</span><h2>屋根の概算面積</h2></div><button class="help" data-help="roof">？拾い方</button></div>
+<div class="twocol">
+<div class="card"><h3>入力</h3><div class="formgrid">
+<label>水平長さ L(m)<input id="roofL" type="number" value="10" step=".01"></label>
+<label>水平幅 W(m)<input id="roofW" type="number" value="10" step=".01"></label>
+<label>面数<input id="roofFaces" type="number" value="1" min="1"></label>
+<label>勾配(寸)<input id="roofSun" type="number" value="3" step=".1"></label>
+<label>屋根材<select id="roofWaveType"></select></label>
+<label>波型係数<input id="roofWaveFactor" type="number" value="1" step=".001"><small>大波等は社内基準値</small></label>
+<label>追加率<select id="roofExtra"><option value="0">0%</option><option value=".05" selected>5%</option><option value=".1">10%</option><option value=".15">15%</option><option value=".2">20%</option></select></label>
+</div><button class="primary" id="calcRoof">計算</button></div>
+<div class="card result"><h3>結果</h3><div class="big"><span>概算施工面積</span><strong id="roofArea">—</strong></div>
+<div id="roofDetail"></div><pre id="roofFormula"></pre><button class="secondary send" data-source="roof">材料計算へ送る</button></div>
+</div></section>
+
+<section id="tank" class="view">
+<div class="title"><div><span class="badge">TANK</span><h2>貯水槽の概算</h2></div><button class="help" data-help="tank">？シーリング拾い方</button></div>
+<div class="twocol">
+<div class="card"><h3>槽・パネル寸法</h3><div class="formgrid">
+<label>長さ L(m)<input id="tankL" type="number" value="4" step=".01"></label>
+<label>幅 W(m)<input id="tankW" type="number" value="3" step=".01"></label>
+<label>高さ H(m)<input id="tankH" type="number" value="2" step=".01"></label>
+<label>パネル幅(m)<input id="panelW" type="number" value="1" step=".01"></label>
+<label>パネル高さ(m)<input id="panelH" type="number" value="1" step=".01"></label>
+<label>床パネル奥行(m)<input id="panelD" type="number" value="1" step=".01"></label></div>
+<div class="checks"><label><input id="tankFloor" type="checkbox" checked>床</label><label><input id="tankWalls" type="checkbox" checked>壁</label>
+<label><input id="tankCeiling" type="checkbox">天井</label><label><input id="tankInternal" type="checkbox" checked>内部継目</label><label><input id="tankCorners" type="checkbox" checked>入隅・四隅</label></div>
+<label>シール延長追加率<select id="sealExtra"><option value="0">0%</option><option value=".05">5%</option><option value=".1" selected>10%</option><option value=".15">15%</option><option value=".2">20%</option></select></label>
+<button class="primary" id="calcTank">計算</button></div>
+<div class="card result"><h3>結果</h3><div class="metrics"><div><span>施工面積</span><strong id="tankArea">—</strong></div><div><span>パネル</span><strong id="tankPanels">—</strong></div><div><span>シール延長</span><strong id="tankSeal">—</strong></div></div>
+<div class="tablewrap"><table><thead><tr><th>部位</th><th>面積</th><th>パネル</th><th>内部継目</th><th>入隅等</th></tr></thead><tbody id="tankRows"></tbody></table></div>
+<button class="secondary send" data-source="tank">材料計算へ送る</button></div></div>
+<div class="card"><h3>シーリング材 本数計算</h3>
+<div class="toggle"><button class="active" data-sealmode="direct">1本あたり○m</button><button data-sealmode="volume">容量・目地寸法</button></div>
+<div id="sealDirect" class="sealmode active"><label>1本あたり施工可能長さ(m)<input id="sealPerTube" type="number" value="10" step=".1"></label></div>
+<div id="sealVolumeBox" class="sealmode"><div class="formgrid"><label>容量(mL)<input id="sealVolume" type="number" value="320"></label><label>目地幅(mm)<input id="sealWidth" type="number" value="10"></label><label>目地深さ(mm)<input id="sealDepth" type="number" value="10"></label></div></div>
+<label>予備率<select id="sealReserve"><option value="0">0%</option><option value=".05">5%</option><option value=".1" selected>10%</option><option value=".15">15%</option><option value=".2">20%</option></select></label>
+<button class="primary" id="calcSealCount">本数計算</button><div class="metrics"><div><span>1本あたり</span><strong id="sealEach">—</strong></div><div><span>必要本数</span><strong id="sealCount">—</strong></div><div><span>予備込み</span><strong id="sealCountReserve">—</strong></div></div></div>
+</section>
+
+<section id="flat" class="view">
+<div class="title"><div><span class="badge">FLAT</span><h2>床・屋上・壁</h2></div><button class="help" data-help="flat">？拾い方</button></div>
+<div class="card"><div class="headrow"><p>部位を追加して拾います。</p><button class="secondary" id="addFlat">＋部位追加</button></div>
+<div class="tablewrap"><table><thead><tr><th>種別</th><th>名称</th><th>長さ</th><th>幅/高さ</th><th>数量</th><th>面積</th><th></th></tr></thead><tbody id="flatRows"></tbody></table></div>
+<div class="big"><span>概算施工面積</span><strong id="flatArea">0.00㎡</strong></div><button class="secondary send" data-source="flat">材料計算へ送る</button></div>
+</section>
+
+<section id="material" class="view">
+<div class="title"><div><span class="badge">MATERIAL</span><h2>材料数量</h2></div><button class="help" data-help="material">？計算方法</button></div>
+<div class="twocol"><div class="card"><div class="formgrid">
+<label>施工面積(㎡)<input id="matArea" type="number" value="100" step=".01"></label>
+<label>材料<select id="matSelect"></select></label>
+<label>標準使用量<input id="matUsage" type="number" step=".001"></label>
+<label>単位<select id="matUnit"><option value="L">L/㎡</option><option value="kg">kg/㎡</option></select></label>
+<label id="foamWrap" class="hidden">発泡ウレタン膜厚<select id="foamThickness"><option value="25">25mm</option><option value="20">20mm</option><option value="15">15mm</option></select></label>
+<label>ロス率<select id="matLoss"><option value="0">0%</option><option value=".05">5%</option><option value=".1">10%</option><option value=".15">15%</option><option value=".2" selected>20%</option><option value=".25">25%</option><option value=".3">30%</option></select></label>
+</div><div id="matInfo" class="info"></div><button class="primary" id="calcMat">材料量計算</button></div>
+<div class="card result"><div class="big"><span>必要量</span><strong id="matRequired">—</strong></div><div id="matDetail"></div><pre id="matFormula"></pre><button class="primary" id="goProject">この計算を案件保存</button></div></div>
+</section>
+
+<section id="master" class="view">
+<div class="title"><div><span class="badge">MASTER</span><h2>材料・係数マスタ</h2></div></div>
+<div class="notice">数量計算に必要な情報だけ登録。単価・原価・見積金額は登録しません。</div>
+<div class="card"><div class="headrow"><h3>材料マスタ</h3><button class="secondary" id="addMaterial">＋材料追加</button></div>
+<div class="tablewrap"><table><thead><tr><th>シリーズ</th><th>製品</th><th>特徴</th><th>使用量</th><th>単位</th><th>通常荷姿</th><th></th></tr></thead><tbody id="materialMaster"></tbody></table></div></div>
+<div class="card"><h3>屋根材・波型係数</h3><div class="tablewrap"><table><thead><tr><th>屋根材</th><th>係数</th><th>備考</th></tr></thead><tbody id="waveMaster"></tbody></table></div><button class="primary" id="saveMaster">マスタ保存</button></div>
+</section>
+
+<section id="projects" class="view">
+<div class="title"><div><span class="badge">PROJECTS</span><h2>案件履歴</h2></div></div>
+<div class="card"><div class="formgrid"><label>案件名<input id="projectName" placeholder="○○工場"></label><label>担当者<input id="projectOwner"></label><label>メモ<textarea id="projectMemo" rows="3"></textarea></label></div><button class="primary" id="saveProject">現在の材料計算を保存</button></div>
+<div class="card"><h3>保存済み</h3><div id="projectList"></div></div>
+<div class="card"><h3>Google Sheets連携</h3><label>Apps Script WebアプリURL<input id="gasEndpoint" placeholder="https://script.google.com/macros/s/.../exec"></label><button class="primary" id="saveEndpoint">URL保存</button></div>
+</section>
+</main>
+
+<dialog id="helpDialog"><div class="dialoghead"><h3 id="helpTitle"></h3><button id="closeHelp">×</button></div><div id="helpBody"></div></dialog>
+<dialog id="materialDialog"><div class="dialoghead"><h3>材料マスタ編集</h3><button id="closeMaterial">×</button></div><div class="dialogbody">
+<input type="hidden" id="editIndex"><div class="formgrid"><label>シリーズ<input id="editSeries"></label><label>製品名<input id="editName"></label><label>特徴<input id="editFeature"></label><label>標準使用量<input id="editUsage" type="number" step=".001"></label><label>使用量単位<select id="editUnit"><option value="L">L/㎡</option><option value="kg">kg/㎡</option><option value="">未設定</option></select></label><label>通常荷姿(カンマ区切り)<input id="editPackages" placeholder="400,36"></label><label>荷姿単位<select id="editPackageUnit"><option value="L">L</option><option value="kg">kg</option><option value="">未設定</option></select></label></div>
+<button class="primary" id="saveMaterialEdit">保存</button></div></dialog>
+<script src="app.js"></script>
+</body></html>

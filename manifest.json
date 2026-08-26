@@ -1,0 +1,16 @@
+{
+  "name": "菱洋 防水数量計算",
+  "short_name": "防水数量",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#F7F9FC",
+  "theme_color": "#17365D",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
