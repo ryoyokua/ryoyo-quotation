@@ -33,12 +33,31 @@
 <label>水平長さ L(m)<input id="roofL" type="number" value="10" step=".01"></label>
 <label>水平幅 W(m)<input id="roofW" type="number" value="10" step=".01"></label>
 <label>面数<input id="roofFaces" type="number" value="1" min="1"></label>
-<label>勾配(寸)<input id="roofSun" type="number" value="3" step=".1"></label>
+<label>勾配
+<select id="roofSun">
+<option value="2.5">2.5寸</option>
+<option value="3" selected>3.0寸</option>
+<option value="3.5">3.5寸</option>
+<option value="4">4.0寸</option>
+<option value="4.5">4.5寸</option>
+<option value="5">5.0寸</option>
+<option value="5.5">5.5寸</option>
+<option value="6">6.0寸</option>
+<option value="custom">直接入力</option>
+</select></label>
+<label id="roofSunCustomWrap" class="hidden">勾配 直接入力(寸)<input id="roofSunCustom" type="number" value="3" step=".1"></label>
 <label>屋根材<select id="roofWaveType"></select></label>
-<label>波型係数<input id="roofWaveFactor" type="number" value="1" step=".001"><small>大波等は社内基準値</small></label>
+<label>波型係数<input id="roofWaveFactor" type="number" value="1" step=".001"><small>屋根材選択で自動入力。必要時は上書き可</small></label>
 <label>追加率<select id="roofExtra"><option value="0">0%</option><option value=".05" selected>5%</option><option value=".1">10%</option><option value=".15">15%</option><option value=".2">20%</option></select></label>
+<label>採用面積の丸め
+<select id="roofRound">
+<option value="1" selected>1㎡単位で切り上げ</option>
+<option value="0.1">0.1㎡単位で切り上げ</option>
+<option value="0">丸めない</option>
+</select></label>
 </div><button class="primary" id="calcRoof">計算</button></div>
-<div class="card result"><h3>結果</h3><div class="big"><span>概算施工面積</span><strong id="roofArea">—</strong></div>
+<div class="card result"><h3>結果</h3><div class="big"><span>採用面積</span><strong id="roofArea">—</strong></div>
+<div class="resultline"><span>計算面積（丸め前）</span><b id="roofRawArea">—</b></div>
 <div id="roofDetail"></div><pre id="roofFormula"></pre><button class="secondary send" data-source="roof">材料計算へ送る</button></div>
 </div></section>
 

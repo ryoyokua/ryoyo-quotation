@@ -1,4 +1,3 @@
-
 const S={materials:"ryoyo_materials_v1",waves:"ryoyo_waves_v1",projects:"ryoyo_projects_v1",endpoint:"ryoyo_gas_endpoint_v1"};
 
 const DEFAULT_MATERIALS=[
@@ -30,18 +29,19 @@ const DEFAULT_MATERIALS=[
 ];
 
 const DEFAULT_WAVES=[
-{name:"平板・折板（係数なし）",factor:1,note:"波形補正なし"},
-{name:"大波スレート",factor:null,note:"社内基準値を入力"},
-{name:"小波スレート",factor:null,note:"社内基準値を入力"},
+{name:"平板・折板（係数なし）",factor:1.000,note:"波形補正なし"},
+{name:"大波スレート",factor:1.140,note:"菱洋社内採用値"},
+{name:"小波スレート",factor:1.150,note:"菱洋社内採用値"},
 {name:"波板",factor:null,note:"製品形状に応じて入力"},
 {name:"その他",factor:null,note:"現場条件に応じて入力"}
 ];
 
 const HELP={
 roof:`<p><b>基本式：</b>水平投影面積 × 勾配係数 × 波型係数 ×（1＋追加率）</p>
+<p>入力した寸法は丸めずに計算し、最後に「採用面積」だけ1㎡または0.1㎡単位で切り上げます。</p>
 <table><tr><th>項目</th><th>意味</th></tr><tr><td>水平投影面積</td><td>真上から見た長さ×幅</td></tr>
-<tr><td>勾配係数</td><td>斜面で増える面積を補正。3寸なら約1.044</td></tr>
-<tr><td>波型係数</td><td>スレート等の凹凸による表面積増加を補正</td></tr>
+<tr><td>勾配係数</td><td>斜面で増える面積を補正。3寸=約1.044、3.5寸=約1.059、4寸=約1.077</td></tr>
+<tr><td>波型係数</td><td>大波1.140、小波1.150を初期値として自動入力。必要時は上書き可能</td></tr>
 <tr><td>追加率</td><td>役物・重なり・細部を概算で上乗せ</td></tr></table>
 <p>L字や段違いはA面・B面・C面に分けて計算します。</p>`,
 tank:`<p>シーリングは<b>パネル枚数×4辺ではありません。</b>隣り合うパネルの境界だけを拾います。</p>
@@ -69,26 +69,53 @@ function load(k,f){try{let v=localStorage.getItem(k);return v?JSON.parse(v):stru
 function save(k,v){localStorage.setItem(k,JSON.stringify(v))}
 function esc(s=""){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 
+// 既存ブラウザ保存値をv2へ移行
+for(const w of waves){
+  if(w.name==="大波スレート" && (w.factor==null || w.factor===1.005)) w.factor=1.140;
+  if(w.name==="小波スレート" && w.factor==null) w.factor=1.150;
+}
+save(S.waves,waves);
+
 function show(v){document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id===v));document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("active",x.dataset.view===v));scrollTo({top:0,behavior:"smooth"})}
 document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>show(b.dataset.view));
 document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>show(b.dataset.go));
 
-// help
 document.querySelectorAll(".help").forEach(b=>b.onclick=()=>{$("helpTitle").textContent=b.dataset.help==="tank"?"貯水槽・シーリングの拾い方":"拾い方・計算方法";$("helpBody").innerHTML=HELP[b.dataset.help];$("helpDialog").showModal()});
 $("closeHelp").onclick=()=>$("helpDialog").close();
 
-// roof
 function renderWaveSelect(){
   $("roofWaveType").innerHTML=waves.map((w,i)=>`<option value="${i}">${esc(w.name)}</option>`).join("");
-  $("roofWaveType").onchange=()=>{let w=waves[Number($("roofWaveType").value)];if(w?.factor)$("roofWaveFactor").value=w.factor}
+  $("roofWaveType").onchange=()=>{
+    const w=waves[Number($("roofWaveType").value)];
+    if(w?.factor!=null)$("roofWaveFactor").value=Number(w.factor).toFixed(3);
+    calcRoof();
+  };
 }
+function getRoofSun(){return $("roofSun").value==="custom" ? n("roofSunCustom") : Number($("roofSun").value)}
+function ceilUnit(value,unit){if(!unit||unit<=0)return value;return Math.ceil((value-1e-12)/unit)*unit}
 function calcRoof(){
-  const p=n("roofL")*n("roofW")*Math.max(1,n("roofFaces")),s=Math.sqrt(1+(n("roofSun")/10)**2),w=Math.max(.001,n("roofWaveFactor")),e=Number($("roofExtra").value);
-  const adj=p*s*w,a=adj*(1+e);state.roofArea=a;$("roofArea").textContent=`${fmt(a,1)}㎡`;
-  $("roofDetail").innerHTML=`<div class="resultline"><span>水平投影面積</span><b>${fmt(p)}㎡</b></div><div class="resultline"><span>勾配係数</span><b>${fmt(s,3)}</b></div><div class="resultline"><span>波型係数</span><b>${fmt(w,3)}</b></div><div class="resultline"><span>追加率</span><b>${fmt(e*100,0)}%</b></div>`;
-  $("roofFormula").textContent=`${fmt(p)} × ${fmt(s,3)} × ${fmt(w,3)} × ${fmt(1+e,2)} = ${fmt(a,1)}㎡`;
+  const projection=n("roofL")*n("roofW")*Math.max(1,n("roofFaces"));
+  const sun=getRoofSun(), slope=Math.sqrt(1+(sun/10)**2);
+  const wave=Math.max(.001,n("roofWaveFactor")),extra=Number($("roofExtra").value);
+  const raw=projection*slope*wave*(1+extra),roundUnit=Number($("roofRound").value),adopted=ceilUnit(raw,roundUnit);
+  state.roofArea=adopted;
+  $("roofArea").textContent=roundUnit===1?`${fmt(adopted,0)}㎡`:`${fmt(adopted,1)}㎡`;
+  $("roofRawArea").textContent=`${fmt(raw,2)}㎡`;
+  $("roofDetail").innerHTML=
+    `<div class="resultline"><span>水平投影面積</span><b>${fmt(projection,2)}㎡</b></div>`+
+    `<div class="resultline"><span>勾配</span><b>${fmt(sun,1)}寸</b></div>`+
+    `<div class="resultline"><span>勾配係数</span><b>${fmt(slope,3)}</b></div>`+
+    `<div class="resultline"><span>波型係数</span><b>${fmt(wave,3)}</b></div>`+
+    `<div class="resultline"><span>追加率</span><b>${fmt(extra*100,0)}%</b></div>`;
+  $("roofFormula").textContent=
+    `${fmt(projection,2)} × ${fmt(slope,3)} × ${fmt(wave,3)} × ${fmt(1+extra,2)} = ${fmt(raw,2)}㎡`+
+    (roundUnit>0?`\n→ ${roundUnit===1?"1㎡":"0.1㎡"}単位切り上げ = ${roundUnit===1?fmt(adopted,0):fmt(adopted,1)}㎡`:"");
 }
 $("calcRoof").onclick=calcRoof;
+["roofL","roofW","roofFaces","roofWaveFactor"].forEach(id=>$(id).addEventListener("input",calcRoof));
+["roofExtra","roofRound"].forEach(id=>$(id).addEventListener("change",calcRoof));
+$("roofSun").addEventListener("change",()=>{$("roofSunCustomWrap").classList.toggle("hidden",$("roofSun").value!=="custom");calcRoof()});
+$("roofSunCustom").addEventListener("input",calcRoof);
 
 // tank
 function calcTank(){
@@ -172,5 +199,4 @@ $("saveProject").onclick=async()=>{
 };
 function renderProjects(){$("projectList").innerHTML=projects.length?projects.map(p=>`<div class="project"><b>${esc(p.name)}</b><br><small>${new Date(p.createdAt).toLocaleString("ja-JP")} ${p.owner?"｜"+esc(p.owner):""}</small><p>${fmt(p.material.area)}㎡ ｜ ${esc(p.material.name)} ｜ ${fmt(p.material.required)}${p.material.unit}${p.tankSeal?` ｜ シール${fmt(p.tankSeal,1)}m`:""}</p>${p.memo?`<p>${esc(p.memo)}</p>`:""}</div>`).join(""):"<p>まだ案件はありません。</p>"}
 
-// init
 renderWaveSelect();renderMaterialSelect();renderMaster();renderProjects();addFlat({type:"平場",name:"A面",a:10,b:8,q:1});calcRoof();calcTank();calcFlat();calcMat();
