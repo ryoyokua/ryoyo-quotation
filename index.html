@@ -35,6 +35,70 @@
 }
 </style>
 
+
+<style>
+@media (max-width: 700px){
+  #flat .tablewrap{overflow:visible}
+  #flat table{display:block;width:100%;min-width:0}
+  #flat thead{display:none}
+  #flat tbody{display:grid;gap:12px;width:100%}
+  #flat tbody tr{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px 12px;
+    width:100%;
+    padding:14px;
+    border:1px solid var(--bd);
+    border-radius:12px;
+    background:#fff;
+    box-sizing:border-box;
+  }
+  #flat tbody td{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+    padding:0;
+    border:0;
+    min-width:0;
+  }
+  #flat tbody td::before{
+    content:attr(data-label);
+    font-size:12px;
+    font-weight:700;
+    color:var(--muted);
+  }
+  #flat tbody td:nth-child(2),
+  #flat tbody td:nth-child(6),
+  #flat tbody td:nth-child(7){
+    grid-column:1 / -1;
+  }
+  #flat tbody input,
+  #flat tbody select{
+    width:100%;
+    min-width:0;
+    min-height:42px;
+    box-sizing:border-box;
+  }
+  #flat tbody td.fo{
+    background:var(--green);
+    border-radius:10px;
+    padding:10px 12px;
+    font-size:20px;
+    font-weight:700;
+    color:#1f4e29;
+  }
+  #flat tbody .delete{
+    width:100%;
+    min-height:40px;
+  }
+  #flat .headrow{
+    align-items:center;
+    gap:10px;
+  }
+  #flat .headrow p{margin:0}
+}
+</style>
+
 </head>
 <body>
 <header><div><small>菱洋株式会社 社内用</small><h1>防水数量 かんたん計算</h1></div></header>
