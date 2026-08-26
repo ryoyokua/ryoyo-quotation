@@ -611,14 +611,14 @@ function addSourceToMaterial(src){
  const title=(titleEl?.value||"").trim()||defaultCalcTitle(src);
 
  // 既存項目は一切消さず、新規項目として追加する
- const configs=currentConfigs().map(x=>({...x}));
+ const inherited=(Array.isArray(specRows)&&specRows.length)?currentConfigs().map(x=>({...x})):[];
  const item={
    id:Date.now()+Math.floor(Math.random()*100000),
    source:src,
    label:SOURCE_LABELS[src]||src,
    title,
    area:a,
-   materialConfigs:configs
+   materialConfigs:inherited
  };
  projectItems.push(item);
  selectedCalcItemId=item.id;
@@ -626,27 +626,34 @@ function addSourceToMaterial(src){
  state.lastSource=src;
 
  $("matArea").value=Number(a).toFixed(2);
- // 材料設定がまだ無い場合だけ標準材料を1行作る
- if(!specRows.length){
+
+ // 材料UIは直前設定を維持。初回だけ標準材料を1行追加。
+ if(!Array.isArray(specRows)||!specRows.length){
+   specRows=[];
    addSpecMaterial(0);
-   item.materialConfigs=currentConfigs().map(x=>({...x}));
  }else{
+   renderSpecRows();
    calcAllSpecMaterials();
-   item.materialConfigs=currentConfigs().map(x=>({...x}));
  }
+ item.materialConfigs=currentConfigs().map(x=>({...x}));
 
  $("currentWorkItemLabel").textContent=`${title}｜${fmt(a)}㎡`;
  if(titleEl)titleEl.value="";
  renderProjectDraft();
+ renderMaterialCalcList();
  show("material");
 }
 
 // 各数量ページの「材料計算へ追加」は必ずこの1本の処理を通す
-document.addEventListener("click",e=>{
- const b=e.target.closest("button.send[data-source]");
- if(!b)return;
- e.preventDefault();
- addSourceToMaterial(b.dataset.source);
+document.querySelectorAll("button.send[data-source]").forEach(btn=>{
+ btn.onclick=()=>{
+   try{
+     addSourceToMaterial(btn.dataset.source);
+   }catch(err){
+     console.error(err);
+     alert("材料計算への追加処理でエラーが発生しました。ページを再読み込みして再度お試しください。");
+   }
+ };
 });
 
 function updateProjectStatus(){
