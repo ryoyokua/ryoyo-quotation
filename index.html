@@ -1,9 +1,4 @@
-<!doc<div class="card" id="multiCalcPanel">
-<div class="headrow"><div><h3>複数計算</h3><p class="muted">複数の施工対象を追加して、合計面積と必要材料をまとめて確認できます。</p></div>
-<div><button class="secondary" id="clearMultiCalc">複数計算をクリア</button> <button class="primary" id="goProjectFromMulti">案件化する</button></div></div>
-</div>
-<div class="card"><div class="headrow"><h3>現在の計算結果</h3><b id="projectTotalArea">合計 0㎡</b></div><div id="currentProjectItems"></div></div>
-<div class="card"><h3>必要材料一覧</h3><div id="projectMaterialSummary"></div>type html>
+<!doctype html>
 <html lang="ja">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -410,7 +405,7 @@ input,select,textarea,button{max-width:100%}
 </section>
 
 <section id="material" class="view">
-<div class="title"><div><span class="badge">MATERIAL</span><h2>材料計算</h2></div><div class="card"><div class="headrow"><div><b>計算結果に追加</b><p class="muted" id="currentWorkItemLabel">単独計算</p></div><button class="secondary" id="addCurrentToProject">この施工対象を複数計算に追加</button></div></div><button class="help" data-help="material">？計算方法</button></div>
+<div class="title"><div><span class="badge">MATERIAL</span><h2>材料計算</h2></div><div class="card"><div class="headrow"><div><b>現在の材料計算</b><p class="muted" id="currentWorkItemLabel">単独計算</p></div><button class="secondary" id="addCurrentToProject">＋ 複数計算に追加</button></div><p class="muted">通常はこの画面だけで1件の材料計算ができます。複数の施工対象をまとめたい場合だけ追加してください。</p></div><button class="help" data-help="material">？計算方法</button></div>
 
 <div class="card">
 <h3>施工条件</h3>
@@ -438,6 +433,24 @@ input,select,textarea,button{max-width:100%}
 </details>
 <button class="primary" id="goProject">この内容を案件保存</button>
 </div>
+
+<div class="card" id="multiCalcPanel">
+  <div class="headrow">
+    <div>
+      <h3>複数計算</h3>
+      <p class="muted">「＋ 複数計算に追加」した施工対象だけをまとめて表示します。</p>
+    </div>
+    <button class="secondary" id="clearMultiCalc">複数計算をクリア</button>
+  </div>
+</div>
+<div class="card"><div class="headrow"><h3>現在の計算結果</h3><b id="projectTotalArea">合計 0㎡</b></div><div id="currentProjectItems"></div></div>
+<div class="card"><h3>必要材料一覧</h3><div id="projectMaterialSummary"></div>
+<div class="card" id="multiCalcActions">
+  <div class="headrow">
+    <p class="muted">計算だけなら保存不要です。必要な場合だけ案件として保存できます。</p>
+    <button class="primary" id="saveMultiAsProject">案件として保存</button>
+  </div>
+</div>
 </section>
 
 <section id="master" class="view">
@@ -460,10 +473,10 @@ input,select,textarea,button{max-width:100%}
 </div>
 </section>
 
-<section id="projects" class="view"><div class="title"><div><span class="badge">PROJECTS</span><h2>案件として管理</h2><p>材料計算でまとめた計算結果を、必要な場合だけ案件として保存・管理します。</p></div></div>
+<section id="projects" class="view"><div class="title"><div><span class="badge">PROJECTS</span><h2>案件として管理</h2><p>材料計算で保存した案件を確認・編集します。</p></div></div>
 <div class="card">
 <input type="hidden" id="editingProjectId">
-<div class="headrow"><div><h3>計算結果を案件化</h3><p class="muted">材料計算でまとめた結果を保存したい場合だけ入力します。</p></div><button class="secondary" id="toggleProjectSave">案件化する</button></div>
+<div class="headrow"><div><h3>複数計算結果を案件として保存</h3><p class="muted">材料計算でまとめた結果を保存したい場合だけ入力します。</p></div><button class="secondary" id="toggleProjectSave">案件情報を入力</button></div>
 <div id="projectSaveFields" class="hidden">
 <div class="formgrid">
 <label>案件名<input id="projectName" placeholder="○○改修工事"></label>
@@ -475,7 +488,7 @@ input,select,textarea,button{max-width:100%}
 <button class="primary" id="saveProject">案件として保存</button>
 </div>
 <button class="secondary" id="newProject">案件入力をクリア</button>
-<p class="muted">案件入力をクリアしても、材料計算の複数計算結果・保存済み案件は削除されません。</p>
+<p class="muted">案件入力をクリアしても、材料計算の複数計算結果と保存済み案件は削除されません。</p>
 </div>
 </div>
 <div class="card"><h3>保存済み案件</h3><div id="projectList"></div></div>

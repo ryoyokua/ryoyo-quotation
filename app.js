@@ -682,11 +682,11 @@ $("gasEndpoint").value=localStorage.getItem(S.endpoint)||"";
 $("saveEndpoint").onclick=()=>{localStorage.setItem(S.endpoint,$("gasEndpoint").value.trim());alert("保存しました")};
 if($("clearMultiCalc"))$("clearMultiCalc").onclick=()=>{
  if(!projectItems.length)return;
- if(!confirm("複数計算の施工対象・材料仕様をすべてクリアしますか？\\n保存済み案件は削除されません。"))return;
+ if(!confirm("複数計算の施工対象と材料仕様をすべてクリアしますか？\\n保存済み案件は削除されません。"))return;
  projectItems=[];editingWorkItemId=null;renderProjectDraft();updateProjectStatus();
 };
-if($("goProjectFromMulti"))$("goProjectFromMulti").onclick=()=>{
- if(!projectItems.length)return alert("先に施工対象を複数計算へ追加してください。");
+if($("saveMultiAsProject"))$("saveMultiAsProject").onclick=()=>{
+ if(!projectItems.length)return alert("先に「＋ 複数計算に追加」で施工対象を追加してください。");
  show("projects");
  if($("projectSaveFields"))$("projectSaveFields").classList.remove("hidden");
  if($("projectName"))$("projectName").focus();
@@ -695,7 +695,7 @@ if($("toggleProjectSave"))$("toggleProjectSave").onclick=()=>{
   $("projectSaveFields").classList.toggle("hidden");
   if(!$("projectSaveFields").classList.contains("hidden"))$("projectName").focus();
 };
-$("saveProject").onclick=async()=>{if(!projectItems.length)return alert("先に材料計算で施工対象を複数計算へ追加してください。");const id=+$("editingProjectId").value||null,p={id:id||Date.now(),createdAt:id?(projects.find(x=>x.id===id)?.createdAt||new Date().toISOString()):new Date().toISOString(),name:$("projectName").value||"名称未設定",customer:$("projectCustomer").value,site:$("projectSite").value,owner:$("projectOwner").value,memo:$("projectMemo").value,area:projectItems.reduce((a,x)=>a+Number(x.area||0),0),workItems:JSON.parse(JSON.stringify(projectItems))};if(id){const i=projects.findIndex(x=>x.id===id);if(i>=0)projects[i]=p;else projects.unshift(p);}else projects.unshift(p);save(S.projects,projects);$("editingProjectId").value=p.id;renderProjects();updateProjectStatus();alert(id?"案件を更新しました":"案件を保存しました");};
+$("saveProject").onclick=async()=>{if(!projectItems.length)return alert("先に施工対象を複数計算へ追加してください。");const id=+$("editingProjectId").value||null,p={id:id||Date.now(),createdAt:id?(projects.find(x=>x.id===id)?.createdAt||new Date().toISOString()):new Date().toISOString(),name:$("projectName").value||"名称未設定",customer:$("projectCustomer").value,site:$("projectSite").value,owner:$("projectOwner").value,memo:$("projectMemo").value,area:projectItems.reduce((a,x)=>a+Number(x.area||0),0),workItems:JSON.parse(JSON.stringify(projectItems))};if(id){const i=projects.findIndex(x=>x.id===id);if(i>=0)projects[i]=p;else projects.unshift(p);}else projects.unshift(p);save(S.projects,projects);$("editingProjectId").value=p.id;renderProjects();updateProjectStatus();alert(id?"案件を更新しました":"案件を保存しました");};
 function resetProjectForm(ask=true){
  if(ask&&!confirm("案件入力欄をクリアしますか？\n材料計算の複数計算結果・保存済み案件は削除されません。"))return;
  $("editingProjectId").value="";
