@@ -604,44 +604,49 @@ function scheduleMultiRefresh(){
  clearTimeout(multiRefreshTimer);
  multiRefreshTimer=setTimeout(()=>{syncSelectedCalcItem();renderProjectDraft();},0);
 }
-document.querySelectorAll(".send").forEach(b=>b.onclick=()=>{
- const src=b.dataset.source,a=sourceArea(src);
- if(!a)return alert("先に施工面積を計算してください");
+function addSourceToMaterial(src){
+ const a=sourceArea(src);
+ if(!a){alert("先に施工面積を計算してください");return;}
  const titleEl=$(src+"Title");
  const title=(titleEl?.value||"").trim()||defaultCalcTitle(src);
 
- // 新しい項目を追加しても、現在の材料設定はリセットしない。
- // 直前の材料設定を初期値として引き継ぎ、タイトルごとに後から変更可能。
- const inheritedConfigs=currentConfigs();
+ // 既存項目は一切消さず、新規項目として追加する
+ const configs=currentConfigs().map(x=>({...x}));
  const item={
-   id:Date.now()+Math.floor(Math.random()*1000),
+   id:Date.now()+Math.floor(Math.random()*100000),
    source:src,
-   label:SOURCE_LABELS[src],
+   label:SOURCE_LABELS[src]||src,
    title,
    area:a,
-   materialConfigs:inheritedConfigs
+   materialConfigs:configs
  };
-
  projectItems.push(item);
  selectedCalcItemId=item.id;
  editingWorkItemId=item.id;
  state.lastSource=src;
 
  $("matArea").value=Number(a).toFixed(2);
-
+ // 材料設定がまだ無い場合だけ標準材料を1行作る
  if(!specRows.length){
    addSpecMaterial(0);
-   item.materialConfigs=currentConfigs();
+   item.materialConfigs=currentConfigs().map(x=>({...x}));
  }else{
-   // 現在の材料UIをそのまま維持し、追加した面積だけで再計算
    calcAllSpecMaterials();
+   item.materialConfigs=currentConfigs().map(x=>({...x}));
  }
 
  $("currentWorkItemLabel").textContent=`${title}｜${fmt(a)}㎡`;
  if(titleEl)titleEl.value="";
  renderProjectDraft();
- updateProjectStatus();
  show("material");
+}
+
+// 各数量ページの「材料計算へ追加」は必ずこの1本の処理を通す
+document.addEventListener("click",e=>{
+ const b=e.target.closest("button.send[data-source]");
+ if(!b)return;
+ e.preventDefault();
+ addSourceToMaterial(b.dataset.source);
 });
 
 function updateProjectStatus(){
@@ -678,7 +683,7 @@ function renderMaterialCalcList(){
      selectedCalcItemId=null;editingWorkItemId=null;
      $("currentWorkItemLabel").textContent="各数量ページから「材料計算へ追加」してください。";
    }
-   renderMaterialCalcList();renderProjectDraft();updateProjectStatus();
+   renderProjectDraft();updateProjectStatus();
  });
 }
 function renderProjectDraft(){
@@ -789,7 +794,7 @@ if($("materialClearAll"))$("materialClearAll").onclick=()=>{
  if(!confirm("追加した計算をすべて削除しますか？\n保存済み案件は削除されません。"))return;
  projectItems=[];selectedCalcItemId=null;editingWorkItemId=null;
  $("currentWorkItemLabel").textContent="各数量ページから「材料計算へ追加」してください。";
- renderMaterialCalcList();renderProjectDraft();updateProjectStatus();
+ renderProjectDraft();updateProjectStatus();
 };
 if($("clearMultiCalc"))$("clearMultiCalc").onclick=()=>{
  if(!projectItems.length)return;
