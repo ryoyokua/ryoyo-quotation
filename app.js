@@ -1,14 +1,3 @@
-
-// v29: GitHub Pages更新時の旧Service Worker/キャッシュ混在を防止
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.getRegistrations().then(regs => {
-    regs.forEach(reg => reg.unregister().catch(()=>{}));
-  }).catch(()=>{});
-}
-if ("caches" in window) {
-  caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).catch(()=>{});
-}
-
 const S={materials:"ryoyo_materials_v1",waves:"ryoyo_waves_v1",seals:"ryoyo_seal_products_v1",projects:"ryoyo_projects_v1",endpoint:"ryoyo_gas_endpoint_v1"};
 
 const DEFAULT_MATERIALS=[
@@ -44,7 +33,7 @@ const DEFAULT_WAVES=[
 {name:"大波スレート",factor:1.140,note:"菱洋社内採用値"},
 {name:"小波スレート",factor:1.150,note:"菱洋社内採用値"},
 {name:"波板",factor:null,note:"製品形状に応じて入力"},
-{name:"面積直接入力",factor:null,note:"現場条件に応じて入力"}
+{name:"その他",factor:null,note:"現場条件に応じて入力"}
 ];
 
 const DEFAULT_SEALS=[
@@ -53,7 +42,7 @@ const DEFAULT_SEALS=[
 
 const HELP={
 roof:`<p><b>基本式：</b>平面面積 × 勾配係数 × 波型係数</p>
-<p>入力した寸法は丸めずに計算し、最後に「面積の端数処理」で、端数処理なし・0.1㎡単位切り上げ・1㎡単位切り上げを選べます。立上り・ドレン・配管まわり・架台などは、必要に応じて別途数量を算出します。材料のロスは材料計算画面で設定します。</p>
+<p>入力した寸法は丸めずに計算し、最後に「面積の端数処理」で、端数処理なし・0.1㎡単位切り上げ・1㎡単位切り上げを選べます。立上り・仕切り・役物などは必要に応じて別途拾います。材料のロスは材料計算画面で設定します。</p>
 <table><tr><th>項目</th><th>意味</th></tr><tr><td>平面面積</td><td>図面・真上から見た長さ×幅</td></tr>
 <tr><td>勾配係数</td><td>斜面で増える面積を補正。3寸=約1.044、3.5寸=約1.059、4寸=約1.077</td></tr>
 <tr><td>波型係数</td><td>大波1.140、小波1.150を初期値として自動入力。必要時は上書き可能</td></tr>
@@ -104,9 +93,6 @@ for(const def of DEFAULT_WAVES){
 }
 
 let state={roofArea:0,roofRawArea:0,flatArea:0,flatRawArea:0,flatRows:[],tankArea:0,tankRawArea:0,tankPanels:0,tankSeal:0,vesselArea:0,vesselRawArea:0,pipeArea:0,pipeRawArea:0,productArea:0,productRawArea:0,otherArea:100,otherRawArea:100,lastSource:null,material:null,sealMode:"volume"};
-let projectItems=[];
-let selectedCalcItemId=null;
-let editingWorkItemId=null;
 const $=id=>document.getElementById(id), n=id=>Number($(id).value)||0;
 const fmt=(v,d=2)=>Number(v).toLocaleString("ja-JP",{minimumFractionDigits:d,maximumFractionDigits:d});
 function load(k,f){try{let v=localStorage.getItem(k);return v?JSON.parse(v):structuredClone(f)}catch{return structuredClone(f)}}
@@ -415,6 +401,8 @@ $("otherAreaInput").addEventListener("input",calcOther);
 
 // material
 let specRows=[];
+let calcItems=[];
+let selectedCalcItemId=null;
 
 function getMaterialCalcMode(m){
   if(m.calcMode) return m.calcMode;
@@ -557,6 +545,75 @@ function calcSpecRow(r,area){
   return {row:r,material:m,mode,usage,theory,required,order,plan,basis};
 }
 
+
+function cloneSpecRows(rows=specRows){
+  return rows.map((r,i)=>({id:"multi-"+Date.now()+"-"+i+"-"+Math.random().toString(16).slice(2),materialIndex:r.materialIndex,thickness:r.thickness,foamThickness:r.foamThickness,loss:r.loss,manualUsage:r.manualUsage??null,usageOverride:r.usageOverride??null}));
+}
+function getSourceArea(src){
+  return Number({roof:state.roofArea,flat:state.flatArea,tank:state.tankArea,vessel:state.vesselArea,pipe:state.pipeArea,product:state.productArea,other:state.otherArea}[src])||0;
+}
+const MULTI_SOURCE_LABELS={roof:"屋根",flat:"屋上・床・壁",tank:"貯水槽",vessel:"他タンク",pipe:"配管",product:"製品・部品塗装",other:"面積直接入力"};
+function defaultCalcTitle(src){return `${MULTI_SOURCE_LABELS[src]||"施工対象"}${calcItems.filter(x=>x.source===src).length+1}`;}
+function syncSelectedCalcItem(){
+  if(!selectedCalcItemId)return;
+  const item=calcItems.find(x=>x.id===selectedCalcItemId); if(!item)return;
+  item.area=Math.max(0,n("matArea")); item.materialConfigs=cloneSpecRows();
+}
+function aggregateCalcItems(){
+  const groups=new Map();
+  for(const item of calcItems){
+    for(const row of item.materialConfigs||[]){
+      const r=calcSpecRow(row,Number(item.area)||0); if(!r)continue;
+      const key=r.material.id;
+      if(!groups.has(key))groups.set(key,{material:r.material,required:0,titles:[]});
+      const g=groups.get(key); g.required+=r.required; g.titles.push(item.title);
+    }
+  }
+  return [...groups.values()].map(g=>{
+    let order="荷姿未設定";
+    if(g.material.packages?.length&&g.material.packageUnit===g.material.unit){
+      const plan=bestPlan(g.required,g.material.packages);
+      if(plan)order=plan.parts.map(x=>`${x.size}${g.material.unit} × ${x.count}セット`).join(" ＋ ");
+    }else if(g.material.packages?.length)order=`換算不可（必要量:${g.material.unit} / 荷姿:${g.material.packageUnit||"未設定"}）`;
+    return {...g,order};
+  });
+}
+function renderAggregateMaterials(){
+  const w=$("aggregateMaterialSummary"); if(!w)return;
+  const rows=aggregateCalcItems();
+  w.innerHTML=rows.length?rows.map(x=>`<div class="spec-summary-item"><span>${esc(x.material.name)}<br><small>${[...new Set(x.titles)].map(esc).join(" / ")}</small></span><strong>${esc(x.order)}</strong></div>`).join(""):'<div class="info">計算を追加すると表示されます。</div>';
+}
+function renderCalcItems(){
+  const list=$("calcItemList"),total=$("calcItemTotal"); if(!list||!total)return;
+  total.textContent=`${fmt(calcItems.reduce((s,x)=>s+Number(x.area||0),0))}㎡`;
+  list.innerHTML=calcItems.length?calcItems.map(item=>`<div class="calc-list-item ${item.id===selectedCalcItemId?"active":""}"><div class="calc-list-main"><div><b>${esc(item.title)}</b><br><small>${esc(MULTI_SOURCE_LABELS[item.source]||item.source)} ｜ ${fmt(item.area)}㎡</small></div><div class="calc-list-actions"><button class="secondary multi-select" type="button" data-id="${item.id}">材料設定</button><button class="delete multi-delete" type="button" data-id="${item.id}">削除</button></div></div></div>`).join(""):'<div class="info">まだ追加されていません。</div>';
+  document.querySelectorAll(".multi-select").forEach(b=>b.onclick=()=>selectCalcItem(Number(b.dataset.id)));
+  document.querySelectorAll(".multi-delete").forEach(b=>b.onclick=()=>deleteCalcItem(Number(b.dataset.id)));
+  renderAggregateMaterials();
+}
+function selectCalcItem(id){
+  const item=calcItems.find(x=>x.id===id); if(!item)return;
+  selectedCalcItemId=id; state.lastSource=item.source; $("matArea").value=Number(item.area||0).toFixed(2);
+  specRows=cloneSpecRows(item.materialConfigs||[]);
+  if(!specRows.length)addSpecMaterial(0); else {renderSpecRows();calcAllSpecMaterials();}
+  $("selectedCalcLabel").textContent=`${item.title} ｜ ${fmt(item.area)}㎡`; renderCalcItems(); show("material");
+}
+function deleteCalcItem(id){
+  calcItems=calcItems.filter(x=>x.id!==id);
+  if(selectedCalcItemId===id){selectedCalcItemId=null;$("selectedCalcLabel").textContent="追加したタイトルを選択すると、材料設定を変更できます。";}
+  renderCalcItems();
+}
+function addCurrentSourceToMaterial(src){
+  const area=getSourceArea(src); if(area<=0){alert("先に施工面積を計算してください。");return;}
+  const titleInput=$(src+"Title"); const title=(titleInput?.value||"").trim()||defaultCalcTitle(src);
+  const item={id:Date.now()+Math.floor(Math.random()*100000),source:src,title,area,materialConfigs:cloneSpecRows()};
+  calcItems.push(item); selectedCalcItemId=item.id; state.lastSource=src;
+  $("matArea").value=Number(area).toFixed(2); if(titleInput)titleInput.value="";
+  if(!specRows.length)addSpecMaterial(0);
+  item.materialConfigs=cloneSpecRows();
+  $("selectedCalcLabel").textContent=`${title} ｜ ${fmt(area)}㎡`;
+  calcAllSpecMaterials(); renderCalcItems(); show("material");
+}
 function calcAllSpecMaterials(){
   const area=n("matArea"),results=specRows.map(r=>calcSpecRow(r,area)).filter(Boolean);
   state.specMaterials=results;
@@ -587,161 +644,16 @@ function calcAllSpecMaterials(){
       <pre>${x.basis} × ${fmt(1+x.row.loss,2)} = ${fmt(x.required,2)}${m.unit}</pre></div>`;
   }).join("");
   syncSelectedCalcItem();
+  renderAggregateMaterials();
 }
 
 if($("addSpecMaterial")) $("addSpecMaterial").onclick=()=>addSpecMaterial(0);
 if($("matArea")) $("matArea").addEventListener("input",calcAllSpecMaterials);
 if($("goProject")) $("goProject").onclick=()=>show("projects");
+if($("clearAllCalcItems")) $("clearAllCalcItems").onclick=()=>{if(!calcItems.length)return;if(!confirm("追加した計算をすべて削除しますか？"))return;calcItems=[];selectedCalcItemId=null;$("selectedCalcLabel").textContent="追加したタイトルを選択すると、材料設定を変更できます。";renderCalcItems();};
 
-const SOURCE_LABELS={roof:"屋根",flat:"屋上・床・壁",tank:"貯水槽",vessel:"他タンク",pipe:"配管",product:"製品・部品塗装",other:"面積直接入力"};
-function sourceArea(src){return Number({roof:state.roofArea,flat:state.flatArea,tank:state.tankArea,vessel:state.vesselArea,pipe:state.pipeArea,product:state.productArea,other:state.otherArea}[src])||0;}
-function defaultCalcTitle(src){const n=projectItems.filter(x=>x.source===src).length+1;return `${SOURCE_LABELS[src]||"施工対象"}${n}`;}
-function selectCalcItem(id){
- const item=projectItems.find(x=>x.id===id);if(!item)return;
- selectedCalcItemId=id;editingWorkItemId=id;state.lastSource=item.source;
- $("matArea").value=Number(item.area||0).toFixed(2);
- specRows=rowsFromConfigs(item.materialConfigs||[]);
- if(!specRows.length)addSpecMaterial(0);else{renderSpecRows();calcAllSpecMaterials();}
- $("currentWorkItemLabel").textContent=`${item.title||item.label}｜${fmt(item.area)}㎡`;
- renderProjectDraft();show("material");
-}
-function syncSelectedCalcItem(){
- if(!selectedCalcItemId)return;
- const item=projectItems.find(x=>x.id===selectedCalcItemId);if(!item)return;
- item.area=Math.max(0,n("matArea"));
- item.materialConfigs=currentConfigs();
- updateProjectStatus();
-}
-let multiRefreshTimer=null;
-function scheduleMultiRefresh(){
- if(!selectedCalcItemId)return;
- clearTimeout(multiRefreshTimer);
- multiRefreshTimer=setTimeout(()=>{syncSelectedCalcItem();renderProjectDraft();},0);
-}
-function addSourceToMaterial(src){
- const a=sourceArea(src);
- if(!a){alert("先に施工面積を計算してください");return;}
+document.querySelectorAll(".send").forEach(btn=>{btn.onclick=()=>addCurrentSourceToMaterial(btn.dataset.source);});
 
- const titleEl=$(src+"Title");
- const title=(titleEl?.value||"").trim()||defaultCalcTitle(src);
-
- const item={
-   id:Date.now()+Math.floor(Math.random()*100000),
-   source:src,
-   label:SOURCE_LABELS[src]||src,
-   title:title,
-   area:Number(a),
-   materialConfigs:[]
- };
-
- // まず追加データを確定
- projectItems.push(item);
- selectedCalcItemId=item.id;
- editingWorkItemId=item.id;
- state.lastSource=src;
- if(titleEl)titleEl.value="";
-
- // 先に材料計算画面を表示
- show("material");
-
- // 表示後に材料画面へ値を反映
- if($("matArea")) $("matArea").value=Number(a).toFixed(2);
- if($("currentWorkItemLabel")) $("currentWorkItemLabel").textContent=`${title}｜${fmt(a)}㎡`;
-
- // 材料設定は既存設定を引き継ぐ。初回のみ標準1行。
- try{
-   if(Array.isArray(specRows) && specRows.length){
-     item.materialConfigs=currentConfigs().map(x=>({...x}));
-     renderSpecRows();
-     calcAllSpecMaterials();
-   }else{
-     specRows=[];
-     addSpecMaterial(0);
-     item.materialConfigs=currentConfigs().map(x=>({...x}));
-   }
- }catch(err){
-   // 面積・タイトルの追加自体は取り消さない
-   console.error("material initialization error",err);
- }
-
- renderProjectDraft();
- renderMaterialCalcList();
- updateProjectStatus();
-}
-// 各数量ページの「材料計算へ追加」は必ずこの1本の処理を通す
-document.addEventListener("click",function(e){
- const btn=e.target.closest("button.send[data-source]");
- if(!btn)return;
- e.preventDefault();
- e.stopPropagation();
- try{
-   addSourceToMaterial(btn.dataset.source);
- }catch(err){
-   console.error("addSourceToMaterial error",err);
-   alert("材料計算への追加処理でエラーが発生しました。\n"+(err?.message||err));
- }
-});
-
-function updateProjectStatus(){
-  if(!$("projectStatusBar") || !$("projectStatusMeta")) return;
-  const total=projectItems.reduce((s,x)=>s+Number(x.area||0),0);
-  $("projectStatusBar").classList.toggle("hidden",projectItems.length===0);
-  $("projectStatusName").textContent="材料計算";
-  $("projectStatusMeta").textContent=`施工対象 ${projectItems.length}件 ｜ 合計 ${fmt(total)}㎡`;
-}
-if($("projectStatusOpen"))$("projectStatusOpen").onclick=()=>show("material");
-
-function currentConfigs(){return specRows.map(r=>{const m=materials[r.materialIndex]||materials[0];return{materialId:m.id,thickness:r.thickness,foamThickness:r.foamThickness,loss:r.loss,usageOverride:r.usageOverride??null,manualUsage:r.manualUsage??null};});}
-function rowsFromConfigs(cs){return(cs||[]).map((c,i)=>{let mi=materials.findIndex(m=>m.id===c.materialId);if(mi<0)mi=0;const m=materials[mi];return{id:"p"+Date.now()+i,materialIndex:mi,thickness:c.thickness??m.standardThickness??2,foamThickness:c.foamThickness??m.standardThickness??25,loss:c.loss??m.defaultLoss??.2,usageOverride:c.usageOverride??null,manualUsage:c.manualUsage??null};});}
-function itemMaterials(it){return(it.materialConfigs||[]).map(c=>{let i=materials.findIndex(m=>m.id===c.materialId);if(i<0)i=0;const m=materials[i],mode=getMaterialCalcMode(m);let u=mode==="thickness"?(m.usage||0)*(c.thickness??2):mode==="foam"?({25:1.75,20:1.4,15:1.2}[c.foamThickness]||0):mode==="manual"?(c.manualUsage||0):(c.usageOverride??m.usage??0);return{m,required:it.area*u*(1+(c.loss||0)),c,mode};});}
-function aggregates(){const g=new Map();projectItems.forEach(it=>itemMaterials(it).forEach(x=>{const c=x.c,k=[x.m.id,x.mode,c.thickness??"",c.foamThickness??"",c.loss??"",c.usageOverride??"",c.manualUsage??""].join("|");if(!g.has(k))g.set(k,{m:x.m,required:0,targets:[]});g.get(k).required+=x.required;g.get(k).targets.push(it.title||it.label);}));return[...g.values()].map(x=>({...x,order:orderPlan(x.m,x.required)}));}
-function renderMaterialCalcList(){
- if(!$("materialCalcItems"))return;
- $("materialCalcTotal").textContent=`${fmt(projectItems.reduce((a,x)=>a+Number(x.area||0),0))}㎡`;
- $("materialCalcItems").innerHTML=projectItems.length?projectItems.map(x=>`
-   <div class="calc-item ${x.id===selectedCalcItemId?"active":""}">
-     <div class="calc-item-main">
-       <div><b>${esc(x.title||x.label)}</b><br><small>${esc(x.label)} ｜ ${fmt(x.area)}㎡</small></div>
-       <div class="calc-item-actions">
-         <button class="secondary material-select-calc" data-id="${x.id}">選択</button>
-         <button class="delete material-remove-calc" data-id="${x.id}">削除</button>
-       </div>
-     </div>
-   </div>`).join(""):"<p>まだ追加されていません。</p>";
- document.querySelectorAll(".material-select-calc").forEach(b=>b.onclick=()=>selectCalcItem(Number(b.dataset.id)));
- document.querySelectorAll(".material-remove-calc").forEach(b=>b.onclick=()=>{
-   const id=Number(b.dataset.id);
-   projectItems=projectItems.filter(x=>x.id!==id);
-   if(selectedCalcItemId===id){
-     selectedCalcItemId=null;editingWorkItemId=null;
-     $("currentWorkItemLabel").textContent="各数量ページから「材料計算へ追加」してください。";
-   }
-   renderProjectDraft();updateProjectStatus();
- });
-}
-function renderProjectDraft(){
- if($("projectTotalArea"))$("projectTotalArea").textContent=`合計 ${fmt(projectItems.reduce((a,x)=>a+Number(x.area||0),0))}㎡`;
- if($("currentProjectItems"))$("currentProjectItems").innerHTML=projectItems.length?projectItems.map(x=>`
- <div class="calc-item ${x.id===selectedCalcItemId?"active":""}">
-  <div class="calc-item-main">
-   <div><b>${esc(x.title||x.label)}</b><br><small>${esc(x.label)} ｜ ${fmt(x.area)}㎡</small></div>
-   <div class="calc-item-actions"><button class="secondary select-calc" data-id="${x.id}">材料設定</button><button class="delete remove-work" data-id="${x.id}">削除</button></div>
-  </div>
- </div>`).join(""):"<p>まだ材料計算に追加されていません。</p>";
- const ag=aggregates();
- if($("projectMaterialSummary"))$("projectMaterialSummary").innerHTML=ag.length?ag.map(x=>`<div class="resultline"><span>${esc(x.m.series)} ${esc(x.m.name)}<br><small>${[...new Set(x.targets)].map(esc).join(" / ")}</small></span><b>${esc(x.order||fmt(x.required,2)+x.m.unit)}</b></div>`).join(""):"<p>材料仕様を設定すると表示されます。</p>";
- document.querySelectorAll(".remove-work").forEach(b=>b.onclick=()=>{const id=Number(b.dataset.id);projectItems=projectItems.filter(x=>x.id!==id);if(selectedCalcItemId===id){selectedCalcItemId=null;editingWorkItemId=null;$("currentWorkItemLabel").textContent="各数量ページから「材料計算へ追加」してください。";}renderProjectDraft();updateProjectStatus();});
- document.querySelectorAll(".select-calc").forEach(b=>b.onclick=()=>selectCalcItem(Number(b.dataset.id)));
- renderMaterialCalcList();
- updateProjectStatus();
-}
-function editWork(i){const x=projectItems[i];if(x)selectCalcItem(x.id);}
-function resetSource(src){if(!confirm(`${SOURCE_LABELS[src]}の入力内容だけを初期化しますか？`))return;if(src==="flat"){$("flatRows").innerHTML="";addFlat({type:"平場",name:"A面",a:10,b:8,q:1});calcFlat();}else if(src==="other"){$("otherAreaInput").value=100;calcOther();}else alert("この画面は各入力値を変更して再計算できます。案件内の他の施工対象には影響しません。");}
-document.querySelectorAll(".reset-source").forEach(b=>b.onclick=()=>resetSource(b.dataset.source));
-if($("material")){
- $("material").addEventListener("change",e=>{if(e.target.closest("#specRows")||e.target.id==="matArea")scheduleMultiRefresh();});
- $("material").addEventListener("input",e=>{if(e.target.closest("#specRows")||e.target.id==="matArea")scheduleMultiRefresh();});
-}
 // master
 function renderMaster(){
  $("materialMaster").innerHTML=materials.map((m,i)=>{
@@ -822,47 +734,32 @@ if($("saveSealEdit"))$("saveSealEdit").onclick=()=>{
 // projects
 $("gasEndpoint").value=localStorage.getItem(S.endpoint)||"";
 $("saveEndpoint").onclick=()=>{localStorage.setItem(S.endpoint,$("gasEndpoint").value.trim());alert("保存しました")};
-if($("materialClearAll"))$("materialClearAll").onclick=()=>{
- if(!projectItems.length)return;
- if(!confirm("追加した計算をすべて削除しますか？\n保存済み案件は削除されません。"))return;
- projectItems=[];selectedCalcItemId=null;editingWorkItemId=null;
- $("currentWorkItemLabel").textContent="各数量ページから「材料計算へ追加」してください。";
- renderProjectDraft();updateProjectStatus();
+$("saveProject").onclick=async()=>{
+ const editingId=Number($("editingProjectId").value)||null;
+ const workItems=calcItems.length?calcItems.map(x=>({id:x.id,source:x.source,title:x.title,area:x.area,materialConfigs:cloneSpecRows(x.materialConfigs||[])})):[{id:Date.now(),source:state.lastSource||"other",title:"単独計算",area:n("matArea"),materialConfigs:cloneSpecRows()}];
+ const p={id:editingId||Date.now(),createdAt:editingId?(projects.find(x=>x.id===editingId)?.createdAt||new Date().toISOString()):new Date().toISOString(),updatedAt:new Date().toISOString(),name:$("projectName").value.trim()||"名称未設定",customer:$("projectCustomer").value.trim(),site:$("projectSite").value.trim(),owner:$("projectOwner").value.trim(),memo:$("projectMemo").value.trim(),area:workItems.reduce((s,x)=>s+Number(x.area||0),0),workItems};
+ if(editingId){const idx=projects.findIndex(x=>x.id===editingId);if(idx>=0)projects[idx]=p;else projects.unshift(p);}else projects.unshift(p);
+ save(S.projects,projects);$("editingProjectId").value=p.id;renderProjects();alert(editingId?"案件を更新しました":"案件を保存しました");
 };
-if($("clearMultiCalc"))$("clearMultiCalc").onclick=()=>{
- if(!projectItems.length)return;
- if(!confirm("複数計算をすべて削除しますか？\\n保存済み案件は削除されません。"))return;
- projectItems=[];selectedCalcItemId=null;editingWorkItemId=null;
- $("currentWorkItemLabel").textContent="各数量ページから「材料計算へ追加」してください。";
- renderProjectDraft();updateProjectStatus();
-};
-if($("saveMultiAsProject"))$("saveMultiAsProject").onclick=()=>{
- if(!projectItems.length)return alert("先に「＋ 複数計算に追加」で施工対象を追加してください。");
- show("projects");
- if($("projectSaveFields"))$("projectSaveFields").classList.remove("hidden");
- if($("projectName"))$("projectName").focus();
-};
-if($("toggleProjectSave"))$("toggleProjectSave").onclick=()=>{
-  $("projectSaveFields").classList.toggle("hidden");
-  if(!$("projectSaveFields").classList.contains("hidden"))$("projectName").focus();
-};
-$("saveProject").onclick=async()=>{if(!projectItems.length)return alert("先に施工対象を複数計算へ追加してください。");const id=+$("editingProjectId").value||null,p={id:id||Date.now(),createdAt:id?(projects.find(x=>x.id===id)?.createdAt||new Date().toISOString()):new Date().toISOString(),name:$("projectName").value||"名称未設定",customer:$("projectCustomer").value,site:$("projectSite").value,owner:$("projectOwner").value,memo:$("projectMemo").value,area:projectItems.reduce((a,x)=>a+Number(x.area||0),0),workItems:JSON.parse(JSON.stringify(projectItems))};if(id){const i=projects.findIndex(x=>x.id===id);if(i>=0)projects[i]=p;else projects.unshift(p);}else projects.unshift(p);save(S.projects,projects);$("editingProjectId").value=p.id;renderProjects();updateProjectStatus();alert(id?"案件を更新しました":"案件を保存しました");};
-function resetProjectForm(ask=true){
- if(ask&&!confirm("案件入力欄をクリアしますか？\n材料計算の複数計算結果・保存済み案件は削除されません。"))return;
- $("editingProjectId").value="";
- ["projectName","projectCustomer","projectSite","projectOwner","projectMemo"].forEach(id=>$(id).value="");
- if($("projectSaveFields"))$("projectSaveFields").classList.add("hidden");
+function resetProjectForm(){$("editingProjectId").value="";$("projectName").value="";$("projectCustomer").value="";$("projectSite").value="";$("projectOwner").value="";$("projectMemo").value="";}
+if($("newProject"))$("newProject").onclick=resetProjectForm;
+function openProject(id){
+ const p=projects.find(x=>x.id===id);if(!p)return;
+ $("editingProjectId").value=p.id;$("projectName").value=p.name||"";$("projectCustomer").value=p.customer||"";$("projectSite").value=p.site||"";$("projectOwner").value=p.owner||"";$("projectMemo").value=p.memo||"";
+ calcItems=(p.workItems||[]).map((x,i)=>({id:x.id||Date.now()+i,source:x.source||"other",title:x.title||`計算${i+1}`,area:Number(x.area)||0,materialConfigs:cloneSpecRows(x.materialConfigs||[])}));
+ selectedCalcItemId=null;renderCalcItems();if(calcItems.length)selectCalcItem(calcItems[0].id);else show("material");
 }
-$("newProject").onclick=()=>resetProjectForm(true);
-function openProject(id){const p=projects.find(x=>x.id===id);if(!p)return;$("editingProjectId").value=p.id;["Name","Customer","Site","Owner","Memo"].forEach(k=>$("project"+k).value=p[k.toLowerCase()]||"");projectItems=JSON.parse(JSON.stringify(p.workItems||[]));if($("projectSaveFields"))$("projectSaveFields").classList.remove("hidden");renderProjectDraft();updateProjectStatus();show("projects");}
-function deleteProject(id){const p=projects.find(x=>x.id===id);if(!p||!confirm(`「${p.name}」を削除しますか？`))return;projects=projects.filter(x=>x.id!==id);save(S.projects,projects);renderProjects();}
-function renderProjects(){$("projectList").innerHTML=projects.length?projects.map(p=>`<div class="project"><div class="headrow"><div><b>${esc(p.name)}</b><br><small>${[p.customer,p.site].filter(Boolean).map(esc).join(" ｜ ")}</small></div><div><button class="secondary openproject" data-id="${p.id}">開く・編集</button><button class="delete deleteproject" data-id="${p.id}">削除</button></div></div><p>施工対象 ${p.workItems?.length||0}件 ｜ 合計 ${fmt(p.area||0)}㎡</p></div>`).join(""):"<p>まだ案件はありません。</p>";document.querySelectorAll(".openproject").forEach(b=>b.onclick=()=>openProject(+b.dataset.id));document.querySelectorAll(".deleteproject").forEach(b=>b.onclick=()=>deleteProject(+b.dataset.id));}
+function renderProjects(){
+ $("projectList").innerHTML=projects.length?projects.map(p=>{const customerSite=[p.customer,p.site].filter(Boolean).map(esc).join(" ｜ ");const count=Array.isArray(p.workItems)?p.workItems.length:1;return `<div class="project"><div class="headrow"><div><b>${esc(p.name)}</b><br><small>${new Date(p.createdAt).toLocaleString("ja-JP")} ${p.owner?"｜"+esc(p.owner):""}</small></div><button class="secondary openproject" data-id="${p.id}">開く・編集</button></div>${customerSite?`<p>${customerSite}</p>`:""}<p>計算 ${count}件 ｜ 合計施工面積 ${fmt(p.area||0)}㎡</p>${p.memo?`<p>${esc(p.memo)}</p>`:""}</div>`;}).join(""):"<p>まだ案件はありません。</p>";
+ document.querySelectorAll(".openproject").forEach(b=>b.onclick=()=>openProject(Number(b.dataset.id)));
+}
 // init
 renderWaveSelect();
 renderMaster();
 renderSealSelect();
 renderSealMaster();
-renderProjects();renderProjectDraft();updateProjectStatus();
+renderProjects();
+renderCalcItems();
 addFlat({type:"平場",name:"A面",a:10,b:8,q:1});
 if($("calcOtherBtn"))$("calcOtherBtn").onclick=calcOther;calcRoof();calcTank();calcFlat();updateVesselFields();calcPipe();updateProductFields();calcOther();
 addSpecMaterial(0);
