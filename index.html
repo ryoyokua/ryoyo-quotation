@@ -5,6 +5,15 @@
 <meta name="theme-color" content="#17365D">
 <title>菱洋 防水数量計算</title>
 <link rel="manifest" href="manifest.json"><link rel="stylesheet" href="styles.css">
+<style>
+.spec-material-row{border:1px solid var(--bd);border-radius:12px;padding:14px;margin-top:12px;background:#fff}
+.spec-material-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+.spec-summary{display:grid;gap:10px;margin-top:12px}
+.spec-summary-item{border:1px solid #bad8c1;background:var(--green);border-radius:12px;padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.spec-summary-item span{font-weight:700}.spec-summary-item strong{font-size:19px;color:#1f4e29;text-align:right}
+.spec-detail{border-bottom:1px solid var(--bd);padding:10px 0}.spec-detail:last-child{border-bottom:0}
+@media(max-width:560px){.spec-summary-item{align-items:flex-start;flex-direction:column}.spec-summary-item strong{text-align:left}}
+</style>
 </head>
 <body>
 <header><div><small>菱洋株式会社 社内用</small><h1>防水数量 かんたん計算</h1></div></header>
@@ -143,23 +152,42 @@
 </section>
 
 <section id="material" class="view">
-<div class="title"><div><span class="badge">MATERIAL</span><h2>材料数量</h2></div><button class="help" data-help="material">？計算方法</button></div>
-<div class="twocol"><div class="card"><div class="formgrid">
-<label>施工面積(㎡)<input id="matArea" type="number" value="100" step=".01"></label>
-<label>材料<select id="matSelect"></select></label>
-<label>標準使用量<input id="matUsage" type="number" step=".001"></label>
-<label>単位<select id="matUnit"><option value="L">L/㎡</option><option value="kg">kg/㎡</option></select></label>
-<label id="foamWrap" class="hidden">発泡ウレタン膜厚<select id="foamThickness"><option value="25">25mm</option><option value="20">20mm</option><option value="15">15mm</option></select></label>
-<label>ロス率<select id="matLoss"><option value="0">0%</option><option value=".05">5%</option><option value=".1">10%</option><option value=".15">15%</option><option value=".2" selected>20%</option><option value=".25">25%</option><option value=".3">30%</option></select></label>
-</div><div id="matInfo" class="info"></div><button class="primary" id="calcMat">材料量計算</button></div>
-<div class="card result"><div class="big"><span>必要量</span><strong id="matRequired">—</strong></div><div id="matDetail"></div><pre id="matFormula"></pre><button class="primary" id="goProject">この計算を案件保存</button></div></div>
+<div class="title"><div><span class="badge">MATERIAL</span><h2>仕様材料 一括計算</h2></div><button class="help" data-help="material">？計算方法</button></div>
+
+<div class="card">
+<h3>施工条件</h3>
+<div class="formgrid">
+<label>施工面積 (㎡)<input id="matArea" type="number" value="100" min="0" step=".01"></label>
+</div>
+</div>
+
+<div class="card">
+<div class="headrow">
+<div><h3>使用材料</h3><p>今回使う材料を複数追加してください。役割による固定分類はしません。</p></div>
+<button class="secondary" id="addSpecMaterial">＋ 使用材料を追加</button>
+</div>
+<div id="specMaterialRows"></div>
+</div>
+
+<div class="card result">
+<div class="headrow">
+<div><h3>仕様材料</h3><p>現場で準備する材料・セット数を一覧表示します。</p></div>
+<button class="primary" id="calcAllMaterials">すべて再計算</button>
+</div>
+<div id="specSummary" class="spec-summary"></div>
+<details style="margin-top:14px">
+<summary><b>計算根拠を見る</b></summary>
+<div id="specDetails" style="margin-top:10px"></div>
+</details>
+<button class="primary" id="goProject">この仕様を案件保存</button>
+</div>
 </section>
 
 <section id="master" class="view">
 <div class="title"><div><span class="badge">MASTER</span><h2>材料・係数マスタ</h2></div></div>
 <div class="notice">数量計算に必要な情報だけ登録。単価・原価・見積金額は登録しません。</div>
 <div class="card"><div class="headrow"><h3>材料マスタ</h3><button class="secondary" id="addMaterial">＋材料追加</button></div>
-<div class="tablewrap"><table><thead><tr><th>シリーズ</th><th>製品</th><th>特徴</th><th>使用量</th><th>単位</th><th>通常荷姿</th><th></th></tr></thead><tbody id="materialMaster"></tbody></table></div></div>
+<div class="tablewrap"><table><thead><tr><th>シリーズ</th><th>製品</th><th>特徴</th><th>計算方式</th><th>基準使用量</th><th>通常荷姿</th><th></th></tr></thead><tbody id="materialMaster"></tbody></table></div></div>
 <div class="card"><h3>屋根材・波型係数</h3><div class="tablewrap"><table><thead><tr><th>屋根材</th><th>係数</th><th>備考</th></tr></thead><tbody id="waveMaster"></tbody></table></div><button class="primary" id="saveMaster">マスタ保存</button></div>
 <div class="card">
 <div class="headrow">
@@ -185,7 +213,14 @@
 
 <dialog id="helpDialog"><div class="dialoghead"><h3 id="helpTitle"></h3><button id="closeHelp">×</button></div><div id="helpBody"></div></dialog>
 <dialog id="materialDialog"><div class="dialoghead"><h3>材料マスタ編集</h3><button id="closeMaterial">×</button></div><div class="dialogbody">
-<input type="hidden" id="editIndex"><div class="formgrid"><label>シリーズ<input id="editSeries"></label><label>製品名<input id="editName"></label><label>特徴<input id="editFeature"></label><label>標準使用量<input id="editUsage" type="number" step=".001"></label><label>使用量単位<select id="editUnit"><option value="L">L/㎡</option><option value="kg">kg/㎡</option><option value="">未設定</option></select></label><label>通常荷姿(カンマ区切り)<input id="editPackages" placeholder="400,36"></label><label>荷姿単位<select id="editPackageUnit"><option value="L">L</option><option value="kg">kg</option><option value="">未設定</option></select></label></div>
+<input type="hidden" id="editIndex"><div class="formgrid"><label>シリーズ<input id="editSeries"></label><label>製品名<input id="editName"></label><label>特徴<input id="editFeature"></label><label>計算方式<select id="editCalcMode">
+<option value="area">面積 × 標準使用量</option>
+<option value="thickness">面積 × 膜厚 × 1mm使用量</option>
+<option value="foam">発泡ウレタン厚み別</option>
+<option value="manual">案件ごとに使用量入力</option>
+</select></label>
+<label>基準使用量<input id="editUsage" type="number" step=".001"></label>
+<label>使用量単位<select id="editUnit"><option value="L">L</option><option value="kg">kg</option><option value="">未設定</option></select></label><label>通常荷姿(カンマ区切り)<input id="editPackages" placeholder="400,36"></label><label>荷姿単位<select id="editPackageUnit"><option value="L">L</option><option value="kg">kg</option><option value="">未設定</option></select></label></div>
 <button class="primary" id="saveMaterialEdit">保存</button></div></dialog>
 <dialog id="sealDialog">
 <div class="dialoghead"><h3>シーリング材マスタ編集</h3><button id="closeSealDialog">×</button></div>

@@ -1,31 +1,31 @@
 const S={materials:"ryoyo_materials_v1",waves:"ryoyo_waves_v1",seals:"ryoyo_seal_products_v1",projects:"ryoyo_projects_v1",endpoint:"ryoyo_gas_endpoint_v1"};
 
 const DEFAULT_MATERIALS=[
-{id:"n-st",series:"NUKOTE",name:"ST",feature:"標準型",usage:1,unit:"L",packages:[380,38],packageUnit:"L"},
-{id:"n-xt",series:"NUKOTE",name:"XT",feature:"耐薬品性能型",usage:1,unit:"L",packages:[380,38],packageUnit:"L"},
-{id:"n-al",series:"NUKOTE",name:"AL",feature:"耐紫外線型",usage:1,unit:"L",packages:[380,38],packageUnit:"L"},
-{id:"n-fr",series:"NUKOTE",name:"FR",feature:"難燃型",usage:1,unit:"L",packages:[380],packageUnit:"L"},
-{id:"n-htd",series:"NUKOTE",name:"HTD",feature:"高強化型",usage:1,unit:"L",packages:[380,38],packageUnit:"L"},
-{id:"n-har",series:"NUKOTE",name:"HAR",feature:"耐摩耗型",usage:1,unit:"L",packages:[380,38],packageUnit:"L"},
-{id:"n-lp",series:"NUKOTE",name:"LP",feature:"常温硬化",usage:null,unit:"L",packages:[38],packageUnit:"L"},
-{id:"n-bg",series:"NUKOTE",name:"BG",feature:"手塗り",usage:null,unit:"L",packages:[19,3.8],packageUnit:"L"},
-{id:"n-jf",series:"NUKOTE",name:"JF-HM",feature:"手塗り",usage:null,unit:"L",packages:[3.8],packageUnit:"L"},
-{id:"n-pa",series:"NUKOTE",name:"PA",feature:"手塗り",usage:null,unit:"L",packages:[38,7.6],packageUnit:"L"},
-{id:"n-ep",series:"NUKOTE",name:"EP-primeⅡ",feature:"エポキシ系プライマー",usage:null,unit:"L",packages:[38,7.6],packageUnit:"L"},
-{id:"n-pp",series:"NUKOTE",name:"Poly PrimeⅡ",feature:"ウレタン系プライマー",usage:null,unit:"L",packages:[38,7.6],packageUnit:"L"},
-{id:"n-fp",series:"NUKOTE",name:"FP1",feature:"1液",usage:null,unit:"L",packages:[3.8],packageUnit:"L"},
-{id:"pg4069",series:"PG",name:"PG 406-9",feature:"標準型",usage:1,unit:"L",packages:[400,36],packageUnit:"L"},
-{id:"pg430",series:"PG",name:"PG 430",feature:"屋根用",usage:1,unit:"L",packages:[400,36],packageUnit:"L"},
-{id:"pg409",series:"PG",name:"PG 409",feature:"衝撃・耐摩耗",usage:1,unit:"L",packages:[400,36],packageUnit:"L"},
-{id:"pg408",series:"PG",name:"PG 408",feature:"耐薬品",usage:1,unit:"L",packages:[400,36],packageUnit:"L"},
-{id:"pg411",series:"PG",name:"PG 411",feature:"脂肪族",usage:1,unit:"L",packages:[400,36],packageUnit:"L"},
-{id:"pg301",series:"PG",name:"PG 301",feature:"手塗り A:B=1:1",usage:null,unit:"L",packages:[40],packageUnit:"L"},
-{id:"pg80920",series:"PG",name:"PG 809-20",feature:"手塗り A:B=1:1",usage:null,unit:"L",packages:[40],packageUnit:"L"},
-{id:"pg80940",series:"PG",name:"PG 809-40",feature:"手塗り A:B=1:1",usage:null,unit:"L",packages:[40],packageUnit:"L"},
-{id:"spu",series:"SPU",name:"SPU-8010",feature:"難燃性ポリウレア",usage:1,unit:"L",packages:[380,38],packageUnit:"L"},
-{id:"hr480",series:"発泡ウレタン",name:"HR480NSG-L",feature:"断熱発泡ウレタン",usage:1.75,unit:"kg",packages:[420],packageUnit:"L",foam:true},
-{id:"act",series:"RSPU",name:"RS-アクトPUプライマー",feature:"PUプライマー",usage:.25,unit:"kg",packages:[17],packageUnit:"kg"},
-{id:"task",series:"RSPU",name:"RS-タスクPUプライマー",feature:"PUプライマー",usage:.12,unit:"kg",packages:[5],packageUnit:"kg"}
+{id:"n-st",series:"NUKOTE",name:"ST",feature:"標準型",usage:1,unit:"L",packages:[380,38],packageUnit:"L",calcMode:"thickness"},
+{id:"n-xt",series:"NUKOTE",name:"XT",feature:"耐薬品性能型",usage:1,unit:"L",packages:[380,38],packageUnit:"L",calcMode:"thickness"},
+{id:"n-al",series:"NUKOTE",name:"AL",feature:"耐紫外線型",usage:1,unit:"L",packages:[380,38],packageUnit:"L",calcMode:"thickness"},
+{id:"n-fr",series:"NUKOTE",name:"FR",feature:"難燃型",usage:1,unit:"L",packages:[380],packageUnit:"L",calcMode:"thickness"},
+{id:"n-htd",series:"NUKOTE",name:"HTD",feature:"高強化型",usage:1,unit:"L",packages:[380,38],packageUnit:"L",calcMode:"thickness"},
+{id:"n-har",series:"NUKOTE",name:"HAR",feature:"耐摩耗型",usage:1,unit:"L",packages:[380,38],packageUnit:"L",calcMode:"thickness"},
+{id:"n-lp",series:"NUKOTE",name:"LP",feature:"常温硬化",usage:1,unit:"L",packages:[38],packageUnit:"L",calcMode:"thickness"},
+{id:"n-bg",series:"NUKOTE",name:"BG",feature:"手塗り",usage:1,unit:"L",packages:[19,3.8],packageUnit:"L",calcMode:"thickness"},
+{id:"n-jf",series:"NUKOTE",name:"JF-HM",feature:"手塗り",usage:1,unit:"L",packages:[3.8],packageUnit:"L",calcMode:"thickness"},
+{id:"n-pa",series:"NUKOTE",name:"PA",feature:"手塗り",usage:1,unit:"L",packages:[38,7.6],packageUnit:"L",calcMode:"thickness"},
+{id:"n-ep",series:"NUKOTE",name:"EP-primeⅡ",feature:"エポキシ系プライマー",usage:0.2,unit:"L",packages:[38,7.6],packageUnit:"L",calcMode:"area"},
+{id:"n-pp",series:"NUKOTE",name:"Poly PrimeⅡ",feature:"ウレタン系プライマー",usage:0.225,unit:"L",packages:[38,7.6],packageUnit:"L",calcMode:"area"},
+{id:"n-fp",series:"NUKOTE",name:"FP1",feature:"1液",usage:0.05,unit:"L",packages:[3.8],packageUnit:"L",calcMode:"area"},
+{id:"pg4069",series:"PG",name:"PG 406-9",feature:"標準型",usage:1,unit:"L",packages:[400,36],packageUnit:"L",calcMode:"thickness"},
+{id:"pg430",series:"PG",name:"PG 430",feature:"屋根用",usage:1,unit:"L",packages:[400,36],packageUnit:"L",calcMode:"thickness"},
+{id:"pg409",series:"PG",name:"PG 409",feature:"衝撃・耐摩耗",usage:1,unit:"L",packages:[400,36],packageUnit:"L",calcMode:"thickness"},
+{id:"pg408",series:"PG",name:"PG 408",feature:"耐薬品",usage:1,unit:"L",packages:[400,36],packageUnit:"L",calcMode:"thickness"},
+{id:"pg411",series:"PG",name:"PG 411",feature:"脂肪族",usage:1,unit:"L",packages:[400,36],packageUnit:"L",calcMode:"thickness"},
+{id:"pg301",series:"PG",name:"PG 301",feature:"手塗り A:B=1:1",usage:null,unit:"L",packages:[40],packageUnit:"L",calcMode:"manual"},
+{id:"pg80920",series:"PG",name:"PG 809-20",feature:"手塗り A:B=1:1",usage:null,unit:"L",packages:[40],packageUnit:"L",calcMode:"manual"},
+{id:"pg80940",series:"PG",name:"PG 809-40",feature:"手塗り A:B=1:1",usage:null,unit:"L",packages:[40],packageUnit:"L",calcMode:"manual"},
+{id:"spu",series:"SPU",name:"SPU-8010",feature:"難燃性ポリウレア",usage:1,unit:"L",packages:[380,38],packageUnit:"L",calcMode:"thickness"},
+{id:"hr480",series:"発泡ウレタン",name:"HR480NSG-L",feature:"断熱発泡ウレタン",usage:1.75,unit:"kg",packages:[420],packageUnit:"L",foam:true,calcMode:"foam"},
+{id:"act",series:"RSPU",name:"RS-アクトPUプライマー",feature:"PUプライマー",usage:0.25,unit:"kg",packages:[17],packageUnit:"kg",calcMode:"area"},
+{id:"task",series:"RSPU",name:"RS-タスクPUプライマー",feature:"PUプライマー",usage:0.12,unit:"kg",packages:[5],packageUnit:"kg",calcMode:"area"}
 ];
 
 const DEFAULT_WAVES=[
@@ -70,8 +70,14 @@ tank:`<p><b>貯水槽は「面積」と「シーリング」を別々に拾い�
 <p>マンホール、配管貫通、内部柱、補強材、特殊なパネル割などはこの自動計算に含めず、必要に応じて別途確認します。</p>`,
 flat:`<table><tr><th>部位</th><th>式</th></tr><tr><td>平場</td><td>長さ×幅</td></tr><tr><td>壁</td><td>幅×高さ×面数</td></tr>
 <tr><td>立上り</td><td>周長×高さ</td></tr><tr><td>仕切り</td><td>長さ×高さ×面数</td></tr><tr><td>設備基礎</td><td>周長×高さ</td></tr><tr><td>控除</td><td>未施工面積をマイナス</td></tr></table>`,
-material:`<p><b>理論量＝施工面積×標準使用量</b></p><p><b>必要量＝理論量×（1＋ロス率）</b></p>
-<p>ロス率は案件ごとに選択。材料もアプリで強制せず、担当者が現場ごとに選択します。</p>`
+material:`<p><b>使用材料を複数追加し、一括で必要量と発注セット数を計算します。</b></p>
+<table>
+<tr><th>計算方式</th><th>例</th><th>計算</th></tr>
+<tr><td>膜厚連動</td><td>NUKOTE ST、PG406-9等</td><td>面積 × 膜厚 × 1mmあたり使用量 ×（1＋ロス率）</td></tr>
+<tr><td>面積連動</td><td>RS-アクトPU等</td><td>面積 × 標準使用量 ×（1＋ロス率）</td></tr>
+<tr><td>厚み別</td><td>HR480NSG-L</td><td>15 / 20 / 25mmの基準使用量</td></tr>
+</table>
+<p>最終結果は材料の役割分けをせず、<b>製品名　荷姿 × セット数</b>として表示します。</p>`
 };
 
 let materials=load(S.materials,DEFAULT_MATERIALS),waves=load(S.waves,DEFAULT_WAVES),seals=load(S.seals,DEFAULT_SEALS),projects=load(S.projects,[]);
@@ -331,93 +337,279 @@ function calcFlat(){let t=0;[...$("flatRows").children].forEach(tr=>{let type=tr
 $("addFlat").onclick=()=>addFlat();
 
 // material
-function renderMaterialSelect(){
- $("matSelect").innerHTML=materials.map((m,i)=>`<option value="${i}">${esc(m.series)}｜${esc(m.name)}（${esc(m.feature||"")}）</option>`).join("");materialChanged();
+let specRows=[];
+
+function getMaterialCalcMode(m){
+  if(m.calcMode) return m.calcMode;
+  if(m.foam) return "foam";
+  return m.usage==null ? "manual" : "area";
 }
-function materialChanged(){
- const m=materials[Number($("matSelect").value)];if(!m)return;$("matUsage").value=m.usage??"";$("matUnit").value=m.unit||"L";$("foamWrap").classList.toggle("hidden",!m.foam);
- $("matInfo").innerHTML=`<b>${esc(m.series)} ${esc(m.name)}</b><br>${esc(m.feature||"")}<br>通常荷姿：${m.packages?.length?m.packages.join(" / ")+" "+(m.packageUnit||""):"未設定"}`;
+
+function addSpecMaterial(prefillIndex=0){
+  specRows.push({
+    id:"spec-"+Date.now()+"-"+Math.random().toString(16).slice(2),
+    materialIndex:Math.max(0,Math.min(prefillIndex,materials.length-1)),
+    thickness:2.0, foamThickness:25, loss:0.20, manualUsage:null
+  });
+  renderSpecRows();
+  calcAllSpecMaterials();
 }
-$("matSelect").onchange=materialChanged;
-$("foamThickness").onchange=()=>{let u={25:1.75,20:1.4,15:1.2}[$("foamThickness").value];$("matUsage").value=u;$("matUnit").value="kg"};
+
+function removeSpecMaterial(id){
+  specRows=specRows.filter(r=>r.id!==id);
+  renderSpecRows();
+  calcAllSpecMaterials();
+}
+
+function renderSpecRows(){
+  const wrap=$("specMaterialRows");
+  if(!wrap) return;
+  if(!specRows.length){
+    wrap.innerHTML='<div class="info">使用材料がまだありません。「＋ 使用材料を追加」から追加してください。</div>';
+    return;
+  }
+
+  wrap.innerHTML=specRows.map((r,idx)=>{
+    const m=materials[r.materialIndex]||materials[0];
+    const mode=getMaterialCalcMode(m);
+    let fields="";
+
+    if(mode==="thickness"){
+      fields=`<label>膜厚 (mm)<input class="spec-thickness" data-id="${r.id}" type="number" min="0.1" step="0.1" value="${r.thickness}">
+      <small>標準2.0mm。現場ごとに自由入力</small></label>`;
+    }else if(mode==="foam"){
+      fields=`<label>発泡ウレタン厚み<select class="spec-foam-thickness" data-id="${r.id}">
+      <option value="25" ${r.foamThickness==25?"selected":""}>25mm（1.75kg/㎡）</option>
+      <option value="20" ${r.foamThickness==20?"selected":""}>20mm（1.40kg/㎡）</option>
+      <option value="15" ${r.foamThickness==15?"selected":""}>15mm（1.20kg/㎡）</option></select></label>`;
+    }else if(mode==="manual"){
+      fields=`<label>使用量 (${m.unit||"L"}/㎡)<input class="spec-manual-usage" data-id="${r.id}" type="number" min="0" step="0.001" value="${r.manualUsage??""}">
+      <small>標準使用量未登録のため案件ごとに入力</small></label>`;
+    }else{
+      fields=`<label>標準使用量<input value="${m.usage??""} ${m.unit||""}/㎡" disabled></label>`;
+    }
+
+    return `<div class="spec-material-row">
+      <div class="spec-material-head"><strong>材料 ${idx+1}</strong><button class="delete spec-delete" data-id="${r.id}">削除</button></div>
+      <div class="formgrid">
+      <label>製品<select class="spec-product" data-id="${r.id}">
+      ${materials.map((x,i)=>`<option value="${i}" ${i===r.materialIndex?"selected":""}>${esc(x.series)}｜${esc(x.name)}（${esc(x.feature||"")}）</option>`).join("")}
+      </select></label>
+      ${fields}
+      <label>ロス率<select class="spec-loss" data-id="${r.id}">
+      ${[0,.05,.1,.15,.2,.25,.3].map(x=>`<option value="${x}" ${Math.abs(x-r.loss)<1e-9?"selected":""}>${Math.round(x*100)}%</option>`).join("")}
+      </select></label>
+      </div></div>`;
+  }).join("");
+
+  document.querySelectorAll(".spec-delete").forEach(b=>b.onclick=()=>removeSpecMaterial(b.dataset.id));
+  document.querySelectorAll(".spec-product").forEach(el=>el.onchange=()=>{
+    const r=specRows.find(x=>x.id===el.dataset.id); if(!r) return;
+    r.materialIndex=Number(el.value);r.thickness=2.0;r.foamThickness=25;r.manualUsage=null;
+    renderSpecRows();calcAllSpecMaterials();
+  });
+  document.querySelectorAll(".spec-thickness").forEach(el=>el.oninput=()=>{const r=specRows.find(x=>x.id===el.dataset.id);if(r){r.thickness=Number(el.value)||0;calcAllSpecMaterials();}});
+  document.querySelectorAll(".spec-foam-thickness").forEach(el=>el.onchange=()=>{const r=specRows.find(x=>x.id===el.dataset.id);if(r){r.foamThickness=Number(el.value)||25;calcAllSpecMaterials();}});
+  document.querySelectorAll(".spec-manual-usage").forEach(el=>el.oninput=()=>{const r=specRows.find(x=>x.id===el.dataset.id);if(r){r.manualUsage=el.value===""?null:Number(el.value);calcAllSpecMaterials();}});
+  document.querySelectorAll(".spec-loss").forEach(el=>el.onchange=()=>{const r=specRows.find(x=>x.id===el.dataset.id);if(r){r.loss=Number(el.value);calcAllSpecMaterials();}});
+}
+
 function bestPlan(req,packs){
  const s=[...packs].filter(x=>x>0).sort((a,b)=>b-a);let best=null;
- function rec(i,total,parts){if(total>=req){let count=parts.reduce((x,p)=>x+p.count,0),over=total-req;if(!best||over<best.over-1e-9||(Math.abs(over-best.over)<1e-9&&count<best.count))best={total,over,count,parts:parts.filter(p=>p.count)};return}if(i>=s.length)return;let size=s[i],max=Math.ceil((req-total)/size)+2;for(let c=0;c<=max;c++)rec(i+1,total+c*size,[...parts,{size,count:c}])}rec(0,0,[]);return best;
+ function rec(i,total,parts){
+   if(total>=req){
+     let count=parts.reduce((x,p)=>x+p.count,0),over=total-req;
+     if(!best||over<best.over-1e-9||(Math.abs(over-best.over)<1e-9&&count<best.count))best={total,over,count,parts:parts.filter(p=>p.count)};
+     return;
+   }
+   if(i>=s.length)return;
+   let size=s[i],max=Math.ceil((req-total)/size)+2;
+   for(let c=0;c<=max;c++)rec(i+1,total+c*size,[...parts,{size,count:c}]);
+ }
+ rec(0,0,[]);return best;
 }
-function calcMat(){
- const area=n("matArea"),usage=n("matUsage"),unit=$("matUnit").value,loss=Number($("matLoss").value),m=materials[Number($("matSelect").value)],theory=area*usage,req=theory*(1+loss);
- let order="—";if(m?.packages?.length&&m.packageUnit===unit){let p=bestPlan(req,m.packages);order=p?p.parts.map(x=>`${x.size}${unit}×${x.count}`).join(" ＋ ")+`（計${fmt(p.total,1)}${unit}）`:"—"}else if(m?.packages?.length)order=`換算不可（使用量:${unit} / 荷姿:${m.packageUnit}）`;
- $("matRequired").textContent=`${fmt(req)}${unit}`;$("matDetail").innerHTML=`<div class="resultline"><span>理論量</span><b>${fmt(theory)}${unit}</b></div><div class="resultline"><span>ロス率</span><b>${fmt(loss*100,0)}%</b></div><div class="resultline"><span>通常荷姿</span><b>${m?.packages?.join(" / ")||"—"} ${m?.packageUnit||""}</b></div><div class="resultline"><span>発注目安</span><b>${order}</b></div>`;
- $("matFormula").textContent=`${fmt(area)}㎡ × ${fmt(usage,3)}${unit}/㎡ × ${fmt(1+loss,2)} = ${fmt(req)}${unit}`;
- state.material={area,usage,unit,loss,required:req,material:m,order};
+
+function calcSpecRow(r,area){
+  const m=materials[r.materialIndex]; if(!m) return null;
+  const mode=getMaterialCalcMode(m);
+  let usage=0,basis="";
+
+  if(mode==="thickness"){
+    usage=(m.usage||0)*(r.thickness||0);
+    basis=`${fmt(area)}㎡ × ${fmt(r.thickness,1)}mm × ${fmt(m.usage||0,3)}${m.unit}/㎡/mm`;
+  }else if(mode==="foam"){
+    const map={25:1.75,20:1.40,15:1.20}; usage=map[r.foamThickness]||0;
+    basis=`${fmt(area)}㎡ × ${r.foamThickness}mm時 ${fmt(usage,2)}kg/㎡`;
+  }else if(mode==="manual"){
+    usage=r.manualUsage||0; basis=`${fmt(area)}㎡ × ${fmt(usage,3)}${m.unit}/㎡`;
+  }else{
+    usage=m.usage||0; basis=`${fmt(area)}㎡ × ${fmt(usage,3)}${m.unit}/㎡`;
+  }
+
+  const theory=area*usage,required=theory*(1+r.loss);
+  let order="荷姿未設定",plan=null;
+
+  if(m.packages?.length&&m.packageUnit===m.unit){
+    plan=bestPlan(required,m.packages);
+    if(plan) order=plan.parts.map(x=>`${x.size}${m.unit} × ${x.count}セット`).join(" ＋ ");
+  }else if(m.packages?.length){
+    order=`換算不可（必要量:${m.unit} / 荷姿:${m.packageUnit||"未設定"}）`;
+  }
+  return {row:r,material:m,mode,usage,theory,required,order,plan,basis};
 }
-$("calcMat").onclick=calcMat;
-document.querySelectorAll(".send").forEach(b=>b.onclick=()=>{let a=b.dataset.source==="roof"?state.roofArea:b.dataset.source==="tank"?state.tankArea:state.flatArea;if(!a)return alert("先に面積を計算してください");$("matArea").value=a.toFixed(2);show("material")});
-$("goProject").onclick=()=>show("projects");
+
+function calcAllSpecMaterials(){
+  const area=n("matArea"),results=specRows.map(r=>calcSpecRow(r,area)).filter(Boolean);
+  state.specMaterials=results;
+  if(!results.length){
+    $("specSummary").innerHTML='<div class="info">使用材料を追加すると、ここに「何を何セット」が表示されます。</div>';
+    $("specDetails").innerHTML="";return;
+  }
+
+  $("specSummary").innerHTML=results.map(x=>`<div class="spec-summary-item">
+    <span>${esc(x.material.name)}</span><strong>${x.order}</strong>
+  </div>`).join("");
+
+  $("specDetails").innerHTML=results.map(x=>{
+    const m=x.material;
+    const thickness=x.mode==="thickness"?`<div class="resultline"><span>膜厚</span><b>${fmt(x.row.thickness,1)}mm</b></div>`:
+                    x.mode==="foam"?`<div class="resultline"><span>発泡厚</span><b>${x.row.foamThickness}mm</b></div>`:"";
+    return `<div class="spec-detail"><b>${esc(m.series)} ${esc(m.name)}</b>${thickness}
+      <div class="resultline"><span>理論量</span><b>${fmt(x.theory,2)}${m.unit}</b></div>
+      <div class="resultline"><span>ロス率</span><b>${Math.round(x.row.loss*100)}%</b></div>
+      <div class="resultline"><span>必要量</span><b>${fmt(x.required,2)}${m.unit}</b></div>
+      <div class="resultline"><span>通常荷姿</span><b>${m.packages?.length?m.packages.join(" / ")+" "+(m.packageUnit||""):"未設定"}</b></div>
+      <div class="resultline"><span>発注目安</span><b>${x.order}</b></div>
+      <pre>${x.basis} × ${fmt(1+x.row.loss,2)} = ${fmt(x.required,2)}${m.unit}</pre></div>`;
+  }).join("");
+}
+
+if($("addSpecMaterial")) $("addSpecMaterial").onclick=()=>addSpecMaterial(0);
+if($("calcAllMaterials")) $("calcAllMaterials").onclick=calcAllSpecMaterials;
+if($("matArea")) $("matArea").addEventListener("input",calcAllSpecMaterials);
+if($("goProject")) $("goProject").onclick=()=>show("projects");
+
+document.querySelectorAll(".send").forEach(b=>b.onclick=()=>{
+  let a=b.dataset.source==="roof"?state.roofArea:b.dataset.source==="tank"?state.tankArea:state.flatArea;
+  if(!a)return alert("先に面積を計算してください");
+  $("matArea").value=a.toFixed(2);calcAllSpecMaterials();show("material");
+});
 
 // master
 function renderMaster(){
- $("materialMaster").innerHTML=materials.map((m,i)=>`<tr><td>${esc(m.series)}</td><td>${esc(m.name)}</td><td>${esc(m.feature||"")}</td><td>${m.usage??"未設定"}</td><td>${m.unit?m.unit+"/㎡":"—"}</td><td>${m.packages?.join(" / ")||"—"} ${m.packageUnit||""}</td><td><button class="secondary editmat" data-i="${i}">編集</button></td></tr>`).join("");
+ $("materialMaster").innerHTML=materials.map((m,i)=>{
+   const mode=getMaterialCalcMode(m);
+   const ml={area:"面積連動",thickness:"膜厚連動",foam:"厚み別",manual:"案件入力"}[mode]||mode;
+   const ul=mode==="thickness"?(m.usage!=null?`${m.usage}${m.unit}/㎡/mm`:"未設定"):
+            mode==="area"?(m.usage!=null?`${m.usage}${m.unit}/㎡`:"未設定"):
+            mode==="foam"?"15/20/25mm別":"案件ごと";
+   return `<tr><td>${esc(m.series)}</td><td>${esc(m.name)}</td><td>${esc(m.feature||"")}</td><td>${ml}</td><td>${ul}</td><td>${m.packages?.join(" / ")||"—"} ${m.packageUnit||""}</td><td><button class="secondary editmat" data-i="${i}">編集</button></td></tr>`;
+ }).join("");
  document.querySelectorAll(".editmat").forEach(b=>b.onclick=()=>openMatEdit(Number(b.dataset.i)));
- $("waveMaster").innerHTML=waves.map((w,i)=>`<tr><td><input class="wn" data-i="${i}" value="${esc(w.name)}"></td><td><input class="wf" data-i="${i}" type="number" step=".001" value="${w.factor??""}"></td><td><input class="wno" data-i="${i}" value="${esc(w.note||"")}"></td></tr>`).join("");
+ $("waveMaster").innerHTML=waves.map((w,i)=>`<tr><td><input class="wn" data-i="${i}" value="${esc(w.name)}"></td><td><input class="wf" data-i="${i}" type="number" step="0.001" value="${w.factor??""}"></td><td><input class="wno" data-i="${i}" value="${esc(w.note||"")}"></td></tr>`).join("");
 }
 function openMatEdit(i){
- const m=i>=0?materials[i]:{series:"",name:"",feature:"",usage:null,unit:"",packages:[],packageUnit:""};$("editIndex").value=i;$("editSeries").value=m.series;$("editName").value=m.name;$("editFeature").value=m.feature||"";$("editUsage").value=m.usage??"";$("editUnit").value=m.unit||"";$("editPackages").value=(m.packages||[]).join(",");$("editPackageUnit").value=m.packageUnit||"";$("materialDialog").showModal()
+ const m=i>=0?materials[i]:{series:"",name:"",feature:"",calcMode:"manual",usage:null,unit:"",packages:[],packageUnit:""};
+ $("editIndex").value=i;
+ $("editSeries").value=m.series||"";
+ $("editName").value=m.name||"";
+ $("editFeature").value=m.feature||"";
+ $("editCalcMode").value=getMaterialCalcMode(m);
+ $("editUsage").value=m.usage??"";
+ $("editUnit").value=m.unit||"";
+ $("editPackages").value=(m.packages||[]).join(",");
+ $("editPackageUnit").value=m.packageUnit||"";
+ $("materialDialog").showModal();
 }
-$("addMaterial").onclick=()=>openMatEdit(-1);$("closeMaterial").onclick=()=>$("materialDialog").close();
-$("saveMaterialEdit").onclick=()=>{let i=Number($("editIndex").value),m={id:i>=0?materials[i].id:"custom-"+Date.now(),series:$("editSeries").value.trim(),name:$("editName").value.trim(),feature:$("editFeature").value.trim(),usage:$("editUsage").value===""?null:n("editUsage"),unit:$("editUnit").value,packages:$("editPackages").value.split(",").map(x=>Number(x.trim())).filter(Boolean),packageUnit:$("editPackageUnit").value};if(!m.name)return alert("製品名を入力してください");if(i>=0)materials[i]={...materials[i],...m};else materials.push(m);save(S.materials,materials);$("materialDialog").close();renderMaster();renderMaterialSelect()};
-$("saveMaster").onclick=()=>{document.querySelectorAll(".wn").forEach(x=>waves[Number(x.dataset.i)].name=x.value);document.querySelectorAll(".wf").forEach(x=>waves[Number(x.dataset.i)].factor=x.value===""?null:Number(x.value));document.querySelectorAll(".wno").forEach(x=>waves[Number(x.dataset.i)].note=x.value);save(S.waves,waves);renderWaveSelect();alert("保存しました")};
-
+$("addMaterial").onclick=()=>openMatEdit(-1);
+$("closeMaterial").onclick=()=>$("materialDialog").close();
+$("saveMaterialEdit").onclick=()=>{
+ const i=Number($("editIndex").value);
+ const m={
+   id:i>=0?materials[i].id:"custom-"+Date.now(),
+   series:$("editSeries").value.trim(),
+   name:$("editName").value.trim(),
+   feature:$("editFeature").value.trim(),
+   calcMode:$("editCalcMode").value,
+   usage:$("editUsage").value===""?null:n("editUsage"),
+   unit:$("editUnit").value,
+   packages:$("editPackages").value.split(",").map(x=>Number(x.trim())).filter(Boolean),
+   packageUnit:$("editPackageUnit").value
+ };
+ if(!m.name)return alert("製品名を入力してください");
+ if(i>=0)materials[i]={...materials[i],...m};else materials.push(m);
+ save(S.materials,materials);
+ $("materialDialog").close();
+ renderMaster();renderSpecRows();calcAllSpecMaterials();
+};
+$("saveMaster").onclick=()=>{
+ document.querySelectorAll(".wn").forEach(x=>waves[Number(x.dataset.i)].name=x.value);
+ document.querySelectorAll(".wf").forEach(x=>waves[Number(x.dataset.i)].factor=x.value===""?null:Number(x.value));
+ document.querySelectorAll(".wno").forEach(x=>waves[Number(x.dataset.i)].note=x.value);
+ save(S.waves,waves);renderWaveSelect();alert("保存しました");
+};
 
 function renderSealMaster(){
-  const body=$("sealMaster");
-  if(!body) return;
-  body.innerHTML=seals.map((s,i)=>`<tr>
-    <td>${esc(s.name)}</td>
-    <td>${s.volume??""}</td>
-    <td>${esc(s.note||"")}</td>
-    <td><button class="secondary editseal" data-i="${i}">編集</button></td>
-  </tr>`).join("");
-  document.querySelectorAll(".editseal").forEach(b=>b.onclick=()=>openSealEdit(Number(b.dataset.i)));
+ const body=$("sealMaster");if(!body)return;
+ body.innerHTML=seals.map((s,i)=>`<tr><td>${esc(s.name)}</td><td>${s.volume??""}</td><td>${esc(s.note||"")}</td><td><button class="secondary editseal" data-i="${i}">編集</button></td></tr>`).join("");
+ document.querySelectorAll(".editseal").forEach(b=>b.onclick=()=>openSealEdit(Number(b.dataset.i)));
 }
 function openSealEdit(i){
-  const s=i>=0?seals[i]:{name:"",volume:320,note:""};
-  $("editSealIndex").value=i;
-  $("editSealName").value=s.name||"";
-  $("editSealVolume").value=s.volume||"";
-  $("editSealNote").value=s.note||"";
-  $("sealDialog").showModal();
+ const s=i>=0?seals[i]:{name:"",volume:320,note:""};
+ $("editSealIndex").value=i;$("editSealName").value=s.name||"";$("editSealVolume").value=s.volume||"";$("editSealNote").value=s.note||"";$("sealDialog").showModal();
 }
-if($("addSealProduct")) $("addSealProduct").onclick=()=>openSealEdit(-1);
-if($("closeSealDialog")) $("closeSealDialog").onclick=()=>$("sealDialog").close();
-if($("saveSealEdit")) $("saveSealEdit").onclick=()=>{
-  const i=Number($("editSealIndex").value);
-  const item={
-    name:$("editSealName").value.trim(),
-    volume:Number($("editSealVolume").value)||0,
-    note:$("editSealNote").value.trim()
-  };
-  if(!item.name) return alert("製品名を入力してください");
-  if(!item.volume) return alert("容量を入力してください");
-  if(i>=0) seals[i]=item; else seals.push(item);
-  save(S.seals,seals);
-  $("sealDialog").close();
-  renderSealMaster();
-  renderSealSelect();
+if($("addSealProduct"))$("addSealProduct").onclick=()=>openSealEdit(-1);
+if($("closeSealDialog"))$("closeSealDialog").onclick=()=>$("sealDialog").close();
+if($("saveSealEdit"))$("saveSealEdit").onclick=()=>{
+ const i=Number($("editSealIndex").value),item={name:$("editSealName").value.trim(),volume:Number($("editSealVolume").value)||0,note:$("editSealNote").value.trim()};
+ if(!item.name)return alert("製品名を入力してください");
+ if(!item.volume)return alert("容量を入力してください");
+ if(i>=0)seals[i]=item;else seals.push(item);
+ save(S.seals,seals);$("sealDialog").close();renderSealMaster();renderSealSelect();
 };
 
 // projects
-$("gasEndpoint").value=localStorage.getItem(S.endpoint)||"";$("saveEndpoint").onclick=()=>{localStorage.setItem(S.endpoint,$("gasEndpoint").value.trim());alert("保存しました")};
+$("gasEndpoint").value=localStorage.getItem(S.endpoint)||"";
+$("saveEndpoint").onclick=()=>{localStorage.setItem(S.endpoint,$("gasEndpoint").value.trim());alert("保存しました")};
 $("saveProject").onclick=async()=>{
- if(!state.material)return alert("先に材料計算をしてください");
- const p={id:Date.now(),createdAt:new Date().toISOString(),name:$("projectName").value.trim()||"名称未設定",owner:$("projectOwner").value.trim(),memo:$("projectMemo").value.trim(),roofArea:state.roofArea||null,tankArea:state.tankArea||null,tankSeal:state.tankSeal||null,flatArea:state.flatArea||null,material:{name:`${state.material.material.series} ${state.material.material.name}`,area:state.material.area,required:state.material.required,unit:state.material.unit,loss:state.material.loss,order:state.material.order}};
- projects.unshift(p);save(S.projects,projects);renderProjects();let ep=localStorage.getItem(S.endpoint);if(ep)fetch(ep,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"saveProject",project:p})}).catch(()=>{});alert("案件を保存しました");
+ if(!state.specMaterials||!state.specMaterials.length)return alert("先に仕様材料を計算してください");
+ const mats=state.specMaterials.map(x=>({
+   name:`${x.material.series} ${x.material.name}`,
+   required:x.required,unit:x.material.unit,loss:x.row.loss,order:x.order,
+   thickness:x.mode==="thickness"?x.row.thickness:null,
+   foamThickness:x.mode==="foam"?x.row.foamThickness:null
+ }));
+ const p={
+   id:Date.now(),createdAt:new Date().toISOString(),
+   name:$("projectName").value.trim()||"名称未設定",
+   owner:$("projectOwner").value.trim(),memo:$("projectMemo").value.trim(),
+   roofArea:state.roofArea||null,tankArea:state.tankArea||null,tankSeal:state.tankSeal||null,flatArea:state.flatArea||null,
+   area:n("matArea"),specificationMaterials:mats
+ };
+ projects.unshift(p);save(S.projects,projects);renderProjects();
+ const ep=localStorage.getItem(S.endpoint);
+ if(ep)fetch(ep,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action:"saveProject",project:p})}).catch(()=>{});
+ alert("案件を保存しました");
 };
-function renderProjects(){$("projectList").innerHTML=projects.length?projects.map(p=>`<div class="project"><b>${esc(p.name)}</b><br><small>${new Date(p.createdAt).toLocaleString("ja-JP")} ${p.owner?"｜"+esc(p.owner):""}</small><p>${fmt(p.material.area)}㎡ ｜ ${esc(p.material.name)} ｜ ${fmt(p.material.required)}${p.material.unit}${p.tankSeal?` ｜ シール${fmt(p.tankSeal,1)}m`:""}</p>${p.memo?`<p>${esc(p.memo)}</p>`:""}</div>`).join(""):"<p>まだ案件はありません。</p>"}
+function renderProjects(){
+ $("projectList").innerHTML=projects.length?projects.map(p=>{
+   if(Array.isArray(p.specificationMaterials)){
+     const mats=p.specificationMaterials.map(m=>`${esc(m.name)}：${esc(m.order||`${fmt(m.required)}${m.unit}`)}`).join("<br>");
+     return `<div class="project"><b>${esc(p.name)}</b><br><small>${new Date(p.createdAt).toLocaleString("ja-JP")} ${p.owner?"｜"+esc(p.owner):""}</small><p>施工面積 ${fmt(p.area||0)}㎡${p.tankSeal?` ｜ シール延長 ${fmt(p.tankSeal,1)}m`:""}</p><p>${mats}</p>${p.memo?`<p>${esc(p.memo)}</p>`:""}</div>`;
+   }
+   return `<div class="project"><b>${esc(p.name)}</b><br><small>${new Date(p.createdAt).toLocaleString("ja-JP")} ${p.owner?"｜"+esc(p.owner):""}</small>${p.memo?`<p>${esc(p.memo)}</p>`:""}</div>`;
+ }).join(""):"<p>まだ案件はありません。</p>";
+}
 
-renderWaveSelect();renderMaterialSelect();renderMaster();renderSealSelect();renderSealMaster();renderProjects();addFlat({type:"平場",name:"A面",a:10,b:8,q:1});calcRoof();calcTank();calcFlat();calcMat();
-if($("calcSealCount")) $("calcSealCount").onclick=()=>calcSealCount(true);
-["sealVolume","sealWidth","sealDepth"].forEach(id=>{
-  if($(id)) $(id).addEventListener("input",()=>calcSealCount(false));
-});
-if($("sealReserve")) $("sealReserve").addEventListener("change",()=>calcSealCount(false));
+// init
+renderWaveSelect();
+renderMaster();
+renderSealSelect();
+renderSealMaster();
+renderProjects();
+addFlat({type:"平場",name:"A面",a:10,b:8,q:1});
+calcRoof();calcTank();calcFlat();
+addSpecMaterial(0);
+if($("calcSealCount"))$("calcSealCount").onclick=()=>calcSealCount(true);
+["sealVolume","sealWidth","sealDepth"].forEach(id=>{if($(id))$(id).addEventListener("input",()=>calcSealCount(false));});
+if($("sealReserve"))$("sealReserve").addEventListener("change",()=>calcSealCount(false));
