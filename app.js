@@ -353,16 +353,16 @@ function calcVessel(){
 }
 function updateVesselFields(){const c=$("vesselShape").value==="cylinder";document.querySelectorAll(".vessel-cylinder").forEach(x=>x.classList.toggle("hidden",!c));document.querySelectorAll(".vessel-rect").forEach(x=>x.classList.toggle("hidden",c));calcVessel()}
 ["vesselD","vesselH","vesselL","vesselW","vesselRH","vesselQty"].forEach(id=>$(id).addEventListener("input",calcVessel));
-$("vesselShape").addEventListener("change",updateVesselFields);$("vesselScope").addEventListener("change",calcVessel);
+$("vesselShape").addEventListener("change",updateVesselFields);$("vesselScope").addEventListener("change",calcVessel);if($("calcVesselBtn"))$("calcVesselBtn").onclick=calcVessel;
 
 // 配管
 function calcPipe(){const D=n("pipeD")/1000,L=n("pipeL"),q=Math.max(1,n("pipeQty")),area=Math.PI*D*L*q;state.pipeArea=area;$("pipeArea").textContent=`${fmt(area)}㎡`;$("pipeFormula").textContent=`π × 外径 ${fmt(D,3)}m × 長さ ${fmt(L)}m × ${q}本 = ${fmt(area)}㎡`;}
-["pipeD","pipeL","pipeQty"].forEach(id=>$(id).addEventListener("input",calcPipe));
+["pipeD","pipeL","pipeQty"].forEach(id=>$(id).addEventListener("input",calcPipe));if($("calcPipeBtn"))$("calcPipeBtn").onclick=calcPipe;
 
 // 製品・部品塗装
 function updateProductFields(){const sh=$("productShape").value;document.querySelectorAll(".product-ab").forEach(x=>x.classList.toggle("hidden",!["plate","box"].includes(sh)));document.querySelectorAll(".product-c").forEach(x=>x.classList.toggle("hidden",!["box","cylinder"].includes(sh)));document.querySelectorAll(".product-d").forEach(x=>x.classList.toggle("hidden",sh!=="cylinder"));document.querySelectorAll(".product-direct").forEach(x=>x.classList.toggle("hidden",sh!=="direct"));calcProduct()}
 function calcProduct(){const sh=$("productShape").value,q=Math.max(1,n("productQty"));let one=0,formula="";if(sh==="plate"){one=n("productA")*n("productB");formula=`${fmt(n("productA"))} × ${fmt(n("productB"))}`;}else if(sh==="box"){const a=n("productA"),b=n("productB"),c=n("productC");one=2*(a*b+a*c+b*c);formula=`2 × (L×W ＋ L×H ＋ W×H)`;}else if(sh==="cylinder"){const d=n("productD"),h=n("productC")||1;one=Math.PI*d*h+Math.PI*d*d/2;formula=`円筒外面（側面＋両端）`;}else{one=n("productDirect");formula=`直接入力 ${fmt(one)}㎡`;}const area=one*q;state.productArea=area;$("productArea").textContent=`${fmt(area)}㎡`;$("productFormula").textContent=`${formula} × ${q}個 = ${fmt(area)}㎡`;}
-$("productShape").addEventListener("change",updateProductFields);["productQty","productA","productB","productC","productD","productDirect"].forEach(id=>$(id).addEventListener("input",calcProduct));
+$("productShape").addEventListener("change",updateProductFields);["productQty","productA","productB","productC","productD","productDirect"].forEach(id=>$(id).addEventListener("input",calcProduct));if($("calcProductBtn"))$("calcProductBtn").onclick=calcProduct;
 
 // その他
 function calcOther(){state.otherArea=Math.max(0,n("otherAreaInput"));$("otherArea").textContent=`${fmt(state.otherArea)}㎡`;}
@@ -643,7 +643,7 @@ renderSealSelect();
 renderSealMaster();
 renderProjects();
 addFlat({type:"平場",name:"A面",a:10,b:8,q:1});
-calcRoof();calcTank();calcFlat();updateVesselFields();calcPipe();updateProductFields();calcOther();
+if($("calcOtherBtn"))$("calcOtherBtn").onclick=calcOther;calcRoof();calcTank();calcFlat();updateVesselFields();calcPipe();updateProductFields();calcOther();
 addSpecMaterial(0);
 if($("calcSealCount"))$("calcSealCount").onclick=()=>calcSealCount(true);
 ["sealVolume","sealWidth","sealDepth"].forEach(id=>{if($(id))$(id).addEventListener("input",()=>calcSealCount(false));});

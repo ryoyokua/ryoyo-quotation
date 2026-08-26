@@ -167,7 +167,7 @@
 <label class="vessel-rect hidden">幅 W(m)<input id="vesselW" type="number" value="3" step=".01"></label>
 <label class="vessel-rect hidden">高さ H(m)<input id="vesselRH" type="number" value="2" step=".01"></label>
 <label>基数<input id="vesselQty" type="number" value="1" min="1" step="1"></label>
-</div></div><div class="card result"><h3>結果</h3><div class="big"><span>施工面積</span><strong id="vesselArea">—</strong></div><pre id="vesselFormula"></pre><button class="secondary send" data-source="vessel">材料計算へ送る</button></div></div>
+</div><button class="primary" id="calcVesselBtn">計算</button></div><div class="card result"><h3>結果</h3><div class="big"><span>施工面積</span><strong id="vesselArea">—</strong></div><pre id="vesselFormula"></pre><button class="secondary send" data-source="vessel">材料計算へ送る</button></div></div>
 </section>
 
 <section id="pipe" class="view">
@@ -176,7 +176,7 @@
 <label>外径 (mm)<input id="pipeD" type="number" value="100" step=".1"></label>
 <label>長さ (m)<input id="pipeL" type="number" value="10" step=".01"></label>
 <label>本数<input id="pipeQty" type="number" value="1" min="1" step="1"></label>
-</div><div class="info">直管外面の概算です。エルボ・フランジ・バルブ等は必要に応じて別途拾います。</div></div>
+</div><div class="info">直管外面の概算です。エルボ・フランジ・バルブ等は必要に応じて別途拾います。</div><button class="primary" id="calcPipeBtn">計算</button></div>
 <div class="card result"><h3>結果</h3><div class="big"><span>施工面積</span><strong id="pipeArea">—</strong></div><pre id="pipeFormula"></pre><button class="secondary send" data-source="pipe">材料計算へ送る</button></div></div>
 </section>
 
@@ -190,12 +190,12 @@
 <label class="product-c hidden">高さ H(m)<input id="productC" type="number" value="1" step=".01"></label>
 <label class="product-d hidden">直径 D(m)<input id="productD" type="number" value="1" step=".01"></label>
 <label class="product-direct hidden">1個あたり施工面積 (㎡)<input id="productDirect" type="number" value="1" step=".01"></label>
-</div></div><div class="card result"><h3>結果</h3><div class="big"><span>施工面積</span><strong id="productArea">—</strong></div><pre id="productFormula"></pre><button class="secondary send" data-source="product">材料計算へ送る</button></div></div>
+</div><button class="primary" id="calcProductBtn">計算</button></div><div class="card result"><h3>結果</h3><div class="big"><span>施工面積</span><strong id="productArea">—</strong></div><pre id="productFormula"></pre><button class="secondary send" data-source="product">材料計算へ送る</button></div></div>
 </section>
 
 <section id="other" class="view">
 <div class="title"><div><span class="badge">OTHER</span><h2>その他</h2></div></div>
-<div class="card"><h3>施工面積を直接入力</h3><div class="formgrid"><label>施工面積 (㎡)<input id="otherAreaInput" type="number" value="100" min="0" step=".01"></label></div>
+<div class="card"><h3>施工面積を直接入力</h3><div class="formgrid"><label>施工面積 (㎡)<input id="otherAreaInput" type="number" value="100" min="0" step=".01"></label></div><button class="primary" id="calcOtherBtn">計算</button>
 <div class="big"><span>施工面積</span><strong id="otherArea">100.00㎡</strong></div><button class="secondary send" data-source="other">材料計算へ送る</button></div>
 </section>
 
