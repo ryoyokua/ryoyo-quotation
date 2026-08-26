@@ -657,6 +657,30 @@ function currentConfigs(){return specRows.map(r=>{const m=materials[r.materialIn
 function rowsFromConfigs(cs){return(cs||[]).map((c,i)=>{let mi=materials.findIndex(m=>m.id===c.materialId);if(mi<0)mi=0;const m=materials[mi];return{id:"p"+Date.now()+i,materialIndex:mi,thickness:c.thickness??m.standardThickness??2,foamThickness:c.foamThickness??m.standardThickness??25,loss:c.loss??m.defaultLoss??.2,usageOverride:c.usageOverride??null,manualUsage:c.manualUsage??null};});}
 function itemMaterials(it){return(it.materialConfigs||[]).map(c=>{let i=materials.findIndex(m=>m.id===c.materialId);if(i<0)i=0;const m=materials[i],mode=getMaterialCalcMode(m);let u=mode==="thickness"?(m.usage||0)*(c.thickness??2):mode==="foam"?({25:1.75,20:1.4,15:1.2}[c.foamThickness]||0):mode==="manual"?(c.manualUsage||0):(c.usageOverride??m.usage??0);return{m,required:it.area*u*(1+(c.loss||0)),c,mode};});}
 function aggregates(){const g=new Map();projectItems.forEach(it=>itemMaterials(it).forEach(x=>{const c=x.c,k=[x.m.id,x.mode,c.thickness??"",c.foamThickness??"",c.loss??"",c.usageOverride??"",c.manualUsage??""].join("|");if(!g.has(k))g.set(k,{m:x.m,required:0,targets:[]});g.get(k).required+=x.required;g.get(k).targets.push(it.title||it.label);}));return[...g.values()].map(x=>({...x,order:orderPlan(x.m,x.required)}));}
+function renderMaterialCalcList(){
+ if(!$("materialCalcItems"))return;
+ $("materialCalcTotal").textContent=`${fmt(projectItems.reduce((a,x)=>a+Number(x.area||0),0))}㎡`;
+ $("materialCalcItems").innerHTML=projectItems.length?projectItems.map(x=>`
+   <div class="calc-item ${x.id===selectedCalcItemId?"active":""}">
+     <div class="calc-item-main">
+       <div><b>${esc(x.title||x.label)}</b><br><small>${esc(x.label)} ｜ ${fmt(x.area)}㎡</small></div>
+       <div class="calc-item-actions">
+         <button class="secondary material-select-calc" data-id="${x.id}">選択</button>
+         <button class="delete material-remove-calc" data-id="${x.id}">削除</button>
+       </div>
+     </div>
+   </div>`).join(""):"<p>まだ追加されていません。</p>";
+ document.querySelectorAll(".material-select-calc").forEach(b=>b.onclick=()=>selectCalcItem(Number(b.dataset.id)));
+ document.querySelectorAll(".material-remove-calc").forEach(b=>b.onclick=()=>{
+   const id=Number(b.dataset.id);
+   projectItems=projectItems.filter(x=>x.id!==id);
+   if(selectedCalcItemId===id){
+     selectedCalcItemId=null;editingWorkItemId=null;
+     $("currentWorkItemLabel").textContent="各数量ページから「材料計算へ追加」してください。";
+   }
+   renderMaterialCalcList();renderProjectDraft();updateProjectStatus();
+ });
+}
 function renderProjectDraft(){
  if($("projectTotalArea"))$("projectTotalArea").textContent=`合計 ${fmt(projectItems.reduce((a,x)=>a+Number(x.area||0),0))}㎡`;
  if($("currentProjectItems"))$("currentProjectItems").innerHTML=projectItems.length?projectItems.map(x=>`
@@ -670,6 +694,7 @@ function renderProjectDraft(){
  if($("projectMaterialSummary"))$("projectMaterialSummary").innerHTML=ag.length?ag.map(x=>`<div class="resultline"><span>${esc(x.m.series)} ${esc(x.m.name)}<br><small>${[...new Set(x.targets)].map(esc).join(" / ")}</small></span><b>${esc(x.order||fmt(x.required,2)+x.m.unit)}</b></div>`).join(""):"<p>材料仕様を設定すると表示されます。</p>";
  document.querySelectorAll(".remove-work").forEach(b=>b.onclick=()=>{const id=Number(b.dataset.id);projectItems=projectItems.filter(x=>x.id!==id);if(selectedCalcItemId===id){selectedCalcItemId=null;editingWorkItemId=null;$("currentWorkItemLabel").textContent="各数量ページから「材料計算へ追加」してください。";}renderProjectDraft();updateProjectStatus();});
  document.querySelectorAll(".select-calc").forEach(b=>b.onclick=()=>selectCalcItem(Number(b.dataset.id)));
+ renderMaterialCalcList();
  updateProjectStatus();
 }
 function editWork(i){const x=projectItems[i];if(x)selectCalcItem(x.id);}
@@ -759,6 +784,13 @@ if($("saveSealEdit"))$("saveSealEdit").onclick=()=>{
 // projects
 $("gasEndpoint").value=localStorage.getItem(S.endpoint)||"";
 $("saveEndpoint").onclick=()=>{localStorage.setItem(S.endpoint,$("gasEndpoint").value.trim());alert("保存しました")};
+if($("materialClearAll"))$("materialClearAll").onclick=()=>{
+ if(!projectItems.length)return;
+ if(!confirm("追加した計算をすべて削除しますか？\n保存済み案件は削除されません。"))return;
+ projectItems=[];selectedCalcItemId=null;editingWorkItemId=null;
+ $("currentWorkItemLabel").textContent="各数量ページから「材料計算へ追加」してください。";
+ renderMaterialCalcList();renderProjectDraft();updateProjectStatus();
+};
 if($("clearMultiCalc"))$("clearMultiCalc").onclick=()=>{
  if(!projectItems.length)return;
  if(!confirm("複数計算をすべて削除しますか？\\n保存済み案件は削除されません。"))return;

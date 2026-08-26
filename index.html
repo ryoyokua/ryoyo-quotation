@@ -443,7 +443,17 @@ input,select,textarea,button{max-width:100%}
 </section>
 
 <section id="material" class="view">
-<div class="title"><div><span class="badge">MATERIAL</span><h2>材料計算</h2></div><div class="card"><div><b>現在選択中</b><p class="muted" id="currentWorkItemLabel">各数量ページから「材料計算へ追加」してください。</p></div></div><button class="help" data-help="material">？計算方法</button></div>
+<div class="title"><div><span class="badge">MATERIAL</span><h2>材料計算</h2></div><div class="card"><div><b>現在選択中</b><p class="muted" id="currentWorkItemLabel">各数量ページから「材料計算へ追加」してください。</p></div></div><div class="card" id="materialMultiList">
+  <div class="headrow">
+    <div>
+      <b>追加した計算</b>
+      <p class="muted">各ページから追加した施工対象をタイトルごとに保持します。</p>
+    </div>
+    <button class="secondary" id="materialClearAll">一括削除</button>
+  </div>
+  <div id="materialCalcItems"><p>まだ追加されていません。</p></div>
+  <div class="resultline"><span><b>合計施工面積</b></span><b id="materialCalcTotal">0.00㎡</b></div>
+</div><button class="help" data-help="material">？計算方法</button></div>
 
 <div class="card">
 <h3>施工条件</h3>
