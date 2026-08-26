@@ -381,7 +381,7 @@ function addSpecMaterial(prefillIndex=0){
   specRows.push({
     id:"spec-"+Date.now()+"-"+Math.random().toString(16).slice(2),
     materialIndex:Math.max(0,Math.min(prefillIndex,materials.length-1)),
-    thickness:2.0, foamThickness:25, loss:0.20, manualUsage:null
+    thickness:2.0, foamThickness:25, loss:0.20, manualUsage:null, usageOverride:null
   });
   renderSpecRows();
   calcAllSpecMaterials();
@@ -407,18 +407,30 @@ function renderSpecRows(){
     let fields="";
 
     if(mode==="thickness"){
-      fields=`<label>膜厚 (mm)<input class="spec-thickness" data-id="${r.id}" type="number" min="0.1" step="0.1" value="${r.thickness}">
-      <small>標準2.0mm。現場ごとに自由入力</small></label>`;
+      fields=`<label>膜厚 (mm)
+        <input class="spec-thickness" data-id="${r.id}" type="number" min="0.1" step="0.1" value="${r.thickness}">
+        <small class="standard-note">標準：2.0mm</small>
+      </label>`;
     }else if(mode==="foam"){
-      fields=`<label>発泡ウレタン厚み<select class="spec-foam-thickness" data-id="${r.id}">
-      <option value="25" ${r.foamThickness==25?"selected":""}>25mm（1.75kg/㎡）</option>
-      <option value="20" ${r.foamThickness==20?"selected":""}>20mm（1.40kg/㎡）</option>
-      <option value="15" ${r.foamThickness==15?"selected":""}>15mm（1.20kg/㎡）</option></select></label>`;
+      fields=`<label>発泡ウレタン厚み
+        <select class="spec-foam-thickness" data-id="${r.id}">
+          <option value="25" ${r.foamThickness==25?"selected":""}>25mm</option>
+          <option value="20" ${r.foamThickness==20?"selected":""}>20mm</option>
+          <option value="15" ${r.foamThickness==15?"selected":""}>15mm</option>
+        </select>
+        <small class="standard-note">標準：25mm　※25mm=1.75kg/㎡ / 20mm=1.40kg/㎡ / 15mm=1.20kg/㎡</small>
+      </label>`;
     }else if(mode==="manual"){
-      fields=`<label>使用量 (${m.unit||"L"}/㎡)<input class="spec-manual-usage" data-id="${r.id}" type="number" min="0" step="0.001" value="${r.manualUsage??""}">
-      <small>標準使用量未登録のため案件ごとに入力</small></label>`;
+      fields=`<label>使用量 (${m.unit||"L"}/㎡)
+        <input class="spec-manual-usage" data-id="${r.id}" type="number" min="0" step="0.001" value="${r.manualUsage??""}">
+        <small class="standard-note">標準：未登録（案件ごとに入力）</small>
+      </label>`;
     }else{
-      fields=`<label>標準使用量<input value="${m.usage??""} ${m.unit||""}/㎡" disabled></label>`;
+      const currentUsage=r.usageOverride??m.usage??0;
+      fields=`<label>使用量 (${m.unit||"L"}/㎡)
+        <input class="spec-area-usage" data-id="${r.id}" type="number" min="0" step="0.001" value="${currentUsage}">
+        <small class="standard-note">標準：${m.usage??"未登録"}${m.usage!=null?m.unit+"/㎡":""}</small>
+      </label>`;
     }
 
     return `<div class="spec-material-row">
@@ -437,12 +449,13 @@ function renderSpecRows(){
   document.querySelectorAll(".spec-delete").forEach(b=>b.onclick=()=>removeSpecMaterial(b.dataset.id));
   document.querySelectorAll(".spec-product").forEach(el=>el.onchange=()=>{
     const r=specRows.find(x=>x.id===el.dataset.id); if(!r) return;
-    r.materialIndex=Number(el.value);r.thickness=2.0;r.foamThickness=25;r.manualUsage=null;
+    r.materialIndex=Number(el.value);r.thickness=2.0;r.foamThickness=25;r.manualUsage=null;r.usageOverride=null;
     renderSpecRows();calcAllSpecMaterials();
   });
   document.querySelectorAll(".spec-thickness").forEach(el=>el.oninput=()=>{const r=specRows.find(x=>x.id===el.dataset.id);if(r){r.thickness=Number(el.value)||0;calcAllSpecMaterials();}});
   document.querySelectorAll(".spec-foam-thickness").forEach(el=>el.onchange=()=>{const r=specRows.find(x=>x.id===el.dataset.id);if(r){r.foamThickness=Number(el.value)||25;calcAllSpecMaterials();}});
   document.querySelectorAll(".spec-manual-usage").forEach(el=>el.oninput=()=>{const r=specRows.find(x=>x.id===el.dataset.id);if(r){r.manualUsage=el.value===""?null:Number(el.value);calcAllSpecMaterials();}});
+  document.querySelectorAll(".spec-area-usage").forEach(el=>el.oninput=()=>{const r=specRows.find(x=>x.id===el.dataset.id);if(r){r.usageOverride=el.value===""?null:Number(el.value);calcAllSpecMaterials();}});
   document.querySelectorAll(".spec-loss").forEach(el=>el.onchange=()=>{const r=specRows.find(x=>x.id===el.dataset.id);if(r){r.loss=Number(el.value);calcAllSpecMaterials();}});
 }
 
@@ -475,7 +488,8 @@ function calcSpecRow(r,area){
   }else if(mode==="manual"){
     usage=r.manualUsage||0; basis=`${fmt(area)}㎡ × ${fmt(usage,3)}${m.unit}/㎡`;
   }else{
-    usage=m.usage||0; basis=`${fmt(area)}㎡ × ${fmt(usage,3)}${m.unit}/㎡`;
+    usage=r.usageOverride??m.usage??0;
+    basis=`${fmt(area)}㎡ × ${fmt(usage,3)}${m.unit}/㎡`;
   }
 
   const theory=area*usage,required=theory*(1+r.loss);
@@ -504,9 +518,14 @@ function calcAllSpecMaterials(){
 
   $("specDetails").innerHTML=results.map(x=>{
     const m=x.material;
-    const thickness=x.mode==="thickness"?`<div class="resultline"><span>膜厚</span><b>${fmt(x.row.thickness,1)}mm</b></div>`:
-                    x.mode==="foam"?`<div class="resultline"><span>発泡厚</span><b>${x.row.foamThickness}mm</b></div>`:"";
-    return `<div class="spec-detail"><b>${esc(m.series)} ${esc(m.name)}</b>${thickness}
+    const condition=x.mode==="thickness"
+      ?`<div class="resultline"><span>膜厚</span><b>${fmt(x.row.thickness,1)}mm（標準 2.0mm）</b></div>`
+      :x.mode==="foam"
+      ?`<div class="resultline"><span>発泡厚</span><b>${x.row.foamThickness}mm（標準 25mm）</b></div>`
+      :x.mode==="area"
+      ?`<div class="resultline"><span>使用量</span><b>${fmt(x.usage,3)}${m.unit}/㎡（標準 ${fmt(m.usage??0,3)}${m.unit}/㎡）</b></div>`
+      :"";
+    return `<div class="spec-detail"><b>${esc(m.series)} ${esc(m.name)}</b>${condition}
       <div class="resultline"><span>理論量</span><b>${fmt(x.theory,2)}${m.unit}</b></div>
       <div class="resultline"><span>ロス率</span><b>${Math.round(x.row.loss*100)}%</b></div>
       <div class="resultline"><span>必要量</span><b>${fmt(x.required,2)}${m.unit}</b></div>
