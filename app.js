@@ -622,40 +622,48 @@ function addSourceToMaterial(src){
  const titleEl=$(src+"Title");
  const title=(titleEl?.value||"").trim()||defaultCalcTitle(src);
 
- // 追加済みデータは一切消さず、新しい計算として追加する
  const item={
    id:Date.now()+Math.floor(Math.random()*100000),
    source:src,
    label:SOURCE_LABELS[src]||src,
    title:title,
-   area:a,
+   area:Number(a),
    materialConfigs:[]
  };
+
+ // まず追加データを確定
  projectItems.push(item);
  selectedCalcItemId=item.id;
  editingWorkItemId=item.id;
  state.lastSource=src;
-
- $("matArea").value=Number(a).toFixed(2);
-
- // 現在の材料設定があれば引き継ぐ。無ければ標準材料を1行作る。
- if(Array.isArray(specRows) && specRows.length){
-   item.materialConfigs=currentConfigs().map(x=>({...x}));
-   renderSpecRows();
-   calcAllSpecMaterials();
- }else{
-   specRows=[];
-   addSpecMaterial(0);
-   item.materialConfigs=currentConfigs().map(x=>({...x}));
- }
-
- $("currentWorkItemLabel").textContent=`${title}｜${fmt(a)}㎡`;
  if(titleEl)titleEl.value="";
+
+ // 先に材料計算画面を表示
+ show("material");
+
+ // 表示後に材料画面へ値を反映
+ if($("matArea")) $("matArea").value=Number(a).toFixed(2);
+ if($("currentWorkItemLabel")) $("currentWorkItemLabel").textContent=`${title}｜${fmt(a)}㎡`;
+
+ // 材料設定は既存設定を引き継ぐ。初回のみ標準1行。
+ try{
+   if(Array.isArray(specRows) && specRows.length){
+     item.materialConfigs=currentConfigs().map(x=>({...x}));
+     renderSpecRows();
+     calcAllSpecMaterials();
+   }else{
+     specRows=[];
+     addSpecMaterial(0);
+     item.materialConfigs=currentConfigs().map(x=>({...x}));
+   }
+ }catch(err){
+   // 面積・タイトルの追加自体は取り消さない
+   console.error("material initialization error",err);
+ }
 
  renderProjectDraft();
  renderMaterialCalcList();
  updateProjectStatus();
- show("material");
 }
 // 各数量ページの「材料計算へ追加」は必ずこの1本の処理を通す
 document.addEventListener("click",function(e){
@@ -667,7 +675,7 @@ document.addEventListener("click",function(e){
    addSourceToMaterial(btn.dataset.source);
  }catch(err){
    console.error("addSourceToMaterial error",err);
-   alert("材料計算への追加処理でエラーが発生しました。");
+   alert("材料計算への追加処理でエラーが発生しました。\n"+(err?.message||err));
  }
 });
 
