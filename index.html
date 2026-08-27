@@ -470,7 +470,12 @@ input,select,textarea,button{max-width:100%}
 <option value="foam">発泡ウレタン厚み別</option>
 <option value="manual">案件ごとに使用量入力</option>
 </select></label>
-<label>基準使用量<input id="editUsage" type="number" step=".001"></label><label>標準膜厚(mm)<input id="editStandardThickness" type="number" min="0" step=".1"></label><label>標準ロス率(%)<input id="editDefaultLoss" type="number" min="0" max="100" step="1"></label>
+<label>基準使用量<input id="editUsage" type="number" step=".001"></label>
+<div id="foamUsageMasterFields" class="formgrid" style="grid-column:1/-1;display:none">
+<label>15mm 標準使用量 (kg/㎡)<input id="editFoamUsage15" type="number" min="0" step=".01"></label>
+<label>20mm 標準使用量 (kg/㎡)<input id="editFoamUsage20" type="number" min="0" step=".01"></label>
+<label>25mm 標準使用量 (kg/㎡)<input id="editFoamUsage25" type="number" min="0" step=".01"></label>
+</div><label>標準膜厚(mm)<input id="editStandardThickness" type="number" min="0" step=".1"></label><label>標準ロス率(%)<input id="editDefaultLoss" type="number" min="0" max="100" step="1"></label>
 <label>使用量単位<select id="editUnit"><option value="L">L</option><option value="kg">kg</option><option value="">未設定</option></select></label><label>通常荷姿(カンマ区切り)<input id="editPackages" placeholder="400,36"></label><label>荷姿単位<select id="editPackageUnit"><option value="L">L</option><option value="kg">kg</option><option value="">未設定</option></select></label></div>
 <button class="primary" id="saveMaterialEdit">保存</button></div></dialog>
 <dialog id="sealDialog">
@@ -486,5 +491,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=35"></script>
+<script src="app.js?v=36"></script>
 </body></html>
