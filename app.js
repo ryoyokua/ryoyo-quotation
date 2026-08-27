@@ -615,10 +615,14 @@ function renderAggregateMaterials(){
 function renderCalcItems(){
   const list=$("calcItemList"),total=$("calcItemTotal"); if(!list||!total)return;
   total.textContent=`${fmt(calcItems.reduce((s,x)=>s+Number(x.area||0),0))}㎡`;
-  list.innerHTML=calcItems.length?calcItems.map(item=>`<div class="calc-list-item ${item.id===selectedCalcItemId?"active":""}"><div class="calc-list-main"><div><b>${esc(item.title)}</b><br><small>${esc(MULTI_SOURCE_LABELS[item.source]||item.source)} ｜ ${fmt(item.area)}㎡</small></div><div class="calc-list-actions"><button class="secondary multi-select" type="button" data-id="${item.id}">材料設定</button><button class="secondary multi-duplicate" type="button" data-id="${item.id}">複製</button><button class="delete multi-delete" type="button" data-id="${item.id}">削除</button></div></div></div>`).join(""):'<div class="info">まだ追加されていません。</div>';
-  document.querySelectorAll(".multi-select").forEach(b=>b.onclick=()=>selectCalcItem(Number(b.dataset.id)));
-  document.querySelectorAll(".multi-duplicate").forEach(b=>b.onclick=()=>duplicateCalcItem(Number(b.dataset.id)));
-  document.querySelectorAll(".multi-delete").forEach(b=>b.onclick=()=>deleteCalcItem(Number(b.dataset.id)));
+  list.innerHTML=calcItems.length?calcItems.map(item=>`<div class="calc-list-item calc-item-clickable ${item.id===selectedCalcItemId?"active":""}" data-select-id="${item.id}" role="button" tabindex="0" aria-label="${esc(item.title)}の材料設定を開く"><div class="calc-list-main"><div><b>${esc(item.title)}</b><br><small>${esc(MULTI_SOURCE_LABELS[item.source]||item.source)} ｜ ${fmt(item.area)}㎡</small></div><div class="calc-list-actions"><button class="multi-select material-setting-btn" type="button" data-id="${item.id}">材料設定</button><button class="multi-duplicate duplicate-btn" type="button" data-id="${item.id}">複製</button><button class="delete multi-delete" type="button" data-id="${item.id}">削除</button></div></div></div>`).join(""):'<div class="info">まだ追加されていません。</div>';
+  document.querySelectorAll(".calc-item-clickable").forEach(row=>{
+    row.onclick=e=>{if(e.target.closest("button"))return; selectCalcItem(Number(row.dataset.selectId));};
+    row.onkeydown=e=>{if((e.key==="Enter"||e.key===" ")&&!e.target.closest("button")){e.preventDefault();selectCalcItem(Number(row.dataset.selectId));}};
+  });
+  document.querySelectorAll(".multi-select").forEach(b=>b.onclick=e=>{e.stopPropagation();selectCalcItem(Number(b.dataset.id));});
+  document.querySelectorAll(".multi-duplicate").forEach(b=>b.onclick=e=>{e.stopPropagation();duplicateCalcItem(Number(b.dataset.id));});
+  document.querySelectorAll(".multi-delete").forEach(b=>b.onclick=e=>{e.stopPropagation();deleteCalcItem(Number(b.dataset.id));});
   renderAggregateMaterials();
 }
 function selectCalcItem(id){
