@@ -1,3 +1,19 @@
+const APP_PIN_HASH="daad2b3adbcb4f72fc3225cb058c64927dc1b2a004b9753892e93080505fd794";
+const APP_AUTH_KEY="ryoyo_material_app_authorized_v1";
+async function verifyAppPin(){
+ const v=document.getElementById("appPinInput").value;
+ const d=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(v));
+ const hash=Array.from(new Uint8Array(d)).map(b=>b.toString(16).padStart(2,"0")).join("");
+ if(hash===APP_PIN_HASH){localStorage.setItem(APP_AUTH_KEY,"1");document.getElementById("appLock").style.display="none";}
+ else document.getElementById("appPinError").style.display="block";
+}
+document.addEventListener("DOMContentLoaded",()=>{
+ if(localStorage.getItem(APP_AUTH_KEY)==="1")document.getElementById("appLock").style.display="none";
+ else{
+  document.getElementById("appPinButton").onclick=verifyAppPin;
+  document.getElementById("appPinInput").addEventListener("keydown",e=>{if(e.key==="Enter")verifyAppPin();});
+ }
+});
 const S={materials:"ryoyo_materials_v1",waves:"ryoyo_waves_v1",seals:"ryoyo_seal_products_v1",projects:"ryoyo_projects_v1",endpoint:"ryoyo_gas_endpoint_v1"};
 
 const DEFAULT_MATERIALS=[
