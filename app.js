@@ -597,13 +597,26 @@ function aggregateCalcItems(){
 function renderAggregateMaterials(){
   const w=$("aggregateMaterialSummary"); if(!w)return;
   const rows=aggregateCalcItems();
-  w.innerHTML=rows.length?rows.map(x=>`<div class="spec-summary-item"><span>${esc(x.material.name)}<br><small>${[...new Set(x.titles)].map(esc).join(" / ")}</small></span><strong>${esc(x.order)}</strong></div>`).join(""):'<div class="info">計算を追加すると表示されます。</div>';
+  if(!calcItems.length){
+    w.innerHTML='<div class="info">計算を追加すると表示されます。</div>';
+    return;
+  }
+  const targetDetails=calcItems.map(item=>{
+    const materialsHtml=(item.materialConfigs||[]).map(row=>{
+      const r=calcSpecRow(row,Number(item.area)||0); if(!r)return "";
+      return `<div class="aggregate-target-material"><span>${esc(r.material.name)}</span><strong>${esc(r.order)}</strong><small>${esc(r.basis)} × ${fmt(1+r.row.loss,2)} = ${fmt(r.required,2)}${r.material.unit}${r.plan?` → ${esc(r.order)}`:""}</small></div>`;
+    }).join("")||'<small>材料未設定</small>';
+    return `<div class="aggregate-target"><b>${esc(item.title)}</b><span>${fmt(item.area)}㎡</span>${materialsHtml}</div>`;
+  }).join("");
+  const totalHtml=rows.length?rows.map(x=>`<div class="spec-summary-item"><span>${esc(x.material.name)}<br><small>${[...new Set(x.titles)].map(esc).join(" / ")}</small></span><strong>${esc(x.order)}</strong></div>`).join(""):'<div class="info">材料を設定すると表示されます。</div>';
+  w.innerHTML=`<div class="aggregate-section-title">施工対象ごとの仕様</div>${targetDetails}<div class="aggregate-section-title">案件全体の材料合計</div>${totalHtml}`;
 }
 function renderCalcItems(){
   const list=$("calcItemList"),total=$("calcItemTotal"); if(!list||!total)return;
   total.textContent=`${fmt(calcItems.reduce((s,x)=>s+Number(x.area||0),0))}㎡`;
-  list.innerHTML=calcItems.length?calcItems.map(item=>`<div class="calc-list-item ${item.id===selectedCalcItemId?"active":""}"><div class="calc-list-main"><div><b>${esc(item.title)}</b><br><small>${esc(MULTI_SOURCE_LABELS[item.source]||item.source)} ｜ ${fmt(item.area)}㎡</small></div><div class="calc-list-actions"><button class="secondary multi-select" type="button" data-id="${item.id}">材料設定</button><button class="delete multi-delete" type="button" data-id="${item.id}">削除</button></div></div></div>`).join(""):'<div class="info">まだ追加されていません。</div>';
+  list.innerHTML=calcItems.length?calcItems.map(item=>`<div class="calc-list-item ${item.id===selectedCalcItemId?"active":""}"><div class="calc-list-main"><div><b>${esc(item.title)}</b><br><small>${esc(MULTI_SOURCE_LABELS[item.source]||item.source)} ｜ ${fmt(item.area)}㎡</small></div><div class="calc-list-actions"><button class="secondary multi-select" type="button" data-id="${item.id}">材料設定</button><button class="secondary multi-duplicate" type="button" data-id="${item.id}">複製</button><button class="delete multi-delete" type="button" data-id="${item.id}">削除</button></div></div></div>`).join(""):'<div class="info">まだ追加されていません。</div>';
   document.querySelectorAll(".multi-select").forEach(b=>b.onclick=()=>selectCalcItem(Number(b.dataset.id)));
+  document.querySelectorAll(".multi-duplicate").forEach(b=>b.onclick=()=>duplicateCalcItem(Number(b.dataset.id)));
   document.querySelectorAll(".multi-delete").forEach(b=>b.onclick=()=>deleteCalcItem(Number(b.dataset.id)));
   renderAggregateMaterials();
 }
@@ -613,6 +626,21 @@ function selectCalcItem(id){
   specRows=cloneSpecRows(item.materialConfigs||[]);
   if(!specRows.length)addSpecMaterial(0); else {renderSpecRows();calcAllSpecMaterials();}
   $("selectedCalcLabel").textContent=`${item.title} ｜ ${fmt(item.area)}㎡`; renderCalcItems(); show("material");
+}
+function duplicateCalcItem(id){
+  syncSelectedCalcItem();
+  const src=calcItems.find(x=>x.id===id); if(!src)return;
+  const copy={
+    id:Date.now()+Math.floor(Math.random()*100000),
+    source:src.source,
+    title:`${src.title}（複製）`,
+    area:Number(src.area)||0,
+    materialConfigs:cloneSpecRows(src.materialConfigs||[])
+  };
+  const idx=calcItems.findIndex(x=>x.id===id);
+  calcItems.splice(idx+1,0,copy);
+  selectedCalcItemId=copy.id;
+  selectCalcItem(copy.id);
 }
 function deleteCalcItem(id){
   calcItems=calcItems.filter(x=>x.id!==id);
@@ -657,7 +685,7 @@ function calcAllSpecMaterials(){
       <div class="resultline"><span>必要量</span><b>${fmt(x.required,2)}${m.unit}</b></div>
       <div class="resultline"><span>通常荷姿</span><b>${m.packages?.length?m.packages.join(" / ")+" "+(m.packageUnit||""):"未設定"}</b></div>
       <div class="resultline"><span>発注目安</span><b>${x.order}</b></div>
-      <pre>${x.basis} × ${fmt(1+x.row.loss,2)} = ${fmt(x.required,2)}${m.unit}</pre></div>`;
+      <div class="calc-basis"><b>計算根拠</b><pre>${x.basis} × ${fmt(1+x.row.loss,2)} = ${fmt(x.required,2)}${m.unit}${x.plan?` → ${x.order}`:""}</pre></div></div>`;
   }).join("");
   syncSelectedCalcItem();
   renderAggregateMaterials();
