@@ -794,25 +794,107 @@ if($("saveSealEdit"))$("saveSealEdit").onclick=()=>{
 // projects
 $("gasEndpoint").value=localStorage.getItem(S.endpoint)||"";
 $("saveEndpoint").onclick=()=>{localStorage.setItem(S.endpoint,$("gasEndpoint").value.trim());alert("保存しました")};
+
+function updateCurrentProjectLabel(){
+ const id=Number($("editingProjectId")?.value)||null;
+ const p=id?projects.find(x=>x.id===id):null;
+ const label=$("currentProjectLabel");
+ if(label) label.textContent=p?`現在：${p.name}`:"現在：未保存の計算";
+}
+
 $("saveProject").onclick=async()=>{
  const editingId=Number($("editingProjectId").value)||null;
+ syncSelectedCalcItem();
  const workItems=calcItems.length?calcItems.map(x=>({id:x.id,source:x.source,title:x.title,area:x.area,materialConfigs:cloneSpecRows(x.materialConfigs||[])})):[{id:Date.now(),source:state.lastSource||"other",title:"単独計算",area:n("matArea"),materialConfigs:cloneSpecRows()}];
  const p={id:editingId||Date.now(),createdAt:editingId?(projects.find(x=>x.id===editingId)?.createdAt||new Date().toISOString()):new Date().toISOString(),updatedAt:new Date().toISOString(),name:$("projectName").value.trim()||"名称未設定",customer:$("projectCustomer").value.trim(),site:$("projectSite").value.trim(),owner:$("projectOwner").value.trim(),memo:$("projectMemo").value.trim(),area:workItems.reduce((s,x)=>s+Number(x.area||0),0),workItems};
  if(editingId){const idx=projects.findIndex(x=>x.id===editingId);if(idx>=0)projects[idx]=p;else projects.unshift(p);}else projects.unshift(p);
- save(S.projects,projects);$("editingProjectId").value=p.id;renderProjects();alert(editingId?"案件を更新しました":"案件を保存しました");
+ save(S.projects,projects);$("editingProjectId").value=p.id;renderProjects();updateCurrentProjectLabel();alert(editingId?"案件を更新しました":"案件を保存しました");
 };
-function resetProjectForm(){$("editingProjectId").value="";$("projectName").value="";$("projectCustomer").value="";$("projectSite").value="";$("projectOwner").value="";$("projectMemo").value="";}
-if($("newProject"))$("newProject").onclick=resetProjectForm;
+
+function resetProjectForm(clearCalculations=false){
+ $("editingProjectId").value="";$("projectName").value="";$("projectCustomer").value="";$("projectSite").value="";$("projectOwner").value="";$("projectMemo").value="";
+ if(clearCalculations){
+   calcItems=[];selectedCalcItemId=null;
+   $("selectedCalcLabel").textContent="追加したタイトルを選択すると、材料設定を変更できます。";
+   renderCalcItems();
+ }
+ updateCurrentProjectLabel();
+}
+if($("newProject"))$("newProject").onclick=()=>{
+ if(calcItems.length && !confirm("新しい案件として入力しますか？\n現在画面に読み込まれている計算内容はクリアされます。\n保存が必要な場合は先に案件を保存してください。"))return;
+ resetProjectForm(true);
+ show("home");
+};
+
 function openProject(id){
  const p=projects.find(x=>x.id===id);if(!p)return;
  $("editingProjectId").value=p.id;$("projectName").value=p.name||"";$("projectCustomer").value=p.customer||"";$("projectSite").value=p.site||"";$("projectOwner").value=p.owner||"";$("projectMemo").value=p.memo||"";
  calcItems=(p.workItems||[]).map((x,i)=>({id:x.id||Date.now()+i,source:x.source||"other",title:x.title||`計算${i+1}`,area:Number(x.area)||0,materialConfigs:cloneSpecRows(x.materialConfigs||[])}));
- selectedCalcItemId=null;renderCalcItems();if(calcItems.length)selectCalcItem(calcItems[0].id);else show("material");
+ selectedCalcItemId=null;renderCalcItems();updateCurrentProjectLabel();
+ if(calcItems.length)selectCalcItem(calcItems[0].id);else show("material");
 }
+
+function duplicateProject(id){
+ const src=projects.find(x=>x.id===id);if(!src)return;
+ const now=new Date().toISOString();
+ const copy={
+   ...src,
+   id:Date.now()+Math.floor(Math.random()*100000),
+   createdAt:now,updatedAt:now,
+   name:`${src.name}（別パターン）`,
+   workItems:(src.workItems||[]).map((x,i)=>({
+     ...x,
+     id:Date.now()+i+Math.floor(Math.random()*100000),
+     materialConfigs:cloneSpecRows(x.materialConfigs||[])
+   }))
+ };
+ projects.unshift(copy);save(S.projects,projects);renderProjects();openProject(copy.id);
+}
+
+function deleteProject(id){
+ const p=projects.find(x=>x.id===id);if(!p)return;
+ if(!confirm(`「${p.name}」を削除しますか？\nこの操作は元に戻せません。`))return;
+ projects=projects.filter(x=>x.id!==id);
+ save(S.projects,projects);
+ if(Number($("editingProjectId").value)===id) resetProjectForm(true);
+ renderProjects();
+}
+
 function renderProjects(){
- $("projectList").innerHTML=projects.length?projects.map(p=>{const customerSite=[p.customer,p.site].filter(Boolean).map(esc).join(" ｜ ");const count=Array.isArray(p.workItems)?p.workItems.length:1;return `<div class="project"><div class="headrow"><div><b>${esc(p.name)}</b><br><small>${new Date(p.createdAt).toLocaleString("ja-JP")} ${p.owner?"｜"+esc(p.owner):""}</small></div><button class="secondary openproject" data-id="${p.id}">開く・編集</button></div>${customerSite?`<p>${customerSite}</p>`:""}<p>計算 ${count}件 ｜ 合計施工面積 ${fmt(p.area||0)}㎡</p>${p.memo?`<p>${esc(p.memo)}</p>`:""}</div>`;}).join(""):"<p>まだ案件はありません。</p>";
+ const currentId=Number($("editingProjectId").value)||null;
+ $("projectList").innerHTML=projects.length?projects.map(p=>{
+   const customerSite=[p.customer,p.site].filter(Boolean).map(esc).join(" ｜ ");
+   const count=Array.isArray(p.workItems)?p.workItems.length:1;
+   const isCurrent=p.id===currentId;
+   return `<div class="project ${isCurrent?"project-current":""}">
+     <div class="headrow">
+       <div><b>${esc(p.name)}</b>${isCurrent?'<span class="project-current-badge">作業中</span>':""}<br>
+       <small>更新：${new Date(p.updatedAt||p.createdAt).toLocaleString("ja-JP")} ${p.owner?"｜"+esc(p.owner):""}</small></div>
+       <div class="project-actions">
+         <button class="secondary openproject" data-id="${p.id}">${isCurrent?"開いています":"開く"}</button>
+         <button class="secondary duplicateproject duplicate-btn" data-id="${p.id}">複製</button>
+         <button class="delete deleteproject" data-id="${p.id}">削除</button>
+       </div>
+     </div>
+     ${customerSite?`<p>${customerSite}</p>`:""}
+     <p>計算 ${count}件 ｜ 合計施工面積 ${fmt(p.area||0)}㎡</p>${p.memo?`<p>${esc(p.memo)}</p>`:""}
+   </div>`;
+ }).join(""):"<p>まだ案件はありません。</p>";
  document.querySelectorAll(".openproject").forEach(b=>b.onclick=()=>openProject(Number(b.dataset.id)));
+ document.querySelectorAll(".duplicateproject").forEach(b=>b.onclick=()=>duplicateProject(Number(b.dataset.id)));
+ document.querySelectorAll(".deleteproject").forEach(b=>b.onclick=()=>deleteProject(Number(b.dataset.id)));
 }
+
+if($("goProjectsFromMaterial"))$("goProjectsFromMaterial").onclick=()=>{renderProjects();show("projects");};
+if($("duplicateCurrentProject"))$("duplicateCurrentProject").onclick=()=>{
+ const id=Number($("editingProjectId").value)||null;
+ if(id){duplicateProject(id);return;}
+ if(!calcItems.length){alert("複製する計算内容がありません。");return;}
+ $("editingProjectId").value="";
+ $("projectName").value=($("projectName").value.trim()||"名称未設定")+"（別パターン）";
+ updateCurrentProjectLabel();
+ show("projects");
+};
 // init
 renderWaveSelect();
 renderMaster();

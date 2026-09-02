@@ -148,6 +148,15 @@ input,select,textarea,button{max-width:100%}
 .material-setting-btn:hover{filter:brightness(.94)}
 .duplicate-btn{background:#eef1f4!important;color:#344454!important;border:1px solid #cbd3db!important}
 .duplicate-btn:hover{background:#e2e7ec!important}
+
+.project-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.project-actions button{white-space:nowrap}
+.project-current{border:2px solid #19446f!important;background:#f3f8fd!important}
+.project-current-badge{display:inline-block;margin-left:8px;padding:2px 8px;border-radius:999px;background:#19446f;color:#fff;font-size:11px}
+@media(max-width:700px){
+ .project-actions{width:100%;justify-content:flex-start}
+ .project-actions button{flex:1 1 auto}
+}
 </style></head>
 <body><div id="appLock" style="position:fixed;inset:0;z-index:99999;background:#f5f7fa;display:flex;align-items:center;justify-content:center;padding:20px"><div style="width:min(420px,100%);background:#fff;border:1px solid #d7dde5;border-radius:16px;padding:24px"><div style="font-size:13px;color:#667085">菱洋株式会社</div><h2>使用材料 概算</h2><p>暗証番号を入力してください。</p><input id="appPinInput" type="password" style="width:100%;padding:12px"><button id="appPinButton" type="button" style="width:100%;margin-top:12px;padding:12px;background:#17365D;color:#fff;border:0;border-radius:8px">ロック解除</button><p id="appPinError" style="display:none;color:#a33">暗証番号が違います。</p></div></div>
 <header><div><small>菱洋株式会社 社内用</small><h1>使用材料 概算</h1></div></header>
@@ -386,6 +395,18 @@ input,select,textarea,button{max-width:100%}
 
 <section id="material" class="view">
 <div class="title"><div><span class="badge">MATERIAL</span><h2>材料計算</h2></div><button class="help" data-help="material">？計算方法</button></div>
+<div class="card" id="projectSwitchCard">
+  <div class="headrow">
+    <div>
+      <h3>作業中の案件</h3>
+      <p id="currentProjectLabel">未保存の計算</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="secondary" id="goProjectsFromMaterial" type="button">案件を切り替える</button>
+      <button class="secondary" id="duplicateCurrentProject" type="button">別パターンを作成</button>
+    </div>
+  </div>
+</div>
 <div class="card" id="multiCalcCard">
   <div class="headrow">
     <div><h3>追加した計算</h3><p>各ページで「タイトル → 数量計算 → 材料計算へ追加」とすると、ここに追加されます。</p></div>
@@ -466,7 +487,10 @@ input,select,textarea,button{max-width:100%}
 <button class="primary" id="saveProject">現在の内容を保存</button>
 <button class="secondary" id="newProject">新規案件として入力</button>
 </div>
-<div class="card"><h3>保存済み</h3><div id="projectList"></div></div>
+<div class="card">
+<div class="headrow"><div><h3>保存済み案件</h3><p>「開く」で案件を切り替え、「複製」で別パターンを作成できます。</p></div></div>
+<div id="projectList"></div>
+</div>
 <div class="card"><h3>Google Sheets連携</h3><label>Apps Script WebアプリURL<input id="gasEndpoint" placeholder="https://script.google.com/macros/s/.../exec"></label><button class="primary" id="saveEndpoint">URL保存</button></div>
 </section>
 </main>
@@ -500,5 +524,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=37"></script>
+<script src="app.js?v=38"></script>
 </body></html>
