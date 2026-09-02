@@ -431,7 +431,6 @@ input,select,textarea,button{max-width:100%}
     <label>案件を選択
       <select id="quickProjectSelect"></select>
     </label>
-    <button class="secondary" id="quickOpenProject" type="button">この案件を開く</button>
     <button class="primary" id="quickSaveAsProject" type="button">案件として保存</button>
     <button class="secondary" id="duplicateCurrentProject" type="button">別パターンを作成</button>
     <button class="secondary" id="goProjectsFromMaterial" type="button">案件一覧・詳細</button>
@@ -528,6 +527,11 @@ input,select,textarea,button{max-width:100%}
 </div>
 <div class="card">
 <div class="headrow"><div><h3>保存済み案件</h3><p>「開く」で案件を切り替え、「複製」で別パターンを作成できます。</p></div></div>
+<div style="margin-bottom:12px">
+<label>案件名検索
+<input id="projectSearch" type="search" placeholder="案件名の一部を入力">
+</label>
+</div>
 <div id="projectList"></div>
 <div class="trash-box">
   <div class="headrow"><h4>削除済み案件・施工対象</h4><button class="secondary" id="toggleProjectTrash" type="button">表示 / 非表示</button></div>
@@ -567,5 +571,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=46"></script>
+<script src="app.js?v=47"></script>
 </body></html>

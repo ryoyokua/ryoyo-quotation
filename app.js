@@ -116,6 +116,8 @@ for(const def of DEFAULT_WAVES){
 let state={roofArea:0,roofRawArea:0,flatArea:0,flatRawArea:0,flatRows:[],tankArea:0,tankRawArea:0,tankPanels:0,tankSeal:0,vesselArea:0,vesselRawArea:0,pipeArea:0,pipeRawArea:0,productArea:0,productRawArea:0,otherArea:100,otherRawArea:100,lastSource:null,material:null,sealMode:"volume"};
 const $=id=>document.getElementById(id), n=id=>Number($(id).value)||0;
 const fmt=(v,d=2)=>Number(v).toLocaleString("ja-JP",{minimumFractionDigits:d,maximumFractionDigits:d});
+const ceilTo1=v=>Math.ceil(((Number(v)||0)-1e-12)*10)/10;
+const fmtCeil1=v=>ceilTo1(v).toFixed(1);
 function load(k,f){try{let v=localStorage.getItem(k);return v?JSON.parse(v):structuredClone(f)}catch{return structuredClone(f)}}
 function save(k,v){localStorage.setItem(k,JSON.stringify(v))}
 function esc(s=""){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
@@ -581,7 +583,7 @@ function calcSpecRow(r,area){
     if(plan) order=plan.parts.map(x=>`${x.size}${m.unit} × ${x.count}セット`).join(" ＋ ");
     if(largest){
       largeEquivalent=required/largest;
-      largeOrder=`${largest}${m.unit}換算 ${largeEquivalent.toFixed(1)}SET`;
+      largeOrder=`${largest}${m.unit}換算 ${fmtCeil1(largeEquivalent)}SET`;
       largePurchase=`発注する場合 ${Math.ceil(largeEquivalent)}SET`;
     }
   }else if(validPacks.length){
@@ -647,14 +649,14 @@ function renderAggregateMaterials(){
     }).join("")||'<small>材料未設定</small>';
     return `<div class="aggregate-target"><b>${esc(item.title)}</b><span>${fmt(item.area)}㎡</span>${materialsHtml}</div>`;
   }).join("");
-  const totalHtml=rows.length?rows.map(x=>`<div class="spec-summary-item"><span>${esc(x.material.name)}<br><small>${[...new Set(x.titles)].map(esc).join(" / ")}</small></span><strong>${esc(x.order)}${x.packageCount>1&&x.largestEquivalent!=null?`<br><small>（最大荷姿の場合 ${fmt(x.largestPackage)}${x.material.unit} × ${x.largestEquivalent.toFixed(1)}セット）</small>`:""}</strong></div>`).join(""):'<div class="info">材料を設定すると表示されます。</div>';
+  const totalHtml=rows.length?rows.map(x=>`<div class="spec-summary-item"><span>${esc(x.material.name)}<br><small>${[...new Set(x.titles)].map(esc).join(" / ")}</small></span><strong>${esc(x.order)}${x.packageCount>1&&x.largestEquivalent!=null?`<br><small>（最大荷姿の場合 ${fmt(x.largestPackage)}${x.material.unit} × ${fmtCeil1(x.largestEquivalent)}セット）</small>`:""}</strong></div>`).join(""):'<div class="info">材料を設定すると表示されます。</div>';
   w.innerHTML=`<div class="aggregate-section-title">施工対象ごとの仕様</div>${targetDetails}<div class="aggregate-section-title">案件全体の材料合計</div>${totalHtml}`;
 
   if(d)d.innerHTML=rows.map(x=>{
     const m=x.material;
     const lossText=x.losses.size===1?`${Math.round([...x.losses][0]*100)}%`:"施工対象ごとに異なる";
     const condition=x.specs.size?`<div class="resultline"><span>${getMaterialCalcMode(m)==="foam"?"発泡厚":getMaterialCalcMode(m)==="thickness"?"膜厚":"使用量"}</span><b>${[...x.specs].join(" / ")}</b></div>`:"";
-    const largeOrder=x.largestEquivalent!=null?`${x.largestPackage}${m.unit}換算 ${x.largestEquivalent.toFixed(1)}SET`:null;
+    const largeOrder=x.largestEquivalent!=null?`${x.largestPackage}${m.unit}換算 ${fmtCeil1(x.largestEquivalent)}SET`:null;
     const largePurchase=x.largestEquivalent!=null?`発注する場合 ${Math.ceil(x.largestEquivalent)}SET`:null;
     return `<div class="spec-detail"><b>${esc(m.series)} ${esc(m.name)}｜案件全体</b>
       ${condition}
@@ -664,7 +666,7 @@ function renderAggregateMaterials(){
       <div class="resultline"><span>通常荷姿</span><b>${m.packages?.length?m.packages.join(" / ")+" "+(m.packageUnit||""):"未設定"}</b></div>
       ${largeOrder?`<div class="resultline"><span>大容量換算</span><b>${esc(largeOrder)}</b></div>`:""}
       ${largePurchase?`<div class="resultline"><span>大容量のみで発注</span><b>${esc(largePurchase)}</b></div>`:""}
-      <div class="resultline"><span>発注目安</span><b>${esc(x.order)}${x.packageCount>1?`<br>（最大荷姿の場合 ${fmt(x.largestPackage)}${m.unit} × ${x.largestEquivalent.toFixed(1)}セット）`:""}</b></div>
+      <div class="resultline"><span>発注目安</span><b>${esc(x.order)}${x.packageCount>1?`<br>（最大荷姿の場合 ${fmt(x.largestPackage)}${m.unit} × ${fmtCeil1(x.largestEquivalent)}セット）`:""}</b></div>
       <div class="calc-basis"><b>内訳・計算根拠</b>
       ${x.details.map(v=>`<pre>${esc(v.title)}：${v.result.basis} × ${fmt(1+v.result.row.loss,2)} = ${fmt(v.result.required,2)}${m.unit}</pre>`).join("")}
       </div></div>`;
@@ -977,7 +979,7 @@ function renderQuickProjectSwitcher(){
   const currentId=Number($("editingProjectId")?.value)||null;
   const opts=[];
   if(!currentId)opts.push('<option value="" selected>未保存の計算</option>');
-  projects.forEach(p=>opts.push(`<option value="${p.id}" ${p.id===currentId?"selected":""}>${esc(p.name||"名称未設定")}</option>`));
+  [...projects].sort((a,b)=>new Date(b.updatedAt||b.createdAt||0)-new Date(a.updatedAt||a.createdAt||0)).forEach(p=>opts.push(`<option value="${p.id}" ${p.id===currentId?"selected":""}>${esc(p.name||"名称未設定")}</option>`));
   sel.innerHTML=opts.join("")||'<option value="">未保存の計算</option>';
 }
 async function autoSaveCurrentProject({createIfNeeded=false}={}){
@@ -1121,10 +1123,13 @@ function renderProjectTrash(){
  document.querySelectorAll(".restore-calc").forEach(b=>b.onclick=()=>restoreDeletedCalcItem(Number(b.dataset.i)));
 }
 if($("toggleProjectTrash"))$("toggleProjectTrash").onclick=()=>{const w=$("projectTrashList");w.hidden=!w.hidden;if(!w.hidden)renderProjectTrash();};
+if($("projectSearch"))$("projectSearch").addEventListener("input",renderProjects);
 
 function renderProjects(){
  const currentId=Number($("editingProjectId").value)||null;
- $("projectList").innerHTML=projects.length?projects.map(p=>{
+ const q=($("projectSearch")?.value||"").trim().toLowerCase();
+ const visibleProjects=[...projects].sort((a,b)=>new Date(b.updatedAt||b.createdAt||0)-new Date(a.updatedAt||a.createdAt||0)).filter(p=>!q||String(p.name||"").toLowerCase().includes(q));
+ $("projectList").innerHTML=visibleProjects.length?visibleProjects.map(p=>{
    const customerSite=[p.customer,p.site].filter(Boolean).map(esc).join(" ｜ ");
    const count=Array.isArray(p.workItems)?p.workItems.length:1;
    const isCurrent=p.id===currentId;
@@ -1141,7 +1146,7 @@ function renderProjects(){
      ${customerSite?`<p>${customerSite}</p>`:""}
      <p>計算 ${count}件 ｜ 合計施工面積 ${fmt(p.area||0)}㎡</p>${p.memo?`<p>${esc(p.memo)}</p>`:""}
    </div>`;
- }).join(""):"<p>まだ案件はありません。</p>";
+ }).join(""):(projects.length?"<p>検索条件に一致する案件はありません。</p>":"<p>まだ案件はありません。</p>");
  document.querySelectorAll(".openproject").forEach(b=>b.onclick=()=>openProject(Number(b.dataset.id)));
  document.querySelectorAll(".duplicateproject").forEach(b=>b.onclick=()=>duplicateProject(Number(b.dataset.id)));
  document.querySelectorAll(".deleteproject").forEach(b=>b.onclick=()=>deleteProject(Number(b.dataset.id)));
@@ -1149,14 +1154,14 @@ function renderProjects(){
 }
 
 if($("goProjectsFromMaterial"))$("goProjectsFromMaterial").onclick=async()=>{await autoSaveCurrentProject({createIfNeeded:true});renderProjects();show("projects");};
-if($("quickOpenProject"))$("quickOpenProject").onclick=async()=>{
- const id=Number($("quickProjectSelect")?.value)||null;
- const currentId=Number($("editingProjectId").value)||null;
- if(!id||id===currentId)return;
- if(!currentId && calcItems.length){
-   const choice=confirm("現在の計算は案件として保存されていません。\n\nOK：保存せず選択した案件を開く\nキャンセル：現在の計算に戻る");
-   if(!choice){renderQuickProjectSwitcher();return;}
+if($("quickProjectSelect"))$("quickProjectSelect").onchange=async e=>{
+ const id=Number(e.target.value)||null,currentId=Number($("editingProjectId").value)||null;
+ if(!id||id===currentId){renderQuickProjectSwitcher();return;}
+ if(!currentId&&calcItems.length){
+   const ok=confirm("現在の計算は案件として保存されていません。\n\n選択した案件を開くと現在の計算内容は破棄されます。\n保存せずに開きますか？");
+   if(!ok){renderQuickProjectSwitcher();return;}
  }
+ if(currentId)await autoSaveCurrentProject();
  await openProject(id);
 };
 if($("quickSaveAsProject"))$("quickSaveAsProject").onclick=saveCurrentWorkAsProject;
