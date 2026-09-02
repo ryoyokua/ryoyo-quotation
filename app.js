@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   document.getElementById("appPinInput").addEventListener("keydown",e=>{if(e.key==="Enter")verifyAppPin();});
  }
 });
-const S={materials:"ryoyo_materials_v1",waves:"ryoyo_waves_v1",seals:"ryoyo_seal_products_v1",projects:"ryoyo_projects_v1",trash:"ryoyo_trash_v1",endpoint:"ryoyo_gas_endpoint_v1"};
+const S={materials:"ryoyo_materials_v1",waves:"ryoyo_waves_v1",seals:"ryoyo_seal_products_v1",projects:"ryoyo_projects_v1",trash:"ryoyo_trash_v1",endpoint:"ryoyo_gas_endpoint_v1",remoteHidden:"ryoyo_remote_hidden_v1"};
 
 const DEFAULT_MATERIALS=[
 {id:"n-st",series:"NUKOTE",name:"ST",feature:"標準型",usage:1,unit:"L",packages:[380,38],packageUnit:"L",calcMode:"thickness",standardThickness:2.0,defaultLoss:0.20},
@@ -962,6 +962,7 @@ async function saveCurrentWorkAsProject(){
      p.area=calcItems.reduce((s,x)=>s+(Number(x.area)||0),0);
      p.updatedAt=new Date().toISOString();
      save(S.projects,projects);
+     await saveProjectToSheets(p);
      $("projectName").value=p.name;
      updateCurrentProjectLabel();
      renderProjects();
@@ -988,6 +989,7 @@ async function saveCurrentWorkAsProject(){
    workItems:currentWorkItemsSnapshot()
  };
  projects.unshift(p);save(S.projects,projects);
+ await saveProjectToSheets(p);
  $("editingProjectId").value=p.id;
  $("projectName").value=p.name;
  updateCurrentProjectLabel();
@@ -1023,7 +1025,7 @@ function renderQuickProjectSwitcher(){
   [...projects].sort((a,b)=>new Date(b.updatedAt||b.createdAt||0)-new Date(a.updatedAt||a.createdAt||0)).forEach(p=>opts.push(`<option value="${p.id}" ${p.id===currentId?"selected":""}>${esc(p.name||"名称未設定")}</option>`));
   sel.innerHTML=opts.join("")||'<option value="">未保存の計算</option>';
 }
-async function autoSaveCurrentProject({createIfNeeded=false}={}){
+async function autoSaveCurrentProject({createIfNeeded=false,syncNow=false}={}){
  if(projectAutoSaveBusy)return;
  const id=Number($("editingProjectId")?.value)||null;
  if(!id){
@@ -1041,6 +1043,8 @@ async function autoSaveCurrentProject({createIfNeeded=false}={}){
    if(enteredName)p.name=enteredName;
    p.updatedAt=new Date().toISOString();
    save(S.projects,projects);
+   if(syncNow)await saveProjectToSheets(p,{quiet:true});
+   else scheduleSheetProjectSave(p);
    renderProjects();
    renderQuickProjectSwitcher();
    setProjectAutoSaveStatus(`自動保存済み ${new Date().toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"})}`,"saved");
@@ -1068,9 +1072,112 @@ async function createQuickNewProject(){
   setProjectAutoSaveStatus("新規案件を作成しました","saved");show("material");
 }
 
+// Google Sheets shared project storage
+const DEFAULT_GAS_ENDPOINT="https://script.google.com/macros/s/AKfycbxcq_MAMSH1wP9yXbngsyIcUVt5ytXA5K5SSAED_1UtaiBRp1SCgOA2d4O8vmNq5Yg/exec";
+let sheetSyncTimer=null;
+let remoteHiddenIds=load(S.remoteHidden,[]);
+if(!Array.isArray(remoteHiddenIds))remoteHiddenIds=[];
+
+function getGasEndpoint(){
+ return ($("gasEndpoint")?.value||localStorage.getItem(S.endpoint)||DEFAULT_GAS_ENDPOINT).trim();
+}
+function setSheetSyncStatus(text,kind=""){
+ const el=$("sheetSyncStatus");if(!el)return;
+ el.textContent=text;
+ el.style.color=kind==="error"?"#b42318":kind==="ok"?"#18794e":"";
+}
+async function sheetGet(action,params={}){
+ const endpoint=getGasEndpoint();
+ if(!endpoint)throw new Error("Apps Script URLが設定されていません。");
+ const u=new URL(endpoint);
+ u.searchParams.set("action",action);
+ Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,String(v)));
+ const r=await fetch(u.toString(),{method:"GET",redirect:"follow",cache:"no-store"});
+ if(!r.ok)throw new Error(`通信エラー ${r.status}`);
+ const data=await r.json();
+ if(!data||data.ok===false)throw new Error(data?.error||"Google Sheets処理に失敗しました。");
+ return data;
+}
+async function sheetPost(action,project){
+ const endpoint=getGasEndpoint();
+ if(!endpoint)throw new Error("Apps Script URLが設定されていません。");
+ const r=await fetch(endpoint,{
+   method:"POST",
+   redirect:"follow",
+   headers:{"Content-Type":"text/plain;charset=utf-8"},
+   body:JSON.stringify({action,project})
+ });
+ if(!r.ok)throw new Error(`通信エラー ${r.status}`);
+ const data=await r.json();
+ if(!data||data.ok===false)throw new Error(data?.error||"Google Sheets保存に失敗しました。");
+ return data;
+}
+async function saveProjectToSheets(project,{quiet=false}={}){
+ if(!project)return false;
+ try{
+   if(!quiet)setSheetSyncStatus("Sheetsへ保存中…");
+   const data=await sheetPost("saveProject",project);
+   if(data.updatedAt)project.updatedAt=data.updatedAt;
+   save(S.projects,projects);
+   if(!quiet)setSheetSyncStatus("Sheets保存済み","ok");
+   return true;
+ }catch(err){
+   console.error("Sheets save failed",err);
+   setSheetSyncStatus("Sheets保存失敗","error");
+   if(!quiet)alert("Googleスプレッドシートへの保存に失敗しました。\nローカルには保存されています。\n\n"+err.message);
+   return false;
+ }
+}
+function scheduleSheetProjectSave(project){
+ clearTimeout(sheetSyncTimer);
+ sheetSyncTimer=setTimeout(()=>saveProjectToSheets(project,{quiet:true}),1500);
+}
+async function fetchProjectFromSheets(id){
+ const data=await sheetGet("getProject",{projectId:id});
+ return data.project||null;
+}
+async function loadProjectsFromSheets({quiet=false}={}){
+ try{
+   if(!quiet)setSheetSyncStatus("案件一覧を同期中…");
+   const data=await sheetGet("listProjects");
+   const hidden=new Set(remoteHiddenIds.map(String));
+   const localById=new Map(projects.map(p=>[String(p.id),p]));
+   for(const rp of (data.projects||[])){
+     if(hidden.has(String(rp.id)))continue;
+     const local=localById.get(String(rp.id));
+     if(local){
+       local.name=rp.name||local.name;
+       local.createdAt=rp.createdAt||local.createdAt;
+       local.updatedAt=rp.updatedAt||local.updatedAt;
+       local._sheetMeta=true;
+     }else{
+       projects.push({
+         id:Number(rp.id)||rp.id,
+         name:rp.name||"名称未設定",
+         createdAt:rp.createdAt||"",
+         updatedAt:rp.updatedAt||"",
+         customer:"",site:"",owner:"",memo:"",
+         _sheetMeta:true
+       });
+     }
+   }
+   projects=projects.filter(p=>!hidden.has(String(p.id)));
+   save(S.projects,projects);
+   renderProjects();renderQuickProjectSwitcher();updateCurrentProjectLabel();
+   setSheetSyncStatus(`同期済み ${new Date().toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"})}`,"ok");
+   return true;
+ }catch(err){
+   console.error("Sheets list failed",err);
+   setSheetSyncStatus("同期失敗","error");
+   if(!quiet)alert("Googleスプレッドシートから案件一覧を取得できませんでした。\n\n"+err.message);
+   return false;
+ }
+}
+
 // projects
-$("gasEndpoint").value=localStorage.getItem(S.endpoint)||"";
-$("saveEndpoint").onclick=()=>{localStorage.setItem(S.endpoint,$("gasEndpoint").value.trim());alert("保存しました")};
+$("gasEndpoint").value=localStorage.getItem(S.endpoint)||DEFAULT_GAS_ENDPOINT;
+$("saveEndpoint").onclick=()=>{localStorage.setItem(S.endpoint,$("gasEndpoint").value.trim());setSheetSyncStatus("URL保存済み","ok");alert("Apps Script URLを保存しました")};
+if($("syncSheetsNow"))$("syncSheetsNow").onclick=()=>loadProjectsFromSheets();
 
 function renameProject(projectId,newName){
  const p=projects.find(x=>x.id===Number(projectId));if(!p)return false;
@@ -1078,6 +1185,7 @@ function renameProject(projectId,newName){
  if(!name)return false;
  p.name=name;p.updatedAt=new Date().toISOString();
  save(S.projects,projects);
+ scheduleSheetProjectSave(p);
  const currentId=Number($("editingProjectId")?.value)||null;
  if(currentId===p.id&&$("projectName"))$("projectName").value=name;
  return true;
@@ -1148,7 +1256,24 @@ async function openProject(id){
  const currentId=Number($("editingProjectId")?.value)||null;
  if(currentId&&currentId!==id)await autoSaveCurrentProject();
  else if(!currentId&&calcItems.length)await autoSaveCurrentProject({createIfNeeded:true});
- const p=projects.find(x=>x.id===id);if(!p)return;
+ let p=projects.find(x=>String(x.id)===String(id));if(!p)return;
+ if(getGasEndpoint()&&(!Array.isArray(p.workItems)||p._sheetMeta)){
+   try{
+     const remote=await fetchProjectFromSheets(id);
+     if(remote){
+       const normalized={...p,...remote,id:Number(remote.id)||remote.id,customer:p.customer||"",site:p.site||"",owner:p.owner||"",memo:p.memo||"",_sheetMeta:false};
+       const idx=projects.findIndex(x=>String(x.id)===String(id));
+       if(idx>=0)projects[idx]=normalized;
+       p=normalized;save(S.projects,projects);renderProjects();renderQuickProjectSwitcher();
+     }
+   }catch(err){
+     console.error("Sheets project fetch failed",err);
+     if(!Array.isArray(p.workItems)){
+       alert("案件詳細をGoogleスプレッドシートから取得できませんでした。\n\n"+err.message);
+       return;
+     }
+   }
+ }
  $("editingProjectId").value=p.id;$("projectName").value=p.name||"";$("projectCustomer").value=p.customer||"";$("projectSite").value=p.site||"";$("projectOwner").value=p.owner||"";$("projectMemo").value=p.memo||"";
  calcItems=(p.workItems||[]).map((x,i)=>({id:x.id||Date.now()+i,source:x.source||"other",title:x.title||`計算${i+1}`,area:Number(x.area)||0,materialConfigs:cloneSpecRows(x.materialConfigs||[])}));
  selectedCalcItemId=null;renderCalcItems();updateCurrentProjectLabel();
@@ -1170,14 +1295,17 @@ function duplicateProject(id){
      materialConfigs:cloneSpecRows(x.materialConfigs||[])
    }))
  };
- projects.unshift(copy);save(S.projects,projects);renderProjects();openProject(copy.id);
+ projects.unshift(copy);save(S.projects,projects);scheduleSheetProjectSave(copy);renderProjects();openProject(copy.id);
 }
 
 function deleteProject(id){
  const p=projects.find(x=>x.id===id);if(!p)return;
  if(!confirm(`「${p.name}」を削除しますか？\n削除済みから復元できます。`))return;
  trash.projects.unshift({...p,deletedAt:new Date().toISOString()});saveTrash();
- projects=projects.filter(x=>x.id!==id);
+ if(!remoteHiddenIds.map(String).includes(String(id)))remoteHiddenIds.unshift(String(id));
+ remoteHiddenIds=remoteHiddenIds.slice(0,200);
+ save(S.remoteHidden,remoteHiddenIds);
+ projects=projects.filter(x=>String(x.id)!==String(id));
  save(S.projects,projects);
  if(Number($("editingProjectId").value)===id) resetProjectForm(true);
  renderProjects();renderProjectTrash();
@@ -1188,7 +1316,9 @@ function restoreDeletedProject(idx){
  const restored={...p,updatedAt:new Date().toISOString()};delete restored.deletedAt;
  if(projects.some(x=>x.id===restored.id))restored.id=Date.now()+Math.floor(Math.random()*100000);
  projects.unshift(restored);trash.projects.splice(idx,1);
- save(S.projects,projects);saveTrash();renderProjects();renderProjectTrash();
+ remoteHiddenIds=remoteHiddenIds.filter(x=>String(x)!==String(restored.id));
+ save(S.remoteHidden,remoteHiddenIds);
+ save(S.projects,projects);saveTrash();scheduleSheetProjectSave(restored);renderProjects();renderQuickProjectSwitcher();renderProjectTrash();
 }
 function restoreDeletedCalcItem(idx){
  const item=trash.calcItems[idx];if(!item)return;
@@ -1212,8 +1342,9 @@ function renderProjects(){
  const visibleProjects=[...projects].sort((a,b)=>new Date(b.updatedAt||b.createdAt||0)-new Date(a.updatedAt||a.createdAt||0)).filter(p=>!q||String(p.name||"").toLowerCase().includes(q));
  $("projectList").innerHTML=visibleProjects.length?visibleProjects.map(p=>{
    const customerSite=[p.customer,p.site].filter(Boolean).map(esc).join(" ｜ ");
-   const count=Array.isArray(p.workItems)?p.workItems.length:1;
-   const isCurrent=p.id===currentId;
+   const detailLoaded=Array.isArray(p.workItems);
+   const count=detailLoaded?p.workItems.length:null;
+   const isCurrent=String(p.id)===String(currentId);
    return `<div class="project ${isCurrent?"project-current":""}">
      <div class="headrow">
        <div><b><span class="project-name-inline" data-project-id="${p.id}" title="クリックして案件名を編集">${esc(p.name)}</span></b> <button type="button" class="project-name-pen renameproject" data-id="${p.id}" title="案件名を編集">✎</button>${isCurrent?'<span class="project-current-badge">作業中</span>':""}<br>
@@ -1225,7 +1356,7 @@ function renderProjects(){
        </div>
      </div>
      ${customerSite?`<p>${customerSite}</p>`:""}
-     <p>計算 ${count}件 ｜ 合計施工面積 ${fmt(p.area||0)}㎡</p>${p.memo?`<p>${esc(p.memo)}</p>`:""}
+     ${detailLoaded?`<p>計算 ${count}件 ｜ 合計施工面積 ${fmt(p.area||0)}㎡</p>`:`<p><small>開くと施工対象・材料設定を取得します。</small></p>`}${p.memo?`<p>${esc(p.memo)}</p>`:""}
    </div>`;
  }).join(""):(projects.length?"<p>検索条件に一致する案件はありません。</p>":"<p>まだ案件はありません。</p>");
  document.querySelectorAll(".project-name-inline[data-project-id]").forEach(el=>el.onclick=()=>beginProjectNameEdit(Number(el.dataset.projectId),"projects"));
@@ -1252,7 +1383,7 @@ if($("quickNewProject"))$("quickNewProject").onclick=async()=>{
 
  // 保存済み案件を編集中の場合は、最新状態を確実に保存してから新規案件へ
  if(currentId){
-   await autoSaveCurrentProject();
+   await autoSaveCurrentProject({syncNow:true});
  }else if(calcItems.length>0){
    // 未保存の計算だけは、破棄前に確認する
    const ok=confirm("現在の計算は案件として保存されていません。\n\n現在の未保存の計算を破棄して、新規案件を作成しますか？");
@@ -1288,6 +1419,7 @@ renderSealMaster();
 renderProjects();
 renderQuickProjectSwitcher();
 updateCurrentProjectLabel();
+loadProjectsFromSheets({quiet:true});
 renderCalcItems();
 addFlat({type:"平場",name:"A面",a:10,b:8,q:1});
 if($("calcOtherBtn"))$("calcOtherBtn").onclick=calcOther;calcRoof();calcTank();calcFlat();updateVesselFields();calcPipe();updateProductFields();calcOther();

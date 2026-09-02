@@ -545,7 +545,13 @@ input,select,textarea,button{max-width:100%}
   <div id="projectTrashList" class="trash-list" hidden></div>
 </div>
 </div>
-<div class="card"><h3>Google Sheets連携</h3><label>Apps Script WebアプリURL<input id="gasEndpoint" placeholder="https://script.google.com/macros/s/.../exec"></label><button class="primary" id="saveEndpoint">URL保存</button></div>
+<div class="card"><h3>Google Sheets連携</h3>
+<label>Apps Script WebアプリURL<input id="gasEndpoint" placeholder="https://script.google.com/macros/s/.../exec"></label>
+<div class="headrow" style="justify-content:flex-start;gap:8px;margin-top:8px">
+<button class="primary" id="saveEndpoint" type="button">URL保存</button>
+<button class="secondary" id="syncSheetsNow" type="button">案件一覧を同期</button>
+<small id="sheetSyncStatus">未同期</small>
+</div></div>
 </section>
 </main>
 
@@ -578,5 +584,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=53"></script>
+<script src="app.js?v=54"></script>
 </body></html>
