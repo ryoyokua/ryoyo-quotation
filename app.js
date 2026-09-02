@@ -116,6 +116,11 @@ for(const def of DEFAULT_WAVES){
 let state={roofArea:0,roofRawArea:0,flatArea:0,flatRawArea:0,flatRows:[],tankArea:0,tankRawArea:0,tankPanels:0,tankSeal:0,vesselArea:0,vesselRawArea:0,pipeArea:0,pipeRawArea:0,productArea:0,productRawArea:0,otherArea:100,otherRawArea:100,lastSource:null,material:null,sealMode:"volume"};
 const $=id=>document.getElementById(id), n=id=>Number($(id).value)||0;
 const fmt=(v,d=2)=>Number(v).toLocaleString("ja-JP",{minimumFractionDigits:d,maximumFractionDigits:d});
+const fmtPack=v=>{
+ const n=Number(v);
+ if(!Number.isFinite(n))return String(v??"");
+ return Number.isInteger(n)?String(n):String(n);
+};
 const ceilTo1=v=>Math.ceil(((Number(v)||0)-1e-12)*10)/10;
 const fmtCeil1=v=>ceilTo1(v).toFixed(1);
 function load(k,f){try{let v=localStorage.getItem(k);return v?JSON.parse(v):structuredClone(f)}catch{return structuredClone(f)}}
@@ -541,18 +546,40 @@ function renderSpecRows(){
 }
 
 function bestPlan(req,packs){
- const s=[...packs].filter(x=>x>0).sort((a,b)=>b-a);let best=null;
- function rec(i,total,parts){
-   if(total>=req){
-     let count=parts.reduce((x,p)=>x+p.count,0),over=total-req;
-     if(!best||over<best.over-1e-9||(Math.abs(over-best.over)<1e-9&&count<best.count))best={total,over,count,parts:parts.filter(p=>p.count)};
-     return;
+ const need=Number(req)||0;
+ const s=[...new Set((packs||[]).map(Number).filter(x=>x>0))].sort((a,b)=>b-a);
+ if(!s.length)return null;
+
+ const counts=Array(s.length).fill(0);
+
+ if(s.length===1){
+   counts[0]=Math.ceil(need/s[0]-1e-12);
+ }else{
+   // 最大荷姿をできるだけ使い、残量を小さい荷姿で補う。
+   // 例：2,205.60L、400L/36L → 400L×5 + 36L×6
+   counts[0]=Math.floor(need/s[0]+1e-12);
+   let remain=need-counts[0]*s[0];
+
+   for(let i=1;i<s.length;i++){
+     if(remain<=1e-9)break;
+     if(i===s.length-1){
+       counts[i]=Math.ceil(remain/s[i]-1e-12);
+       remain-=counts[i]*s[i];
+     }else{
+       counts[i]=Math.floor(remain/s[i]+1e-12);
+       remain-=counts[i]*s[i];
+     }
    }
-   if(i>=s.length)return;
-   let size=s[i],max=Math.ceil((req-total)/size)+2;
-   for(let c=0;c<=max;c++)rec(i+1,total+c*size,[...parts,{size,count:c}]);
  }
- rec(0,0,[]);return best;
+
+ let total=counts.reduce((sum,c,i)=>sum+c*s[i],0);
+ while(total+1e-9<need){
+   counts[counts.length-1]++;
+   total+=s[s.length-1];
+ }
+
+ const parts=counts.map((count,i)=>({size:s[i],count})).filter(x=>x.count>0);
+ return {total,over:total-need,count:counts.reduce((a,b)=>a+b,0),parts,counts};
 }
 
 function calcSpecRow(r,area){
@@ -627,7 +654,7 @@ function aggregateCalcItems(){
     packageCount=validPacks.length;
     if(validPacks.length&&g.material.packageUnit===g.material.unit){
       const plan=bestPlan(g.required,validPacks);
-      if(plan)order=plan.parts.map(x=>`${x.size}${g.material.unit} × ${x.count}セット`).join(" ＋ ");
+      if(plan)order=plan.parts.map(x=>`${fmtPack(x.size)}${g.material.unit} × ${x.count}セット`).join(" ＋ ");
       largestPackage=Math.max(...validPacks);
       largestEquivalent=g.required/largestPackage;
     }else if(validPacks.length)order=`換算不可（必要量:${g.material.unit} / 荷姿:${g.material.packageUnit||"未設定"}）`;
@@ -649,7 +676,7 @@ function renderAggregateMaterials(){
     }).join("")||'<small>材料未設定</small>';
     return `<div class="aggregate-target"><b>${esc(item.title)}</b><span>${fmt(item.area)}㎡</span>${materialsHtml}</div>`;
   }).join("");
-  const totalHtml=rows.length?rows.map(x=>`<div class="spec-summary-item"><span>${esc(x.material.name)}<br><small>${[...new Set(x.titles)].map(esc).join(" / ")}</small></span><strong>${esc(x.order)}${x.packageCount>1&&x.largestEquivalent!=null?`<br><small>（最大荷姿の場合 ${fmt(x.largestPackage)}${x.material.unit} × ${fmtCeil1(x.largestEquivalent)}セット）</small>`:""}</strong></div>`).join(""):'<div class="info">材料を設定すると表示されます。</div>';
+  const totalHtml=rows.length?rows.map(x=>`<div class="spec-summary-item"><span>${esc(x.material.name)}<br><small>${[...new Set(x.titles)].map(esc).join(" / ")}</small></span><strong>${esc(x.order)}${x.packageCount>1&&x.largestEquivalent!=null?`<br><small>（最大荷姿の場合 ${fmtPack(x.largestPackage)}${x.material.unit} × ${fmtCeil1(x.largestEquivalent)}セット）</small>`:""}</strong></div>`).join(""):'<div class="info">材料を設定すると表示されます。</div>';
   w.innerHTML=`<div class="aggregate-section-title">施工対象ごとの仕様</div>${targetDetails}<div class="aggregate-section-title">案件全体の材料合計</div>${totalHtml}`;
 
   if(d)d.innerHTML=rows.map(x=>{
@@ -663,10 +690,10 @@ function renderAggregateMaterials(){
       <div class="resultline"><span>合計理論量</span><b>${fmt(x.theory,2)}${m.unit}</b></div>
       <div class="resultline"><span>ロス率</span><b>${lossText}</b></div>
       <div class="resultline"><span>合計必要量</span><b>${fmt(x.required,2)}${m.unit}</b></div>
-      <div class="resultline"><span>通常荷姿</span><b>${m.packages?.length?m.packages.join(" / ")+" "+(m.packageUnit||""):"未設定"}</b></div>
+      <div class="resultline"><span>通常荷姿</span><b>${m.packages?.length?m.packages.map(fmtPack).join(" / ")+" "+(m.packageUnit||""):"未設定"}</b></div>
       ${largeOrder?`<div class="resultline"><span>大容量換算</span><b>${esc(largeOrder)}</b></div>`:""}
       ${largePurchase?`<div class="resultline"><span>大容量のみで発注</span><b>${esc(largePurchase)}</b></div>`:""}
-      <div class="resultline"><span>発注目安</span><b>${esc(x.order)}${x.packageCount>1?`<br>（最大荷姿の場合 ${fmt(x.largestPackage)}${m.unit} × ${fmtCeil1(x.largestEquivalent)}セット）`:""}</b></div>
+      <div class="resultline"><span>発注目安</span><b>${esc(x.order)}${x.packageCount>1?`<br>（最大荷姿の場合 ${fmtPack(x.largestPackage)}${m.unit} × ${fmtCeil1(x.largestEquivalent)}セット）`:""}</b></div>
       <div class="calc-basis"><b>内訳・計算根拠</b>
       ${x.details.map(v=>`<pre>${esc(v.title)}：${v.result.basis} × ${fmt(1+v.result.row.loss,2)} = ${fmt(v.result.required,2)}${m.unit}</pre>`).join("")}
       </div></div>`;
@@ -769,7 +796,7 @@ function calcAllSpecMaterials(){
   $("specSummary").innerHTML=results.map(x=>{
     const packCount=(x.material.packages||[]).filter(p=>Number(p)>0).length;
     const maxNote=packCount>1&&x.largeEquivalent!=null
-      ?`<br><small>（最大荷姿の場合 ${fmt(x.largestPackage)}${x.material.unit} × ${fmtCeil1(x.largeEquivalent)}セット）</small>`
+      ?`<br><small>（最大荷姿の場合 ${fmtPack(x.largestPackage)}${x.material.unit} × ${fmtCeil1(x.largeEquivalent)}セット）</small>`
       :"";
     return `<div class="spec-summary-item">
       <span>${esc(x.material.name)}</span><strong>${x.order}${maxNote}</strong>
@@ -789,10 +816,10 @@ function calcAllSpecMaterials(){
       <div class="resultline"><span>理論量</span><b>${fmt(x.theory,2)}${m.unit}</b></div>
       <div class="resultline"><span>ロス率</span><b>${Math.round(x.row.loss*100)}%</b></div>
       <div class="resultline"><span>必要量</span><b>${fmt(x.required,2)}${m.unit}</b></div>
-      <div class="resultline"><span>通常荷姿</span><b>${m.packages?.length?m.packages.join(" / ")+" "+(m.packageUnit||""):"未設定"}</b></div>
+      <div class="resultline"><span>通常荷姿</span><b>${m.packages?.length?m.packages.map(fmtPack).join(" / ")+" "+(m.packageUnit||""):"未設定"}</b></div>
       ${x.largeOrder?`<div class="resultline"><span>大容量換算</span><b>${esc(x.largeOrder)}</b></div>`:""}
       ${x.largePurchase?`<div class="resultline"><span>大容量のみで発注</span><b>${esc(x.largePurchase)}</b></div>`:""}
-      <div class="resultline"><span>発注目安</span><b>${x.order}${((m.packages||[]).filter(p=>Number(p)>0).length>1&&x.largeEquivalent!=null)?`<br>（最大荷姿の場合 ${fmt(x.largestPackage)}${m.unit} × ${fmtCeil1(x.largeEquivalent)}セット）`:""}</b></div>
+      <div class="resultline"><span>発注目安</span><b>${x.order}${((m.packages||[]).filter(p=>Number(p)>0).length>1&&x.largeEquivalent!=null)?`<br>（最大荷姿の場合 ${fmtPack(x.largestPackage)}${m.unit} × ${fmtCeil1(x.largeEquivalent)}セット）`:""}</b></div>
       <div class="calc-basis"><b>計算根拠</b><pre>${x.basis} × ${fmt(1+x.row.loss,2)} = ${fmt(x.required,2)}${m.unit}${x.plan?` → ${x.order}`:""}</pre></div></div>`;
   }).join("");
   syncSelectedCalcItem();
