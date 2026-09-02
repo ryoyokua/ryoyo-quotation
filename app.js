@@ -986,7 +986,8 @@ async function saveCurrentWorkAsProject(){
    createdAt:now,updatedAt:now,name:name.trim(),
    customer:"",site:"",owner:"",memo:"",
    area:calcItems.reduce((s,x)=>s+(Number(x.area)||0),0),
-   workItems:currentWorkItemsSnapshot()
+   workItems:currentWorkItemsSnapshot(),
+   _sheetUpdatedAt:""
  };
  projects.unshift(p);save(S.projects,projects);
  await saveProjectToSheets(p);
@@ -1026,6 +1027,7 @@ function renderQuickProjectSwitcher(){
   sel.innerHTML=opts.join("")||'<option value="">未保存の計算</option>';
 }
 async function autoSaveCurrentProject({createIfNeeded=false,syncNow=false}={}){
+ if(syncNow)clearTimeout(sheetSyncTimer);
  if(projectAutoSaveBusy)return;
  const id=Number($("editingProjectId")?.value)||null;
  if(!id){
@@ -1062,7 +1064,7 @@ async function createQuickNewProject(){
   const name=prompt("新しい案件名を入力してください。","");
   if(name===null)return;
   const now=new Date().toISOString();
-  const p={id:Date.now()+Math.floor(Math.random()*100000),createdAt:now,updatedAt:now,name:name.trim()||"名称未設定",customer:"",site:"",owner:"",memo:"",area:0,workItems:[]};
+  const p={id:Date.now()+Math.floor(Math.random()*100000),createdAt:now,updatedAt:now,name:name.trim()||"名称未設定",customer:"",site:"",owner:"",memo:"",area:0,workItems:[],_sheetUpdatedAt:""};
   projects.unshift(p);save(S.projects,projects);
   $("editingProjectId").value=p.id;$("projectName").value=p.name;
   $("projectCustomer").value="";$("projectSite").value="";$("projectOwner").value="";$("projectMemo").value="";
@@ -1105,10 +1107,20 @@ async function sheetPost(action,project){
    method:"POST",
    redirect:"follow",
    headers:{"Content-Type":"text/plain;charset=utf-8"},
-   body:JSON.stringify({action,project})
+   body:JSON.stringify({
+     action,
+     project,
+     expectedUpdatedAt: project._sheetUpdatedAt || ""
+   })
  });
  if(!r.ok)throw new Error(`通信エラー ${r.status}`);
  const data=await r.json();
+ if(data?.conflict){
+   const err=new Error(data.message||"この案件は別の端末で更新されています。");
+   err.code="PROJECT_CONFLICT";
+   err.latestUpdatedAt=data.latestUpdatedAt||"";
+   throw err;
+ }
  if(!data||data.ok===false)throw new Error(data?.error||"Google Sheets保存に失敗しました。");
  return data;
 }
@@ -1117,12 +1129,50 @@ async function saveProjectToSheets(project,{quiet=false}={}){
  try{
    if(!quiet)setSheetSyncStatus("Sheetsへ保存中…");
    const data=await sheetPost("saveProject",project);
-   if(data.updatedAt)project.updatedAt=data.updatedAt;
+   if(data.updatedAt){
+     project.updatedAt=data.updatedAt;
+     project._sheetUpdatedAt=data.updatedAt;
+   }
+   project._sheetMeta=false;
    save(S.projects,projects);
    if(!quiet)setSheetSyncStatus("Sheets保存済み","ok");
    return true;
  }catch(err){
    console.error("Sheets save failed",err);
+   if(err?.code==="PROJECT_CONFLICT"){
+     setSheetSyncStatus("別端末の更新を検出","error");
+     const reload=confirm(
+       "この案件は、開いた後に別の端末で更新されています。\n\n"+
+       "このまま上書きはせず、保存を停止しました。\n"+
+       "［OK］最新データを読み込む\n"+
+       "［キャンセル］現在の画面を残す"
+     );
+     if(reload){
+       try{
+         const remote=await fetchProjectFromSheets(project.id);
+         if(remote){
+           const normalized={
+             ...project,...remote,
+             id:Number(remote.id)||remote.id,
+             _sheetUpdatedAt:remote.updatedAt||"",
+             _sheetMeta:false
+           };
+           const idx=projects.findIndex(x=>String(x.id)===String(project.id));
+           if(idx>=0)projects[idx]=normalized;
+           save(S.projects,projects);
+           if(String($("editingProjectId")?.value)===String(project.id)){
+             await openProject(normalized.id,{skipAutoSave:true,forceRemote:false});
+           }else{
+             renderProjects();renderQuickProjectSwitcher();
+           }
+           setSheetSyncStatus("最新データを読み込みました","ok");
+         }
+       }catch(loadErr){
+         alert("最新データの取得に失敗しました。\n\n"+loadErr.message);
+       }
+     }
+     return false;
+   }
    setSheetSyncStatus("Sheets保存失敗","error");
    if(!quiet)alert("Googleスプレッドシートへの保存に失敗しました。\nローカルには保存されています。\n\n"+err.message);
    return false;
@@ -1149,6 +1199,7 @@ async function loadProjectsFromSheets({quiet=false}={}){
        local.name=rp.name||local.name;
        local.createdAt=rp.createdAt||local.createdAt;
        local.updatedAt=rp.updatedAt||local.updatedAt;
+       local._sheetUpdatedAt=rp.updatedAt||local._sheetUpdatedAt||"";
        local._sheetMeta=true;
      }else{
        projects.push({
@@ -1157,6 +1208,7 @@ async function loadProjectsFromSheets({quiet=false}={}){
          createdAt:rp.createdAt||"",
          updatedAt:rp.updatedAt||"",
          customer:"",site:"",owner:"",memo:"",
+         _sheetUpdatedAt:rp.updatedAt||"",
          _sheetMeta:true
        });
      }
@@ -1252,16 +1304,18 @@ if($("newProject"))$("newProject").onclick=async()=>{
  show("home");
 };
 
-async function openProject(id){
+async function openProject(id,{skipAutoSave=false,forceRemote=false}={}){
  const currentId=Number($("editingProjectId")?.value)||null;
- if(currentId&&currentId!==id)await autoSaveCurrentProject();
- else if(!currentId&&calcItems.length)await autoSaveCurrentProject({createIfNeeded:true});
+ if(!skipAutoSave){
+   if(currentId&&String(currentId)!==String(id))await autoSaveCurrentProject({syncNow:true});
+   else if(!currentId&&calcItems.length)await autoSaveCurrentProject({createIfNeeded:true});
+ }
  let p=projects.find(x=>String(x.id)===String(id));if(!p)return;
- if(getGasEndpoint()&&(!Array.isArray(p.workItems)||p._sheetMeta)){
+ if(getGasEndpoint()&&(forceRemote||!Array.isArray(p.workItems)||p._sheetMeta)){
    try{
      const remote=await fetchProjectFromSheets(id);
      if(remote){
-       const normalized={...p,...remote,id:Number(remote.id)||remote.id,customer:p.customer||"",site:p.site||"",owner:p.owner||"",memo:p.memo||"",_sheetMeta:false};
+       const normalized={...p,...remote,id:Number(remote.id)||remote.id,customer:p.customer||"",site:p.site||"",owner:p.owner||"",memo:p.memo||"",_sheetUpdatedAt:remote.updatedAt||"",_sheetMeta:false};
        const idx=projects.findIndex(x=>String(x.id)===String(id));
        if(idx>=0)projects[idx]=normalized;
        p=normalized;save(S.projects,projects);renderProjects();renderQuickProjectSwitcher();
@@ -1289,6 +1343,8 @@ function duplicateProject(id){
    id:Date.now()+Math.floor(Math.random()*100000),
    createdAt:now,updatedAt:now,
    name:`${src.name}（別パターン）`,
+   _sheetUpdatedAt:"",
+   _sheetMeta:false,
    workItems:(src.workItems||[]).map((x,i)=>({
      ...x,
      id:Date.now()+i+Math.floor(Math.random()*100000),
