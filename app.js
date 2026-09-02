@@ -886,6 +886,31 @@ if($("saveSealEdit"))$("saveSealEdit").onclick=()=>{
  save(S.seals,seals);$("sealDialog").close();renderSealMaster();renderSealSelect();
 };
 
+
+function renderHomeProjects(){
+ const box=$("homeProjectList");if(!box)return;
+ const currentId=Number($("editingProjectId")?.value)||null;
+ if(!projects.length){box.innerHTML='<div class="info">まだ案件がありません。「＋ 新規案件」から作成してください。</div>';return;}
+ const rows=[...projects].sort((a,b)=>String(b.updatedAt||b.createdAt||"").localeCompare(String(a.updatedAt||a.createdAt||"")));
+ box.innerHTML=rows.map(p=>`<div class="home-project-item ${p.id===currentId?"active":""}" data-home-project="${p.id}">
+ <div><div class="home-project-name">${esc(p.name||"名称未設定")}${p.id===currentId?' <span class="badge">作業中</span>':""}</div>
+ <div class="home-project-meta">施工対象 ${(p.workItems||[]).length}件${Number(p.area)?` ｜ ${fmt(Number(p.area))}㎡`:""}</div></div>
+ <button class="secondary" type="button" data-home-project="${p.id}">この案件で作業</button></div>`).join("");
+ document.querySelectorAll("[data-home-project]").forEach(el=>el.onclick=async e=>{e.stopPropagation();await openProject(Number(el.dataset.homeProject));show("home");renderHomeProjects();});
+}
+async function createHomeNewProject(){
+ clearTimeout(projectAutoSaveTimer);
+ await autoSaveCurrentProject({createIfNeeded:true});
+ const name=prompt("新しい案件名を入力してください。","");
+ if(name===null)return;
+ const now=new Date().toISOString();
+ const p={id:Date.now()+Math.floor(Math.random()*100000),createdAt:now,updatedAt:now,name:name.trim()||"名称未設定",customer:"",site:"",owner:"",memo:"",area:0,workItems:[]};
+ projects.unshift(p);save(S.projects,projects);
+ $("editingProjectId").value=p.id;$("projectName").value=p.name;$("projectCustomer").value="";$("projectSite").value="";$("projectOwner").value="";$("projectMemo").value="";
+ calcItems=[];selectedCalcItemId=null;specRows=[];$("selectedCalcLabel").textContent="追加したタイトルを選択すると、材料設定を変更できます。";
+ renderCalcItems();updateCurrentProjectLabel();renderProjects();renderHomeProjects();setProjectAutoSaveStatus("新規案件を作成しました","saved");show("home");
+}
+
 // project autosave / quick switching
 let projectAutoSaveTimer=null;
 let projectAutoSaveBusy=false;
@@ -905,14 +930,7 @@ function setProjectAutoSaveStatus(text,kind=""){
   const el=$("projectAutoSaveStatus"); if(!el)return;
   el.textContent=text;el.classList.remove("saving","saved");if(kind)el.classList.add(kind);
 }
-function renderQuickProjectSwitcher(){
-  const sel=$("quickProjectSelect");if(!sel)return;
-  const currentId=Number($("editingProjectId")?.value)||null;
-  const opts=[];
-  if(!currentId)opts.push('<option value="" selected>未保存の計算</option>');
-  projects.forEach(p=>opts.push(`<option value="${p.id}" ${p.id===currentId?"selected":""}>${esc(p.name||"名称未設定")}</option>`));
-  sel.innerHTML=opts.join("")||'<option value="">未保存の計算</option>';
-}
+function renderQuickProjectSwitcher(){ renderHomeProjects(); }
 async function autoSaveCurrentProject({createIfNeeded=false}={}){
   if(projectAutoSaveBusy)return;
   let editingId=Number($("editingProjectId")?.value)||null;
@@ -1087,12 +1105,9 @@ function renderProjects(){
 }
 
 if($("goProjectsFromMaterial"))$("goProjectsFromMaterial").onclick=async()=>{await autoSaveCurrentProject({createIfNeeded:true});renderProjects();show("projects");};
-if($("quickProjectSelect"))$("quickProjectSelect").onchange=async e=>{
- const id=Number(e.target.value)||null,currentId=Number($("editingProjectId").value)||null;
- if(!id||id===currentId){renderQuickProjectSwitcher();return;}
- await openProject(id);
-};
-if($("quickNewProject"))$("quickNewProject").onclick=createQuickNewProject;
+if($("goHomeForProject"))$("goHomeForProject").onclick=async()=>{await autoSaveCurrentProject({createIfNeeded:true});renderHomeProjects();show("home");};
+if($("homeNewProject"))$("homeNewProject").onclick=createHomeNewProject;
+
 ["projectName","projectCustomer","projectSite","projectOwner","projectMemo"].forEach(id=>{const el=$(id);if(el)el.addEventListener("input",scheduleProjectAutoSave);});
 if($("duplicateCurrentProject"))$("duplicateCurrentProject").onclick=async()=>{
  await autoSaveCurrentProject({createIfNeeded:true});
@@ -1112,6 +1127,7 @@ renderSealMaster();
 renderProjects();
 renderQuickProjectSwitcher();
 updateCurrentProjectLabel();
+renderHomeProjects();
 renderCalcItems();
 addFlat({type:"平場",name:"A面",a:10,b:8,q:1});
 if($("calcOtherBtn"))$("calcOtherBtn").onclick=calcOther;calcRoof();calcTank();calcFlat();updateVesselFields();calcPipe();updateProductFields();calcOther();

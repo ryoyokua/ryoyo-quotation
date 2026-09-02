@@ -181,6 +181,15 @@ input,select,textarea,button{max-width:100%}
 #projectAutoSaveStatus.saved{color:#26734d}
 @media(max-width:900px){.quick-project-switch{grid-template-columns:1fr 1fr}.quick-project-switch label{grid-column:1/-1}}
 @media(max-width:560px){.quick-project-switch{grid-template-columns:1fr}.quick-project-switch label{grid-column:auto}}
+
+.home-project-card{margin-bottom:16px}
+.home-project-list{display:grid;gap:8px;margin-top:12px}
+.home-project-item{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 13px;border:1px solid #d7e0e8;border-radius:10px;background:#fff;cursor:pointer}
+.home-project-item:hover{background:#f5faff;border-color:#91b7d8}
+.home-project-item.active{background:#eaf4fd;border-color:#1d466f}
+.home-project-name{font-weight:700}
+.home-project-meta{font-size:12px;color:#647789;margin-top:3px}
+@media(max-width:600px){.home-project-item{align-items:flex-start}.home-project-item button{padding:7px 9px}}
 </style></head>
 <body><div id="appLock" style="position:fixed;inset:0;z-index:99999;background:#f5f7fa;display:flex;align-items:center;justify-content:center;padding:20px"><div style="width:min(420px,100%);background:#fff;border:1px solid #d7dde5;border-radius:16px;padding:24px"><div style="font-size:13px;color:#667085">菱洋株式会社</div><h2>使用材料 概算</h2><p>暗証番号を入力してください。</p><input id="appPinInput" type="password" style="width:100%;padding:12px"><button id="appPinButton" type="button" style="width:100%;margin-top:12px;padding:12px;background:#17365D;color:#fff;border:0;border-radius:8px">ロック解除</button><p id="appPinError" style="display:none;color:#a33">暗証番号が違います。</p></div></div>
 <header><div><small>菱洋株式会社 社内用</small><h1>使用材料 概算</h1></div></header>
@@ -192,6 +201,11 @@ input,select,textarea,button{max-width:100%}
 </nav>
 <main>
 <section id="home" class="view active">
+<div class="card home-project-card">
+<div class="headrow"><div><span class="badge">PROJECT</span><h2>作業する案件</h2><p>案件を選択してから施工対象を追加してください。</p></div>
+<button class="primary" id="homeNewProject" type="button">＋ 新規案件</button></div>
+<div id="homeProjectList" class="home-project-list"></div>
+</div>
 <div class="card hero"><span class="badge">概算専用</span><h2>何を計算しますか？</h2>
 <p>寸法を入力して、概算施工面積・材料量・パネル枚数・シーリング延長・必要本数を計算します。単価・原価・見積金額は扱いません。</p>
 <div class="grid4">
@@ -420,78 +434,13 @@ input,select,textarea,button{max-width:100%}
 <section id="material" class="view">
 <div class="title"><div><span class="badge">MATERIAL</span><h2>材料計算</h2></div><button class="help" data-help="material">？計算方法</button></div>
 <div class="card" id="projectSwitchCard">
-  <div class="headrow">
-    <div>
-      <h3>作業中の案件</h3>
-      <p id="currentProjectLabel">未保存の計算</p>
-      <small id="projectAutoSaveStatus">変更内容は自動保存されます</small>
-    </div>
-  </div>
-  <div class="quick-project-switch">
-    <label>案件を切り替える
-      <select id="quickProjectSelect"></select>
-    </label>
-    <button class="primary" id="quickNewProject" type="button">＋ 新規案件</button>
-    <button class="secondary" id="duplicateCurrentProject" type="button">別パターンを作成</button>
-    <button class="secondary" id="goProjectsFromMaterial" type="button">案件一覧・詳細</button>
-  </div>
-</div>
-<div class="card" id="multiCalcCard">
-  <div class="headrow">
-    <div><h3>追加した計算</h3><p>各ページで「タイトル → 数量計算 → 材料計算へ追加」とすると、ここに追加されます。</p></div>
-    <button class="secondary" id="clearAllCalcItems" type="button">一括削除</button>
-  </div>
-  <div id="calcItemList"><div class="info">まだ追加されていません。</div></div>
-  <div class="big" style="margin-top:12px"><span>合計施工面積</span><strong id="calcItemTotal">0.00㎡</strong></div>
-</div>
-<div class="card" id="selectedCalcCard">
-  <div class="headrow"><div><h3>現在選択中</h3><p id="selectedCalcLabel">追加したタイトルを選択すると、材料設定を変更できます。</p></div></div>
-</div>
-
-
-<div class="card">
-<h3>施工条件</h3>
-<div class="formgrid">
-<label>施工面積 (㎡)<input id="matArea" type="number" value="100" min="0" step=".01"></label>
-</div>
-</div>
-
-<div class="card">
 <div class="headrow">
-<div><h3>使用材料を選択</h3><p>今回使う材料を追加してください。選択・入力内容は下の必要材料一覧へ自動反映します。</p></div>
-<button class="secondary" id="addSpecMaterial">＋ 使用材料を追加</button>
-</div>
-<div id="specMaterialRows"></div>
-</div>
-
-<div class="card result">
-<div class="headrow">
-<div><h3>必要材料一覧</h3><p>現場で準備する材料・セット数を自動表示します。</p></div>
-</div>
-<div id="specSummary" class="spec-summary"></div>
-<details style="margin-top:14px">
-<summary><b>計算根拠を見る</b></summary>
-<div id="specDetails" style="margin-top:10px"></div>
-</details>
-<button class="primary" id="goProject">案件として保存</button>
-</div>
-
-<div class="card result" id="aggregateMaterialCard">
-  <div class="headrow"><div><h3>複数計算の必要材料合計</h3><p>追加したタイトルすべての必要材料を合算します。</p></div></div>
-  <div id="aggregateMaterialSummary" class="spec-summary"><div class="info">計算を追加すると表示されます。</div></div>
-</div>
-</section>
-
-<section id="master" class="view">
-<div class="title"><div><span class="badge">MASTER</span><h2>材料・係数マスタ</h2></div></div>
-<div class="notice">数量計算に必要な情報だけ登録。単価・原価・見積金額は登録しません。</div>
-<div class="card"><div class="headrow"><h3>材料マスタ</h3><button class="secondary" id="addMaterial">＋材料追加</button></div>
-<div class="tablewrap"><table><thead><tr><th>シリーズ</th><th>製品</th><th>特徴</th><th>計算方式</th><th>基準使用量</th><th>標準膜厚</th><th>標準ロス率</th><th>通常荷姿</th><th></th></tr></thead><tbody id="materialMaster"></tbody></table></div>
-<div class="trash-box">
-  <div class="headrow"><h4>削除済み材料</h4><button class="secondary" id="toggleMaterialTrash" type="button">表示 / 非表示</button></div>
-  <div id="materialTrashList" class="trash-list" hidden></div>
-</div>
-</div>
+<div><h3>作業中の案件</h3><p id="currentProjectLabel">未保存の計算</p><small id="projectAutoSaveStatus">変更内容は自動保存されます</small></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap">
+<button class="secondary" id="goHomeForProject" type="button">案件を変更</button>
+<button class="secondary" id="duplicateCurrentProject" type="button">別パターンを作成</button>
+<button class="secondary" id="goProjectsFromMaterial" type="button">案件一覧・詳細</button>
+</div></div></div>
 <div class="card"><h3>屋根材・波型係数</h3><div class="tablewrap"><table><thead><tr><th>屋根材</th><th>係数</th><th>備考</th></tr></thead><tbody id="waveMaster"></tbody></table></div><button class="primary" id="saveMaster">マスタ保存</button></div>
 <div class="card">
 <div class="headrow">
@@ -562,5 +511,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=42"></script>
+<script src="app.js?v=43"></script>
 </body></html>
