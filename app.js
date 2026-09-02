@@ -621,12 +621,15 @@ function aggregateCalcItems(){
     }
   }
   return [...groups.values()].map(g=>{
-    let order="荷姿未設定";
-    if(g.material.packages?.length&&g.material.packageUnit===g.material.unit){
-      const plan=bestPlan(g.required,g.material.packages);
+    let order="荷姿未設定",largestPackage=null,largestEquivalent=null;
+    const validPacks=(g.material.packages||[]).filter(x=>Number(x)>0).map(Number);
+    if(validPacks.length&&g.material.packageUnit===g.material.unit){
+      const plan=bestPlan(g.required,validPacks);
       if(plan)order=plan.parts.map(x=>`${x.size}${g.material.unit} × ${x.count}セット`).join(" ＋ ");
-    }else if(g.material.packages?.length)order=`換算不可（必要量:${g.material.unit} / 荷姿:${g.material.packageUnit||"未設定"}）`;
-    return {...g,order};
+      largestPackage=Math.max(...validPacks);
+      largestEquivalent=g.required/largestPackage;
+    }else if(validPacks.length)order=`換算不可（必要量:${g.material.unit} / 荷姿:${g.material.packageUnit||"未設定"}）`;
+    return {...g,order,largestPackage,largestEquivalent};
   });
 }
 function renderAggregateMaterials(){
@@ -643,7 +646,7 @@ function renderAggregateMaterials(){
     }).join("")||'<small>材料未設定</small>';
     return `<div class="aggregate-target"><b>${esc(item.title)}</b><span>${fmt(item.area)}㎡</span>${materialsHtml}</div>`;
   }).join("");
-  const totalHtml=rows.length?rows.map(x=>`<div class="spec-summary-item"><span>${esc(x.material.name)}<br><small>${[...new Set(x.titles)].map(esc).join(" / ")}</small></span><strong>${esc(x.order)}</strong></div>`).join(""):'<div class="info">材料を設定すると表示されます。</div>';
+  const totalHtml=rows.length?rows.map(x=>`<div class="spec-summary-item"><span>${esc(x.material.name)}<br><small>${[...new Set(x.titles)].map(esc).join(" / ")}</small></span><strong>${esc(x.order)}${x.largestEquivalent!=null?`<br><small>（最大荷姿の場合 ${x.largestEquivalent.toFixed(1)}SET）</small>`:""}</strong></div>`).join(""):'<div class="info">材料を設定すると表示されます。</div>';
   w.innerHTML=`<div class="aggregate-section-title">施工対象ごとの仕様</div>${targetDetails}<div class="aggregate-section-title">案件全体の材料合計</div>${totalHtml}`;
 }
 
