@@ -101,7 +101,15 @@ let trash=load(S.trash,{projects:[],calcItems:[]});
 if(!trash||typeof trash!=="object")trash={projects:[],calcItems:[]};
 if(!Array.isArray(trash.projects))trash.projects=[];
 if(!Array.isArray(trash.calcItems))trash.calcItems=[];
-function saveTrash(){save(S.trash,trash);}
+trash.projects=trash.projects.slice(0,10);
+trash.calcItems=trash.calcItems.slice(0,10);
+save(S.trash,trash);
+function saveTrash(){
+ // 削除済み案件・施工対象は、それぞれ直近10件のみ保持
+ trash.projects=trash.projects.slice(0,10);
+ trash.calcItems=trash.calcItems.slice(0,10);
+ save(S.trash,trash);
+}
 
 // 屋根材マスタが空・破損していても必ず初期値へ復旧
 if(!Array.isArray(waves) || waves.length===0){
