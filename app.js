@@ -1072,11 +1072,51 @@ async function createQuickNewProject(){
 $("gasEndpoint").value=localStorage.getItem(S.endpoint)||"";
 $("saveEndpoint").onclick=()=>{localStorage.setItem(S.endpoint,$("gasEndpoint").value.trim());alert("保存しました")};
 
+function renameProject(projectId,newName){
+ const p=projects.find(x=>x.id===Number(projectId));if(!p)return false;
+ const name=String(newName||"").trim();
+ if(!name)return false;
+ p.name=name;p.updatedAt=new Date().toISOString();
+ save(S.projects,projects);
+ const currentId=Number($("editingProjectId")?.value)||null;
+ if(currentId===p.id&&$("projectName"))$("projectName").value=name;
+ return true;
+}
+function beginProjectNameEdit(projectId,source="projects"){
+ const p=projects.find(x=>x.id===Number(projectId));if(!p)return;
+ const el=source==="material"?$("currentProjectNameEdit"):document.querySelector(`.project-name-inline[data-project-id="${p.id}"]`);
+ if(!el||el.querySelector("input"))return;
+ const oldName=p.name||"";
+ const input=document.createElement("input");
+ input.type="text";input.className="inline-title-input project-name-input";input.value=oldName;
+ el.textContent="";el.appendChild(input);input.focus();input.select();
+ let done=false;
+ const finish=saveName=>{
+   if(done)return;done=true;
+   const val=input.value.trim();
+   if(saveName&&val&&val!==oldName)renameProject(p.id,val);
+   updateCurrentProjectLabel();renderProjects();renderQuickProjectSwitcher();
+ };
+ input.addEventListener("keydown",e=>{
+   if(e.key==="Enter"){e.preventDefault();finish(true);}
+   if(e.key==="Escape"){e.preventDefault();finish(false);}
+ });
+ input.addEventListener("blur",()=>finish(true));
+}
 function updateCurrentProjectLabel(){
  const id=Number($("editingProjectId")?.value)||null;
  const p=id?projects.find(x=>x.id===id):null;
  const label=$("currentProjectLabel");
- if(label) label.textContent=p?`現在：${p.name}`:"現在：未保存の計算";
+ if(label){
+   label.innerHTML=p
+     ?`現在：<span class="project-name-inline" id="currentProjectNameEdit" title="クリックして案件名を編集">${esc(p.name)}</span> <button type="button" class="project-name-pen" id="currentProjectNamePen" title="案件名を編集">✎</button>`
+     :"現在：未保存の計算";
+   if(p){
+     const start=()=>beginProjectNameEdit(p.id,"material");
+     $("currentProjectNameEdit").onclick=start;
+     $("currentProjectNamePen").onclick=start;
+   }
+ }
  renderQuickProjectSwitcher();
 }
 
@@ -1176,7 +1216,7 @@ function renderProjects(){
    const isCurrent=p.id===currentId;
    return `<div class="project ${isCurrent?"project-current":""}">
      <div class="headrow">
-       <div><b>${esc(p.name)}</b>${isCurrent?'<span class="project-current-badge">作業中</span>':""}<br>
+       <div><b><span class="project-name-inline" data-project-id="${p.id}" title="クリックして案件名を編集">${esc(p.name)}</span></b> <button type="button" class="project-name-pen renameproject" data-id="${p.id}" title="案件名を編集">✎</button>${isCurrent?'<span class="project-current-badge">作業中</span>':""}<br>
        <small>更新：${new Date(p.updatedAt||p.createdAt).toLocaleString("ja-JP")} ${p.owner?"｜"+esc(p.owner):""}</small></div>
        <div class="project-actions">
          <button class="secondary openproject" data-id="${p.id}">${isCurrent?"開いています":"開く"}</button>
@@ -1188,6 +1228,8 @@ function renderProjects(){
      <p>計算 ${count}件 ｜ 合計施工面積 ${fmt(p.area||0)}㎡</p>${p.memo?`<p>${esc(p.memo)}</p>`:""}
    </div>`;
  }).join(""):(projects.length?"<p>検索条件に一致する案件はありません。</p>":"<p>まだ案件はありません。</p>");
+ document.querySelectorAll(".project-name-inline[data-project-id]").forEach(el=>el.onclick=()=>beginProjectNameEdit(Number(el.dataset.projectId),"projects"));
+ document.querySelectorAll(".renameproject").forEach(b=>b.onclick=()=>beginProjectNameEdit(Number(b.dataset.id),"projects"));
  document.querySelectorAll(".openproject").forEach(b=>b.onclick=()=>openProject(Number(b.dataset.id)));
  document.querySelectorAll(".duplicateproject").forEach(b=>b.onclick=()=>duplicateProject(Number(b.dataset.id)));
  document.querySelectorAll(".deleteproject").forEach(b=>b.onclick=()=>deleteProject(Number(b.dataset.id)));
