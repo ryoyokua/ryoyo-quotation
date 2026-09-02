@@ -181,14 +181,6 @@ input,select,textarea,button{max-width:100%}
 #projectAutoSaveStatus.saved{color:#26734d}
 @media(max-width:900px){.quick-project-switch{grid-template-columns:1fr 1fr}.quick-project-switch label{grid-column:1/-1}}
 @media(max-width:560px){.quick-project-switch{grid-template-columns:1fr}.quick-project-switch label{grid-column:auto}}
-
-.home-project-card{margin-bottom:16px}
-.home-project-list{display:grid;gap:8px;margin-top:12px}
-.home-project-item{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 13px;border:1px solid #d7e0e8;border-radius:10px;background:#fff}
-.home-project-item.active{background:#eaf4fd;border-color:#1d466f}
-.home-project-name{font-weight:700}
-.home-project-meta{font-size:12px;color:#647789;margin-top:3px}
-@media(max-width:650px){.home-project-item{align-items:flex-start;flex-direction:column}.home-project-item button{width:100%}}
 </style></head>
 <body><div id="appLock" style="position:fixed;inset:0;z-index:99999;background:#f5f7fa;display:flex;align-items:center;justify-content:center;padding:20px"><div style="width:min(420px,100%);background:#fff;border:1px solid #d7dde5;border-radius:16px;padding:24px"><div style="font-size:13px;color:#667085">菱洋株式会社</div><h2>使用材料 概算</h2><p>暗証番号を入力してください。</p><input id="appPinInput" type="password" style="width:100%;padding:12px"><button id="appPinButton" type="button" style="width:100%;margin-top:12px;padding:12px;background:#17365D;color:#fff;border:0;border-radius:8px">ロック解除</button><p id="appPinError" style="display:none;color:#a33">暗証番号が違います。</p></div></div>
 <header><div><small>菱洋株式会社 社内用</small><h1>使用材料 概算</h1></div></header>
@@ -200,17 +192,6 @@ input,select,textarea,button{max-width:100%}
 </nav>
 <main>
 <section id="home" class="view active">
-<div class="card home-project-card">
-  <div class="headrow">
-    <div>
-      <span class="badge">PROJECT</span>
-      <h2 style="margin-top:8px">作業する案件</h2>
-      <p>案件を選択してから、下の施工対象を追加してください。</p>
-    </div>
-    <button class="primary" id="homeNewProject" type="button">＋ 新規案件</button>
-  </div>
-  <div id="homeProjectList" class="home-project-list"></div>
-</div>
 <div class="card hero"><span class="badge">概算専用</span><h2>何を計算しますか？</h2>
 <p>寸法を入力して、概算施工面積・材料量・パネル枚数・シーリング延長・必要本数を計算します。単価・原価・見積金額は扱いません。</p>
 <div class="grid4">
@@ -318,10 +299,10 @@ input,select,textarea,button{max-width:100%}
 <small>製品選択で自動入力。必要時は変更可能</small>
 </label>
 <label>目地幅 (mm)
-<input id="sealWidth" type="number" value="10" min="0.1" step="0.1">
+<input id="sealWidth" type="number" value="10" min="0.1" step="1">
 </label>
 <label>目地深さ (mm)
-<input id="sealDepth" type="number" value="10" min="0.1" step="0.1">
+<input id="sealDepth" type="number" value="10" min="0.1" step="1">
 </label>
 <label>予備率
 <select id="sealReserve">
@@ -451,7 +432,7 @@ input,select,textarea,button{max-width:100%}
       <select id="quickProjectSelect"></select>
     </label>
     <button class="secondary" id="quickOpenProject" type="button">この案件を開く</button>
-    <button class="primary" id="quickNewProject" type="button">＋ 新規案件</button>
+    <button class="primary" id="quickSaveAsProject" type="button">案件として保存</button>
     <button class="secondary" id="duplicateCurrentProject" type="button">別パターンを作成</button>
     <button class="secondary" id="goProjectsFromMaterial" type="button">案件一覧・詳細</button>
   </div>
@@ -582,5 +563,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=44"></script>
+<script src="app.js?v=45"></script>
 </body></html>

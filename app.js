@@ -502,7 +502,7 @@ function renderSpecRows(){
     }else{
       const currentUsage=r.usageOverride??m.usage??0;
       fields=`<label>使用量 (${m.unit||"L"}/㎡)
-        <input class="spec-area-usage" data-id="${r.id}" type="number" min="0" step="0.001" value="${currentUsage}">
+        <input class="spec-area-usage" data-id="${r.id}" type="number" min="0" step="1" value="${currentUsage}">
         <small class="standard-note">標準：${m.usage??"未登録"}${m.usage!=null?m.unit+"/㎡":""}</small>
       </label>`;
     }
@@ -887,49 +887,50 @@ if($("saveSealEdit"))$("saveSealEdit").onclick=()=>{
 };
 
 
-function renderHomeProjects(){
-  const box=$("homeProjectList"); if(!box)return;
-  const currentId=Number($("editingProjectId")?.value)||null;
-  if(!projects.length){
-    box.innerHTML='<div class="info">まだ案件がありません。「＋ 新規案件」から作成してください。</div>';
-    return;
-  }
-  const rows=[...projects].sort((a,b)=>String(b.updatedAt||b.createdAt||"").localeCompare(String(a.updatedAt||a.createdAt||"")));
-  box.innerHTML=rows.map(p=>{
-    const count=(p.workItems||[]).length;
-    const area=Number(p.area)||0;
-    return `<div class="home-project-item ${p.id===currentId?"active":""}">
-      <div>
-        <div class="home-project-name">${esc(p.name||"名称未設定")}${p.id===currentId?' <span class="badge">作業中</span>':""}</div>
-        <div class="home-project-meta">施工対象 ${count}件${area?` ｜ ${fmt(area)}㎡`:""}</div>
-      </div>
-      <button class="secondary home-open-project" type="button" data-id="${p.id}">この案件で作業</button>
-    </div>`;
-  }).join("");
-  document.querySelectorAll(".home-open-project").forEach(b=>b.onclick=async()=>{
-    await openProject(Number(b.dataset.id));
-    renderHomeProjects();
-  });
-}
-
-async function createHomeNewProject(){
-  await autoSaveCurrentProject({createIfNeeded:true});
-  const name=prompt("新しい案件名を入力してください。","");
-  if(name===null)return;
-  const now=new Date().toISOString();
-  const p={
-    id:Date.now()+Math.floor(Math.random()*100000),
-    createdAt:now,updatedAt:now,name:name.trim()||"名称未設定",
-    customer:"",site:"",owner:"",memo:"",area:0,workItems:[]
-  };
-  projects.unshift(p); save(S.projects,projects);
-  $("editingProjectId").value=p.id;
-  $("projectName").value=p.name;
-  $("projectCustomer").value="";$("projectSite").value="";$("projectOwner").value="";$("projectMemo").value="";
-  calcItems=[];selectedCalcItemId=null;specRows=[];
-  $("selectedCalcLabel").textContent="追加したタイトルを選択すると、材料設定を変更できます。";
-  renderCalcItems();updateCurrentProjectLabel();renderProjects();renderQuickProjectSwitcher();renderHomeProjects();
-  setProjectAutoSaveStatus("新規案件を作成しました","saved");
+async function saveCurrentWorkAsProject(){
+ const currentId=Number($("editingProjectId")?.value)||null;
+ if(currentId){
+   const p=projects.find(x=>x.id===currentId);
+   if(p){
+     const renamed=prompt("案件名を変更できます。",p.name||"");
+     if(renamed===null)return;
+     if(renamed.trim())p.name=renamed.trim();
+     p.workItems=currentWorkItemsSnapshot();
+     p.area=calcItems.reduce((s,x)=>s+(Number(x.area)||0),0);
+     p.updatedAt=new Date().toISOString();
+     save(S.projects,projects);
+     $("projectName").value=p.name;
+     updateCurrentProjectLabel();
+     renderProjects();
+     setProjectAutoSaveStatus("自動保存済み","saved");
+   }
+   return;
+ }
+ if(!calcItems.length){
+   alert("案件として保存する計算がありません。");
+   return;
+ }
+ const name=prompt("案件名を入力してください。","");
+ if(name===null)return;
+ if(!name.trim()){
+   alert("案件名を入力してください。");
+   return;
+ }
+ const now=new Date().toISOString();
+ const p={
+   id:Date.now()+Math.floor(Math.random()*100000),
+   createdAt:now,updatedAt:now,name:name.trim(),
+   customer:"",site:"",owner:"",memo:"",
+   area:calcItems.reduce((s,x)=>s+(Number(x.area)||0),0),
+   workItems:currentWorkItemsSnapshot()
+ };
+ projects.unshift(p);save(S.projects,projects);
+ $("editingProjectId").value=p.id;
+ $("projectName").value=p.name;
+ updateCurrentProjectLabel();
+ renderProjects();
+ renderQuickProjectSwitcher();
+ setProjectAutoSaveStatus("案件として保存しました","saved");
 }
 
 // project autosave / quick switching
@@ -960,32 +961,27 @@ function renderQuickProjectSwitcher(){
   sel.innerHTML=opts.join("")||'<option value="">未保存の計算</option>';
 }
 async function autoSaveCurrentProject({createIfNeeded=false}={}){
-  if(projectAutoSaveBusy)return;
-  let editingId=Number($("editingProjectId")?.value)||null;
-  if(!editingId&&!createIfNeeded)return;
-  if(!editingId&&!calcItems.length)return;
-  projectAutoSaveBusy=true;setProjectAutoSaveStatus("保存中…","saving");
-  try{
-    const workItems=currentWorkItemsSnapshot(),now=new Date().toISOString();
-    let existing=editingId?projects.find(x=>x.id===editingId):null;
-    if(!editingId){
-      editingId=Date.now()+Math.floor(Math.random()*100000);
-      $("editingProjectId").value=editingId;
-      if(!$("projectName").value.trim())$("projectName").value=generatedDraftProjectName();
-    }
-    const p={
-      id:editingId,createdAt:existing?.createdAt||now,updatedAt:now,
-      name:$("projectName").value.trim()||existing?.name||generatedDraftProjectName(),
-      customer:$("projectCustomer").value.trim(),site:$("projectSite").value.trim(),
-      owner:$("projectOwner").value.trim(),memo:$("projectMemo").value.trim(),
-      area:workItems.reduce((s,x)=>s+Number(x.area||0),0),workItems
-    };
-    const idx=projects.findIndex(x=>x.id===editingId);
-    if(idx>=0)projects[idx]=p;else projects.unshift(p);
-    save(S.projects,projects);
-    updateCurrentProjectLabel();renderProjects();renderQuickProjectSwitcher();
-    setProjectAutoSaveStatus(`自動保存済み ${new Date().toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"})}`,"saved");
-  }finally{projectAutoSaveBusy=false;}
+ if(projectAutoSaveBusy)return;
+ const id=Number($("editingProjectId")?.value)||null;
+ if(!id){
+   setProjectAutoSaveStatus(calcItems.length?"案件未保存":"変更内容は自動保存されます","");
+   return;
+ }
+ const p=projects.find(x=>x.id===id);
+ if(!p)return;
+ projectAutoSaveBusy=true;
+ setProjectAutoSaveStatus("保存中…","saving");
+ try{
+   p.workItems=currentWorkItemsSnapshot();
+   p.area=calcItems.reduce((s,x)=>s+(Number(x.area)||0),0);
+   const enteredName=($("projectName")?.value||"").trim();
+   if(enteredName)p.name=enteredName;
+   p.updatedAt=new Date().toISOString();
+   save(S.projects,projects);
+   renderProjects();
+   renderQuickProjectSwitcher();
+   setProjectAutoSaveStatus(`自動保存済み ${new Date().toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"})}`,"saved");
+ }finally{projectAutoSaveBusy=false;}
 }
 function scheduleProjectAutoSave(){
   if(!Number($("editingProjectId")?.value))return;
@@ -1019,7 +1015,6 @@ function updateCurrentProjectLabel(){
  const label=$("currentProjectLabel");
  if(label) label.textContent=p?`現在：${p.name}`:"現在：未保存の計算";
  renderQuickProjectSwitcher();
- renderHomeProjects();
 }
 
 $("saveProject").onclick=async()=>{
@@ -1138,10 +1133,13 @@ if($("quickOpenProject"))$("quickOpenProject").onclick=async()=>{
  const id=Number($("quickProjectSelect")?.value)||null;
  const currentId=Number($("editingProjectId").value)||null;
  if(!id||id===currentId)return;
+ if(!currentId && calcItems.length){
+   const choice=confirm("現在の計算は案件として保存されていません。\n\nOK：保存せず選択した案件を開く\nキャンセル：現在の計算に戻る");
+   if(!choice){renderQuickProjectSwitcher();return;}
+ }
  await openProject(id);
 };
-if($("quickNewProject"))$("quickNewProject").onclick=createQuickNewProject;
-if($("homeNewProject"))$("homeNewProject").onclick=createHomeNewProject;
+if($("quickSaveAsProject"))$("quickSaveAsProject").onclick=saveCurrentWorkAsProject;
 ["projectName","projectCustomer","projectSite","projectOwner","projectMemo"].forEach(id=>{const el=$(id);if(el)el.addEventListener("input",scheduleProjectAutoSave);});
 if($("duplicateCurrentProject"))$("duplicateCurrentProject").onclick=async()=>{
  await autoSaveCurrentProject({createIfNeeded:true});
@@ -1161,7 +1159,6 @@ renderSealMaster();
 renderProjects();
 renderQuickProjectSwitcher();
 updateCurrentProjectLabel();
-renderHomeProjects();
 renderCalcItems();
 addFlat({type:"平場",name:"A面",a:10,b:8,q:1});
 if($("calcOtherBtn"))$("calcOtherBtn").onclick=calcOther;calcRoof();calcTank();calcFlat();updateVesselFields();calcPipe();updateProductFields();calcOther();
