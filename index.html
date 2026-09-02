@@ -14,11 +14,17 @@
 .spec-detail{border-bottom:1px solid var(--bd);padding:10px 0}.spec-detail:last-child{border-bottom:0}
 @media(max-width:560px){.spec-summary-item{align-items:flex-start;flex-direction:column}.spec-summary-item strong{text-align:left}}
 
-.project-name-inline{cursor:text;border-bottom:1px dashed #9bb1c7;padding:1px 2px}
+.project-name-inline{cursor:text;border-bottom:1px dashed #9bb1c7;padding:1px 2px;display:inline}
 .project-name-inline:hover{background:#eef6fc;border-radius:4px}
-.project-name-pen{border:0;background:transparent;padding:2px 4px;cursor:pointer;color:#53718e;font-size:.95em}
+.project-name-pen{border:0;background:transparent;padding:2px 4px;cursor:pointer;color:#53718e;font-size:.95em;display:inline-flex;align-items:center;justify-content:center;vertical-align:baseline;flex:0 0 auto}
 .project-name-pen:hover{background:#e7f1f8;border-radius:4px}
 .project-name-input{min-width:220px;max-width:100%;padding:5px 7px}
+
+.project-name-edit-wrap{display:inline-flex;align-items:baseline;gap:4px;max-width:100%;vertical-align:baseline}
+#quickNewProject{background:#e4f2dc!important;color:#234b2b!important;border:1px solid #bfd8b4!important}
+#quickNewProject:hover{background:#d8ebce!important}
+#goProjectsFromMaterial{background:#f7f9fb!important;color:#28425f!important;border:1px solid #cfd9e3!important}
+@media(max-width:560px){.project-name-edit-wrap{max-width:100%}.project-name-inline{overflow-wrap:anywhere}}
 </style>
 
 <style>

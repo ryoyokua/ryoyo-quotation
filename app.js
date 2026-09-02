@@ -1217,7 +1217,7 @@ function updateCurrentProjectLabel(){
  const label=$("currentProjectLabel");
  if(label){
    label.innerHTML=p
-     ?`現在：<span class="project-name-inline" id="currentProjectNameEdit" title="クリックして案件名を編集">${esc(p.name)}</span> <button type="button" class="project-name-pen" id="currentProjectNamePen" title="案件名を編集">✎</button>`
+     ?`現在：<span class="project-name-edit-wrap"><span class="project-name-inline" id="currentProjectNameEdit" title="クリックして案件名を編集">${esc(p.name)}</span><button type="button" class="project-name-pen" id="currentProjectNamePen" title="案件名を編集">✎</button></span>`
      :"現在：未保存の計算";
    if(p){
      const start=()=>beginProjectNameEdit(p.id,"material");
@@ -1347,7 +1347,7 @@ function renderProjects(){
    const isCurrent=String(p.id)===String(currentId);
    return `<div class="project ${isCurrent?"project-current":""}">
      <div class="headrow">
-       <div><b><span class="project-name-inline" data-project-id="${p.id}" title="クリックして案件名を編集">${esc(p.name)}</span></b> <button type="button" class="project-name-pen renameproject" data-id="${p.id}" title="案件名を編集">✎</button>${isCurrent?'<span class="project-current-badge">作業中</span>':""}<br>
+       <div><span class="project-name-edit-wrap"><b><span class="project-name-inline" data-project-id="${p.id}" title="クリックして案件名を編集">${esc(p.name)}</span></b><button type="button" class="project-name-pen renameproject" data-id="${p.id}" title="案件名を編集">✎</button></span>${isCurrent?'<span class="project-current-badge">作業中</span>':""}<br>
        <small>更新：${new Date(p.updatedAt||p.createdAt).toLocaleString("ja-JP")} ${p.owner?"｜"+esc(p.owner):""}</small></div>
        <div class="project-actions">
          <button class="secondary openproject" data-id="${p.id}">${isCurrent?"開いています":"開く"}</button>
