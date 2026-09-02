@@ -1175,6 +1175,7 @@ async function saveProjectToSheets(project,{quiet=false}={}){
      project._sheetUpdatedAt=data.updatedAt;
    }
    project._sheetMeta=false;
+   project._remoteNewer=false;
    save(S.projects,projects);
    if(!quiet)setSheetSyncStatus("Sheets保存済み","ok");
    return true;
@@ -1227,6 +1228,54 @@ async function fetchProjectFromSheets(id){
  const data=await sheetGet("getProject",{projectId:id});
  return projectFromSheets(data.project||null);
 }
+async function checkOpenedProjectForRemoteUpdate(projectId,openedSheetStamp){
+ if(!getGasEndpoint())return;
+ try{
+   const remote=await fetchProjectFromSheets(projectId);
+   if(!remote)return;
+   const latest=remote.updatedAt||"";
+   const current=projects.find(x=>String(x.id)===String(projectId));
+   if(!current)return;
+   const isStillOpen=String($("editingProjectId")?.value||"")===String(projectId);
+   if(!isStillOpen)return;
+
+   if(latest&&openedSheetStamp&&latest!==openedSheetStamp){
+     current._remoteNewer=true;
+     save(S.projects,projects);
+     setSheetSyncStatus("別端末の更新あり","error");
+     const reload=confirm(
+       "この案件は別の端末で更新されています。\n\n"+
+       "［OK］最新データを読み込む\n"+
+       "［キャンセル］現在の画面をそのまま使う"
+     );
+     if(reload){
+       const normalized={
+         ...current,...remote,
+         id:Number(remote.id)||remote.id,
+         customer:current.customer||"",
+         site:current.site||"",
+         owner:current.owner||"",
+         memo:current.memo||"",
+         _sheetUpdatedAt:latest,
+         _remoteNewer:false,
+         _sheetMeta:false
+       };
+       const idx=projects.findIndex(x=>String(x.id)===String(projectId));
+       if(idx>=0)projects[idx]=normalized;
+       save(S.projects,projects);
+       await openProject(normalized.id,{skipAutoSave:true,forceRemote:false,skipBackgroundCheck:true});
+       setSheetSyncStatus("最新データを読み込みました","ok");
+     }
+   }else if(latest){
+     current._sheetUpdatedAt=latest;
+     current._remoteNewer=false;
+     current._sheetMeta=false;
+     save(S.projects,projects);
+   }
+ }catch(err){
+   console.warn("Background Sheets check failed",err);
+ }
+}
 async function loadProjectsFromSheets({quiet=false}={}){
  try{
    if(!quiet)setSheetSyncStatus("案件一覧を同期中…");
@@ -1237,11 +1286,14 @@ async function loadProjectsFromSheets({quiet=false}={}){
      if(hidden.has(String(rp.id)))continue;
      const local=localById.get(String(rp.id));
      if(local){
+       const remoteStamp=rp.updatedAt||"";
+       const cachedStamp=local._sheetUpdatedAt||"";
+       local._remoteNewer=!!(remoteStamp&&cachedStamp&&remoteStamp!==cachedStamp);
        local.name=rp.name||local.name;
        local.createdAt=rp.createdAt||local.createdAt;
-       local.updatedAt=rp.updatedAt||local.updatedAt;
-       local._sheetUpdatedAt=rp.updatedAt||local._sheetUpdatedAt||"";
-       local._sheetMeta=true;
+       if(!Array.isArray(local.workItems))local.updatedAt=rp.updatedAt||local.updatedAt;
+       if(!cachedStamp)local._sheetUpdatedAt=remoteStamp;
+       local._sheetMeta=!Array.isArray(local.workItems);
      }else{
        projects.push({
          id:Number(rp.id)||rp.id,
@@ -1250,6 +1302,7 @@ async function loadProjectsFromSheets({quiet=false}={}){
          updatedAt:rp.updatedAt||"",
          customer:"",site:"",owner:"",memo:"",
          _sheetUpdatedAt:rp.updatedAt||"",
+         _remoteNewer:false,
          _sheetMeta:true
        });
      }
@@ -1345,21 +1398,39 @@ if($("newProject"))$("newProject").onclick=async()=>{
  show("home");
 };
 
-async function openProject(id,{skipAutoSave=false,forceRemote=false}={}){
+async function openProject(id,{skipAutoSave=false,forceRemote=false,skipBackgroundCheck=false}={}){
  const currentId=Number($("editingProjectId")?.value)||null;
+
+ // 切替元はローカルへ即時保存し、Sheets保存はバックグラウンドで行う
  if(!skipAutoSave){
-   if(currentId&&String(currentId)!==String(id))await autoSaveCurrentProject({syncNow:true});
-   else if(!currentId&&calcItems.length)await autoSaveCurrentProject({createIfNeeded:true});
+   if(currentId&&String(currentId)!==String(id)){
+     autoSaveCurrentProject();
+   }else if(!currentId&&calcItems.length){
+     // 未保存計算は呼び出し側で確認する。ここでは自動案件化しない。
+   }
  }
+
  let p=projects.find(x=>String(x.id)===String(id));if(!p)return;
- if(getGasEndpoint()&&(forceRemote||!Array.isArray(p.workItems)||p._sheetMeta)){
+
+ // この端末に詳細キャッシュがない案件だけは、初回のみSheets取得を待つ
+ if(getGasEndpoint()&&(forceRemote||!Array.isArray(p.workItems))){
    try{
+     setProjectAutoSaveStatus("案件データを取得中…","saving");
      const remote=await fetchProjectFromSheets(id);
      if(remote){
-       const normalized={...p,...remote,id:Number(remote.id)||remote.id,customer:p.customer||"",site:p.site||"",owner:p.owner||"",memo:p.memo||"",_sheetUpdatedAt:remote.updatedAt||"",_sheetMeta:false};
+       const normalized={
+         ...p,...remote,
+         id:Number(remote.id)||remote.id,
+         customer:p.customer||"",site:p.site||"",owner:p.owner||"",memo:p.memo||"",
+         _sheetUpdatedAt:remote.updatedAt||"",
+         _remoteNewer:false,
+         _sheetMeta:false
+       };
        const idx=projects.findIndex(x=>String(x.id)===String(id));
        if(idx>=0)projects[idx]=normalized;
-       p=normalized;save(S.projects,projects);renderProjects();renderQuickProjectSwitcher();
+       p=normalized;
+       save(S.projects,projects);
+       renderProjects();renderQuickProjectSwitcher();
      }
    }catch(err){
      console.error("Sheets project fetch failed",err);
@@ -1369,11 +1440,30 @@ async function openProject(id,{skipAutoSave=false,forceRemote=false}={}){
      }
    }
  }
- $("editingProjectId").value=p.id;$("projectName").value=p.name||"";$("projectCustomer").value=p.customer||"";$("projectSite").value=p.site||"";$("projectOwner").value=p.owner||"";$("projectMemo").value=p.memo||"";
- calcItems=(p.workItems||[]).map((x,i)=>({id:x.id||Date.now()+i,source:x.source||"other",title:x.title||`計算${i+1}`,area:Number(x.area)||0,materialConfigs:cloneSpecRows(x.materialConfigs||[])}));
- selectedCalcItemId=null;renderCalcItems();updateCurrentProjectLabel();
+
+ const openedSheetStamp=p._sheetUpdatedAt||"";
+ $("editingProjectId").value=p.id;
+ $("projectName").value=p.name||"";
+ $("projectCustomer").value=p.customer||"";
+ $("projectSite").value=p.site||"";
+ $("projectOwner").value=p.owner||"";
+ $("projectMemo").value=p.memo||"";
+ calcItems=(p.workItems||[]).map((x,i)=>({
+   id:x.id||Date.now()+i,
+   source:x.source||"other",
+   title:x.title||`計算${i+1}`,
+   area:Number(x.area)||0,
+   materialConfigs:cloneSpecRows(x.materialConfigs||[])
+ }));
+ selectedCalcItemId=null;
+ renderCalcItems();updateCurrentProjectLabel();
  setProjectAutoSaveStatus("変更内容は自動保存されます");
  if(calcItems.length)selectCalcItem(calcItems[0].id);else show("material");
+
+ // 表示後に裏側で最新版を確認。画面切替えは待たせない。
+ if(!skipBackgroundCheck&&Array.isArray(p.workItems)){
+   setTimeout(()=>checkOpenedProjectForRemoteUpdate(p.id,openedSheetStamp),0);
+ }
 }
 
 function duplicateProject(id){
@@ -1472,8 +1562,8 @@ if($("quickProjectSelect"))$("quickProjectSelect").onchange=async e=>{
    const ok=confirm("現在の計算は案件として保存されていません。\n\n選択した案件を開くと現在の計算内容は破棄されます。\n保存せずに開きますか？");
    if(!ok){renderQuickProjectSwitcher();return;}
  }
- if(currentId)await autoSaveCurrentProject();
- await openProject(id);
+ if(currentId)autoSaveCurrentProject();
+ await openProject(id,{skipAutoSave:true});
 };
 if($("quickNewProject"))$("quickNewProject").onclick=async()=>{
  const currentId=Number($("editingProjectId")?.value)||null;
