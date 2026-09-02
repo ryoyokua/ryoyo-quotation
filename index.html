@@ -649,7 +649,8 @@ input,select,textarea,button{max-width:100%}
 <section id="master" class="view">
 <div class="title"><div><span class="badge">MASTER</span><h2>材料・係数マスタ</h2></div></div>
 <div class="notice">数量計算に必要な情報だけ登録。単価・原価・見積金額は登録しません。</div>
-<div class="card"><div class="headrow"><h3>材料マスタ</h3><button class="secondary" id="addMaterial">＋材料追加</button></div>
+<div class="card"><div class="headrow"><h3>材料マスタ</h3><div class="project-actions"><button class="secondary" id="syncMaterialMaster" type="button">材料マスタを同期</button><button class="secondary" id="addMaterial">＋材料追加</button></div></div>
+<small id="materialSyncStatus">Google Sheets共通マスタ：未同期</small>
 <div class="tablewrap"><table><thead><tr><th>シリーズ</th><th>製品</th><th>特徴</th><th>計算方式</th><th>基準使用量</th><th>標準膜厚</th><th>標準ロス率</th><th>通常荷姿</th><th></th></tr></thead><tbody id="materialMaster"></tbody></table></div>
 <div class="trash-box">
   <div class="headrow"><h4>削除済み材料</h4><button class="secondary" id="toggleMaterialTrash" type="button">表示 / 非表示</button></div>
@@ -737,5 +738,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=63"></script>
+<script src="app.js?v=64"></script>
 </body></html>

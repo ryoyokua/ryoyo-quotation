@@ -842,6 +842,45 @@ if($("clearAllCalcItems")) $("clearAllCalcItems").onclick=()=>{if(!calcItems.len
 
 document.querySelectorAll(".send").forEach(btn=>{btn.onclick=()=>addCurrentSourceToMaterial(btn.dataset.source);});
 
+const MATERIAL_MODE_LABELS={area:"面積 × 標準使用量",thickness:"面積 × 膜厚 × 1mm使用量",foam:"発泡ウレタン厚み別",manual:"案件ごとに使用量入力"};
+const MATERIAL_MODE_CODES=Object.fromEntries(Object.entries(MATERIAL_MODE_LABELS).map(([k,v])=>[v,k]));
+function setMaterialSyncStatus(text,kind=""){
+ const el=$("materialSyncStatus");if(!el)return;el.textContent=text;el.style.color=kind==="error"?"#b42318":kind==="ok"?"#18794e":"";
+}
+function materialForSheets(m){
+ return {sheetId:m.sheetId||"",series:m.series||"",name:m.name||"",feature:m.feature||"",calcMode:MATERIAL_MODE_LABELS[getMaterialCalcMode(m)]||getMaterialCalcMode(m),usage:m.usage,unit:m.unit||"",standardThickness:m.standardThickness,defaultLoss:Math.round((m.defaultLoss??0.20)*100),packages:Array.isArray(m.packages)?m.packages:[],packageUnit:m.packageUnit||"",foamUsages:m.foamUsages||{}};
+}
+function materialFromSheets(m){
+ return {id:"sheet-"+String(m.sheetId||m.id||Date.now()),sheetId:String(m.sheetId||m.id||""),series:m.series||"",name:m.name||"",feature:m.feature||"",calcMode:MATERIAL_MODE_CODES[m.calcMode]||m.calcMode||"manual",usage:m.usage==null?null:Number(m.usage),unit:m.unit||"",standardThickness:m.standardThickness==null||m.standardThickness===""?null:Number(m.standardThickness),defaultLoss:(Number(m.defaultLoss)||0)/100,packages:Array.isArray(m.packages)?m.packages.map(Number):[],packageUnit:m.packageUnit||"",foamUsages:m.foamUsages||undefined};
+}
+async function loadMaterialsFromSheets({quiet=false}={}){
+ try{
+   if(!quiet)setMaterialSyncStatus("Google Sheetsから同期中…");
+   const data=await sheetGet("listMaterials");
+   if(Array.isArray(data.materials)&&data.materials.length){
+     const localDeleted=materials.filter(m=>m.deleted);
+     materials=data.materials.map(materialFromSheets);
+     // 削除済み材料はこの端末の復元用として保持
+     for(const d of localDeleted){if(!materials.some(m=>m.sheetId&&m.sheetId===d.sheetId))materials.push(d);}
+     save(S.materials,materials);renderMaster();renderSpecRows();calcAllSpecMaterials();
+   }
+   setMaterialSyncStatus("Google Sheets共通マスタ：同期済み","ok");return true;
+ }catch(err){console.error(err);setMaterialSyncStatus("材料マスタ同期失敗","error");if(!quiet)alert("材料マスタを同期できませんでした。\\n\\n"+err.message);return false;}
+}
+async function saveMaterialsToSheets({quiet=false}={}){
+ try{
+   if(!quiet)setMaterialSyncStatus("Google Sheetsへ保存中…");
+   const active=materials.filter(m=>!m.deleted).map(materialForSheets);
+   const data=await sheetPostRaw("saveMaterials",{materials:active});
+   if(Array.isArray(data.materials)){
+     const deleted=materials.filter(m=>m.deleted);
+     materials=data.materials.map(materialFromSheets).concat(deleted);
+     save(S.materials,materials);renderMaster();
+   }
+   setMaterialSyncStatus("Google Sheets共通マスタ：保存済み","ok");return true;
+ }catch(err){console.error(err);setMaterialSyncStatus("材料マスタ保存失敗","error");if(!quiet)alert("材料マスタを保存できませんでした。\\n\\n"+err.message);return false;}
+}
+
 // master
 function renderMaster(){
  $("materialMaster").innerHTML=materials.map((m,i)=>({m,i})).filter(o=>!o.m.deleted).map(({m,i})=>{
@@ -860,11 +899,11 @@ function renderMaster(){
 function deleteMaterialMaster(i){
  const m=materials[i];if(!m||m.deleted)return;
  if(!confirm(`「${m.series} ${m.name}」を材料マスタから削除しますか？\n削除済み材料から復元できます。`))return;
- m.deleted=true;m.deletedAt=new Date().toISOString();save(S.materials,materials);renderMaster();
+ m.deleted=true;m.deletedAt=new Date().toISOString();save(S.materials,materials);renderMaster();saveMaterialsToSheets({quiet:true});
 }
 function restoreMaterialMaster(i){
  const m=materials[i];if(!m)return;
- delete m.deleted;delete m.deletedAt;save(S.materials,materials);renderMaster();
+ delete m.deleted;delete m.deletedAt;save(S.materials,materials);renderMaster();saveMaterialsToSheets({quiet:true});
 }
 function renderMaterialTrash(){
  const w=$("materialTrashList");if(!w)return;
@@ -896,11 +935,13 @@ function openMatEdit(i){
 }
 if($("editCalcMode"))$("editCalcMode").onchange=()=>{if($("foamUsageMasterFields"))$("foamUsageMasterFields").style.display=$("editCalcMode").value==="foam"?"grid":"none";};
 $("addMaterial").onclick=()=>openMatEdit(-1);
+if($("syncMaterialMaster"))$("syncMaterialMaster").onclick=()=>loadMaterialsFromSheets();
 $("closeMaterial").onclick=()=>$("materialDialog").close();
 $("saveMaterialEdit").onclick=()=>{
  const i=Number($("editIndex").value);
  const m={
    id:i>=0?materials[i].id:"custom-"+Date.now(),
+   sheetId:i>=0?(materials[i].sheetId||""):"",
    series:$("editSeries").value.trim(),
    name:$("editName").value.trim(),
    feature:$("editFeature").value.trim(),
@@ -922,6 +963,7 @@ $("saveMaterialEdit").onclick=()=>{
  save(S.materials,materials);
  $("materialDialog").close();
  renderMaster();renderSpecRows();calcAllSpecMaterials();
+ saveMaterialsToSheets({quiet:true});
 };
 $("saveMaster").onclick=()=>{
  document.querySelectorAll(".wn").forEach(x=>waves[Number(x.dataset.i)].name=x.value);
@@ -1098,8 +1140,12 @@ function sourceFromSheetLabel(source){
 function projectForSheets(project){
   return {
     ...project,
+    id:project.sheetId||"",
+    legacyId:String(project.id||""),
     workItems:(Array.isArray(project.workItems)?project.workItems:[]).map(item=>({
       ...item,
+      id:item.sheetItemId||"",
+      legacyId:String(item.id||""),
       source:sourceToSheetLabel(item.source)
     }))
   };
@@ -1108,8 +1154,12 @@ function projectFromSheets(project){
   if(!project)return project;
   return {
     ...project,
-    workItems:(Array.isArray(project.workItems)?project.workItems:[]).map(item=>({
+    sheetId:String(project.id||""),
+    id:project.legacyId&&/^\\d+$/.test(String(project.legacyId))?Number(project.legacyId):null,
+    workItems:(Array.isArray(project.workItems)?project.workItems:[]).map((item,i)=>({
       ...item,
+      sheetItemId:String(item.id||""),
+      id:item.legacyId&&/^\\d+$/.test(String(item.legacyId))?Number(item.legacyId):(Date.now()+i+Math.floor(Math.random()*100000)),
       source:sourceFromSheetLabel(item.source)
     }))
   };
@@ -1170,6 +1220,11 @@ async function saveProjectToSheets(project,{quiet=false}={}){
  try{
    if(!quiet)setSheetSyncStatus("Sheetsへ保存中…");
    const data=await sheetPost("saveProject",projectForSheets(project));
+   if(data.projectId)project.sheetId=String(data.projectId);
+   if(Array.isArray(data.itemIds)&&Array.isArray(project.workItems)){
+     const byLegacy=new Map(data.itemIds.map(x=>[String(x.legacyId||""),String(x.itemId||"")]));
+     project.workItems.forEach(item=>{const sid=byLegacy.get(String(item.id));if(sid)item.sheetItemId=sid;});
+   }
    if(data.updatedAt){
      project.updatedAt=data.updatedAt;
      project._sheetUpdatedAt=data.updatedAt;
@@ -1195,7 +1250,8 @@ async function saveProjectToSheets(project,{quiet=false}={}){
          if(remote){
            const normalized={
              ...project,...remote,
-             id:Number(remote.id)||remote.id,
+             id:project.id,
+             sheetId:remote.sheetId||project.sheetId||"",
              _sheetUpdatedAt:remote.updatedAt||"",
              _sheetMeta:false
            };
@@ -1220,13 +1276,22 @@ async function saveProjectToSheets(project,{quiet=false}={}){
    return false;
  }
 }
+async function sheetPostRaw(action,payload={}){
+ const endpoint=getGasEndpoint();if(!endpoint)throw new Error("Apps Script URLが設定されていません。");
+ const r=await fetch(endpoint,{method:"POST",redirect:"follow",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action,...payload})});
+ if(!r.ok)throw new Error(`通信エラー ${r.status}`);const data=await r.json();if(!data||data.ok===false)throw new Error(data?.error||"Google Sheets処理に失敗しました。");return data;
+}
 function scheduleSheetProjectSave(project){
  clearTimeout(sheetSyncTimer);
  sheetSyncTimer=setTimeout(()=>saveProjectToSheets(project,{quiet:true}),1500);
 }
 async function fetchProjectFromSheets(id){
- const data=await sheetGet("getProject",{projectId:id});
- return projectFromSheets(data.project||null);
+ const local=projects.find(x=>String(x.id)===String(id));
+ const projectId=local?.sheetId||id;
+ const data=await sheetGet("getProject",{projectId});
+ const remote=projectFromSheets(data.project||null);
+ if(remote&&local)remote.id=local.id;
+ return remote;
 }
 async function checkOpenedProjectForRemoteUpdate(projectId,openedSheetStamp){
  if(!getGasEndpoint())return;
@@ -1251,7 +1316,8 @@ async function checkOpenedProjectForRemoteUpdate(projectId,openedSheetStamp){
      if(reload){
        const normalized={
          ...current,...remote,
-         id:Number(remote.id)||remote.id,
+         id:current.id,
+         sheetId:remote.sheetId||current.sheetId||"",
          customer:current.customer||"",
          site:current.site||"",
          owner:current.owner||"",
@@ -1281,11 +1347,14 @@ async function loadProjectsFromSheets({quiet=false}={}){
    if(!quiet)setSheetSyncStatus("案件一覧を同期中…");
    const data=await sheetGet("listProjects");
    const hidden=new Set(remoteHiddenIds.map(String));
-   const localById=new Map(projects.map(p=>[String(p.id),p]));
    for(const rp of (data.projects||[])){
-     if(hidden.has(String(rp.id)))continue;
-     const local=localById.get(String(rp.id));
+     const sheetId=String(rp.id||"");
+     const legacyId=String(rp.legacyId||"");
+     if(hidden.has(sheetId)||hidden.has(legacyId))continue;
+     let local=projects.find(p=>String(p.sheetId||"")===sheetId);
+     if(!local&&legacyId)local=projects.find(p=>String(p.id)===legacyId);
      if(local){
+       local.sheetId=sheetId;
        const remoteStamp=rp.updatedAt||"";
        const cachedStamp=local._sheetUpdatedAt||"";
        local._remoteNewer=!!(remoteStamp&&cachedStamp&&remoteStamp!==cachedStamp);
@@ -1296,7 +1365,8 @@ async function loadProjectsFromSheets({quiet=false}={}){
        local._sheetMeta=!Array.isArray(local.workItems);
      }else{
        projects.push({
-         id:Number(rp.id)||rp.id,
+         id:Date.now()+Math.floor(Math.random()*100000),
+         sheetId,
          name:rp.name||"名称未設定",
          createdAt:rp.createdAt||"",
          updatedAt:rp.updatedAt||"",
@@ -1307,7 +1377,7 @@ async function loadProjectsFromSheets({quiet=false}={}){
        });
      }
    }
-   projects=projects.filter(p=>!hidden.has(String(p.id)));
+   projects=projects.filter(p=>!hidden.has(String(p.sheetId||p.id)));
    save(S.projects,projects);
    renderProjects();renderQuickProjectSwitcher();updateCurrentProjectLabel();
    setSheetSyncStatus(`同期済み ${new Date().toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"})}`,"ok");
@@ -1315,7 +1385,7 @@ async function loadProjectsFromSheets({quiet=false}={}){
  }catch(err){
    console.error("Sheets list failed",err);
    setSheetSyncStatus("同期失敗","error");
-   if(!quiet)alert("Googleスプレッドシートから案件一覧を取得できませんでした。\n\n"+err.message);
+   if(!quiet)alert("Googleスプレッドシートから案件一覧を取得できませんでした。\\n\\n"+err.message);
    return false;
  }
 }
@@ -1380,7 +1450,7 @@ $("saveProject").onclick=async()=>{
  const workItems=calcItems.length?currentWorkItemsSnapshot():[{id:Date.now(),source:state.lastSource||"other",title:"単独計算",area:n("matArea"),materialConfigs:cloneSpecRows()}];
  const p={id:editingId||Date.now(),createdAt:editingId?(projects.find(x=>x.id===editingId)?.createdAt||new Date().toISOString()):new Date().toISOString(),updatedAt:new Date().toISOString(),name:$("projectName").value.trim()||"名称未設定",customer:$("projectCustomer").value.trim(),site:$("projectSite").value.trim(),owner:$("projectOwner").value.trim(),memo:$("projectMemo").value.trim(),area:workItems.reduce((s,x)=>s+Number(x.area||0),0),workItems};
  if(editingId){const idx=projects.findIndex(x=>x.id===editingId);if(idx>=0)projects[idx]=p;else projects.unshift(p);}else projects.unshift(p);
- save(S.projects,projects);$("editingProjectId").value=p.id;renderProjects();updateCurrentProjectLabel();alert(editingId?"案件を更新しました":"案件を保存しました");
+ save(S.projects,projects);$("editingProjectId").value=p.id;await saveProjectToSheets(p);renderProjects();updateCurrentProjectLabel();alert(editingId?"案件を更新しました":"案件を保存しました");
 };
 
 function resetProjectForm(clearCalculations=false){
@@ -1420,7 +1490,8 @@ async function openProject(id,{skipAutoSave=false,forceRemote=false,skipBackgrou
      if(remote){
        const normalized={
          ...p,...remote,
-         id:Number(remote.id)||remote.id,
+         id:p.id,
+         sheetId:remote.sheetId||p.sheetId||"",
          customer:p.customer||"",site:p.site||"",owner:p.owner||"",memo:p.memo||"",
          _sheetUpdatedAt:remote.updatedAt||"",
          _remoteNewer:false,
@@ -1489,7 +1560,8 @@ function deleteProject(id){
  const p=projects.find(x=>x.id===id);if(!p)return;
  if(!confirm(`「${p.name}」を削除しますか？\n削除済みから復元できます。`))return;
  trash.projects.unshift({...p,deletedAt:new Date().toISOString()});saveTrash();
- if(!remoteHiddenIds.map(String).includes(String(id)))remoteHiddenIds.unshift(String(id));
+ const remoteKey=String(p.sheetId||id);
+ if(!remoteHiddenIds.map(String).includes(remoteKey))remoteHiddenIds.unshift(remoteKey);
  remoteHiddenIds=remoteHiddenIds.slice(0,200);
  save(S.remoteHidden,remoteHiddenIds);
  projects=projects.filter(x=>String(x.id)!==String(id));
@@ -1607,6 +1679,7 @@ renderProjects();
 renderQuickProjectSwitcher();
 updateCurrentProjectLabel();
 loadProjectsFromSheets({quiet:true});
+loadMaterialsFromSheets({quiet:true});
 renderCalcItems();
 addFlat({type:"平場",name:"A面",a:10,b:8,q:1});
 if($("calcOtherBtn"))$("calcOtherBtn").onclick=calcOther;calcRoof();calcTank();calcFlat();updateVesselFields();calcPipe();updateProductFields();calcOther();
