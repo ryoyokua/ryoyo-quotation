@@ -692,6 +692,7 @@ function renderCalcItems(){
     beginCalcTitleEdit(Number(el.dataset.editTitle));
   });
   renderAggregateMaterials();
+  scheduleProjectAutoSave();
 }
 function selectCalcItem(id){
   const item=calcItems.find(x=>x.id===id); if(!item)return;
@@ -739,7 +740,8 @@ function calcAllSpecMaterials(){
   state.specMaterials=results;
   if(!results.length){
     $("specSummary").innerHTML='<div class="info">使用材料を追加すると、ここに「何を何セット」が表示されます。</div>';
-    $("specDetails").innerHTML="";return;
+    $("specDetails").innerHTML="";
+    syncSelectedCalcItem();scheduleProjectAutoSave();return;
   }
 
   $("specSummary").innerHTML=results.map(x=>`<div class="spec-summary-item">
@@ -767,6 +769,7 @@ function calcAllSpecMaterials(){
   }).join("");
   syncSelectedCalcItem();
   renderAggregateMaterials();
+  scheduleProjectAutoSave();
 }
 
 if($("addSpecMaterial")) $("addSpecMaterial").onclick=()=>addSpecMaterial(0);
@@ -883,6 +886,83 @@ if($("saveSealEdit"))$("saveSealEdit").onclick=()=>{
  save(S.seals,seals);$("sealDialog").close();renderSealMaster();renderSealSelect();
 };
 
+// project autosave / quick switching
+let projectAutoSaveTimer=null;
+let projectAutoSaveBusy=false;
+
+function currentWorkItemsSnapshot(){
+  syncSelectedCalcItem();
+  return calcItems.map(x=>({
+    id:x.id,source:x.source,title:x.title,area:Number(x.area)||0,
+    materialConfigs:cloneSpecRows(x.materialConfigs||[])
+  }));
+}
+function generatedDraftProjectName(){
+  const d=new Date(),p=n=>String(n).padStart(2,"0");
+  return `未保存案件 ${d.getFullYear()}/${p(d.getMonth()+1)}/${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function setProjectAutoSaveStatus(text,kind=""){
+  const el=$("projectAutoSaveStatus"); if(!el)return;
+  el.textContent=text;el.classList.remove("saving","saved");if(kind)el.classList.add(kind);
+}
+function renderQuickProjectSwitcher(){
+  const sel=$("quickProjectSelect");if(!sel)return;
+  const currentId=Number($("editingProjectId")?.value)||null;
+  const opts=[];
+  if(!currentId)opts.push('<option value="" selected>未保存の計算</option>');
+  projects.forEach(p=>opts.push(`<option value="${p.id}" ${p.id===currentId?"selected":""}>${esc(p.name||"名称未設定")}</option>`));
+  sel.innerHTML=opts.join("")||'<option value="">未保存の計算</option>';
+}
+async function autoSaveCurrentProject({createIfNeeded=false}={}){
+  if(projectAutoSaveBusy)return;
+  let editingId=Number($("editingProjectId")?.value)||null;
+  if(!editingId&&!createIfNeeded)return;
+  if(!editingId&&!calcItems.length)return;
+  projectAutoSaveBusy=true;setProjectAutoSaveStatus("保存中…","saving");
+  try{
+    const workItems=currentWorkItemsSnapshot(),now=new Date().toISOString();
+    let existing=editingId?projects.find(x=>x.id===editingId):null;
+    if(!editingId){
+      editingId=Date.now()+Math.floor(Math.random()*100000);
+      $("editingProjectId").value=editingId;
+      if(!$("projectName").value.trim())$("projectName").value=generatedDraftProjectName();
+    }
+    const p={
+      id:editingId,createdAt:existing?.createdAt||now,updatedAt:now,
+      name:$("projectName").value.trim()||existing?.name||generatedDraftProjectName(),
+      customer:$("projectCustomer").value.trim(),site:$("projectSite").value.trim(),
+      owner:$("projectOwner").value.trim(),memo:$("projectMemo").value.trim(),
+      area:workItems.reduce((s,x)=>s+Number(x.area||0),0),workItems
+    };
+    const idx=projects.findIndex(x=>x.id===editingId);
+    if(idx>=0)projects[idx]=p;else projects.unshift(p);
+    save(S.projects,projects);
+    updateCurrentProjectLabel();renderProjects();renderQuickProjectSwitcher();
+    setProjectAutoSaveStatus(`自動保存済み ${new Date().toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"})}`,"saved");
+  }finally{projectAutoSaveBusy=false;}
+}
+function scheduleProjectAutoSave(){
+  if(!Number($("editingProjectId")?.value))return;
+  clearTimeout(projectAutoSaveTimer);
+  setProjectAutoSaveStatus("変更を保存しています…","saving");
+  projectAutoSaveTimer=setTimeout(()=>autoSaveCurrentProject(),450);
+}
+async function createQuickNewProject(){
+  clearTimeout(projectAutoSaveTimer);
+  await autoSaveCurrentProject({createIfNeeded:true});
+  const name=prompt("新しい案件名を入力してください。","");
+  if(name===null)return;
+  const now=new Date().toISOString();
+  const p={id:Date.now()+Math.floor(Math.random()*100000),createdAt:now,updatedAt:now,name:name.trim()||"名称未設定",customer:"",site:"",owner:"",memo:"",area:0,workItems:[]};
+  projects.unshift(p);save(S.projects,projects);
+  $("editingProjectId").value=p.id;$("projectName").value=p.name;
+  $("projectCustomer").value="";$("projectSite").value="";$("projectOwner").value="";$("projectMemo").value="";
+  calcItems=[];selectedCalcItemId=null;specRows=[];
+  $("selectedCalcLabel").textContent="追加したタイトルを選択すると、材料設定を変更できます。";
+  renderCalcItems();updateCurrentProjectLabel();renderProjects();renderQuickProjectSwitcher();
+  setProjectAutoSaveStatus("新規案件を作成しました","saved");show("material");
+}
+
 // projects
 $("gasEndpoint").value=localStorage.getItem(S.endpoint)||"";
 $("saveEndpoint").onclick=()=>{localStorage.setItem(S.endpoint,$("gasEndpoint").value.trim());alert("保存しました")};
@@ -892,12 +972,13 @@ function updateCurrentProjectLabel(){
  const p=id?projects.find(x=>x.id===id):null;
  const label=$("currentProjectLabel");
  if(label) label.textContent=p?`現在：${p.name}`:"現在：未保存の計算";
+ renderQuickProjectSwitcher();
 }
 
 $("saveProject").onclick=async()=>{
  const editingId=Number($("editingProjectId").value)||null;
  syncSelectedCalcItem();
- const workItems=calcItems.length?calcItems.map(x=>({id:x.id,source:x.source,title:x.title,area:x.area,materialConfigs:cloneSpecRows(x.materialConfigs||[])})):[{id:Date.now(),source:state.lastSource||"other",title:"単独計算",area:n("matArea"),materialConfigs:cloneSpecRows()}];
+ const workItems=calcItems.length?currentWorkItemsSnapshot():[{id:Date.now(),source:state.lastSource||"other",title:"単独計算",area:n("matArea"),materialConfigs:cloneSpecRows()}];
  const p={id:editingId||Date.now(),createdAt:editingId?(projects.find(x=>x.id===editingId)?.createdAt||new Date().toISOString()):new Date().toISOString(),updatedAt:new Date().toISOString(),name:$("projectName").value.trim()||"名称未設定",customer:$("projectCustomer").value.trim(),site:$("projectSite").value.trim(),owner:$("projectOwner").value.trim(),memo:$("projectMemo").value.trim(),area:workItems.reduce((s,x)=>s+Number(x.area||0),0),workItems};
  if(editingId){const idx=projects.findIndex(x=>x.id===editingId);if(idx>=0)projects[idx]=p;else projects.unshift(p);}else projects.unshift(p);
  save(S.projects,projects);$("editingProjectId").value=p.id;renderProjects();updateCurrentProjectLabel();alert(editingId?"案件を更新しました":"案件を保存しました");
@@ -912,17 +993,21 @@ function resetProjectForm(clearCalculations=false){
  }
  updateCurrentProjectLabel();
 }
-if($("newProject"))$("newProject").onclick=()=>{
- if(calcItems.length && !confirm("新しい案件として入力しますか？\n現在画面に読み込まれている計算内容はクリアされます。\n保存が必要な場合は先に案件を保存してください。"))return;
+if($("newProject"))$("newProject").onclick=async()=>{
+ await autoSaveCurrentProject({createIfNeeded:true});
  resetProjectForm(true);
  show("home");
 };
 
-function openProject(id){
+async function openProject(id){
+ const currentId=Number($("editingProjectId")?.value)||null;
+ if(currentId&&currentId!==id)await autoSaveCurrentProject();
+ else if(!currentId&&calcItems.length)await autoSaveCurrentProject({createIfNeeded:true});
  const p=projects.find(x=>x.id===id);if(!p)return;
  $("editingProjectId").value=p.id;$("projectName").value=p.name||"";$("projectCustomer").value=p.customer||"";$("projectSite").value=p.site||"";$("projectOwner").value=p.owner||"";$("projectMemo").value=p.memo||"";
  calcItems=(p.workItems||[]).map((x,i)=>({id:x.id||Date.now()+i,source:x.source||"other",title:x.title||`計算${i+1}`,area:Number(x.area)||0,materialConfigs:cloneSpecRows(x.materialConfigs||[])}));
  selectedCalcItemId=null;renderCalcItems();updateCurrentProjectLabel();
+ setProjectAutoSaveStatus("変更内容は自動保存されます");
  if(calcItems.length)selectCalcItem(calcItems[0].id);else show("material");
 }
 
@@ -1001,8 +1086,16 @@ function renderProjects(){
  renderProjectTrash();
 }
 
-if($("goProjectsFromMaterial"))$("goProjectsFromMaterial").onclick=()=>{renderProjects();show("projects");};
-if($("duplicateCurrentProject"))$("duplicateCurrentProject").onclick=()=>{
+if($("goProjectsFromMaterial"))$("goProjectsFromMaterial").onclick=async()=>{await autoSaveCurrentProject({createIfNeeded:true});renderProjects();show("projects");};
+if($("quickProjectSelect"))$("quickProjectSelect").onchange=async e=>{
+ const id=Number(e.target.value)||null,currentId=Number($("editingProjectId").value)||null;
+ if(!id||id===currentId){renderQuickProjectSwitcher();return;}
+ await openProject(id);
+};
+if($("quickNewProject"))$("quickNewProject").onclick=createQuickNewProject;
+["projectName","projectCustomer","projectSite","projectOwner","projectMemo"].forEach(id=>{const el=$(id);if(el)el.addEventListener("input",scheduleProjectAutoSave);});
+if($("duplicateCurrentProject"))$("duplicateCurrentProject").onclick=async()=>{
+ await autoSaveCurrentProject({createIfNeeded:true});
  const id=Number($("editingProjectId").value)||null;
  if(id){duplicateProject(id);return;}
  if(!calcItems.length){alert("複製する計算内容がありません。");return;}
@@ -1017,6 +1110,8 @@ renderMaster();
 renderSealSelect();
 renderSealMaster();
 renderProjects();
+renderQuickProjectSwitcher();
+updateCurrentProjectLabel();
 renderCalcItems();
 addFlat({type:"平場",name:"A面",a:10,b:8,q:1});
 if($("calcOtherBtn"))$("calcOtherBtn").onclick=calcOther;calcRoof();calcTank();calcFlat();updateVesselFields();calcPipe();updateProductFields();calcOther();

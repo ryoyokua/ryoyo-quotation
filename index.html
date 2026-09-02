@@ -172,6 +172,15 @@ input,select,textarea,button{max-width:100%}
 .inline-title-edit:hover{background:#edf5fc!important;border-radius:6px}
 .inline-title-input{min-width:180px;max-width:100%;padding:6px 8px;border:1px solid #7fb0dc;border-radius:6px;font-weight:700}
 @media(max-width:700px){.inline-title-input{min-width:140px}}
+
+.quick-project-switch{display:grid;grid-template-columns:minmax(240px,1fr) auto auto auto;gap:10px;align-items:end;margin-top:14px}
+.quick-project-switch label{margin:0}
+.quick-project-switch select{width:100%}
+#projectAutoSaveStatus{display:inline-block;margin-top:4px;color:#5d7287}
+#projectAutoSaveStatus.saving{color:#916c00}
+#projectAutoSaveStatus.saved{color:#26734d}
+@media(max-width:900px){.quick-project-switch{grid-template-columns:1fr 1fr}.quick-project-switch label{grid-column:1/-1}}
+@media(max-width:560px){.quick-project-switch{grid-template-columns:1fr}.quick-project-switch label{grid-column:auto}}
 </style></head>
 <body><div id="appLock" style="position:fixed;inset:0;z-index:99999;background:#f5f7fa;display:flex;align-items:center;justify-content:center;padding:20px"><div style="width:min(420px,100%);background:#fff;border:1px solid #d7dde5;border-radius:16px;padding:24px"><div style="font-size:13px;color:#667085">菱洋株式会社</div><h2>使用材料 概算</h2><p>暗証番号を入力してください。</p><input id="appPinInput" type="password" style="width:100%;padding:12px"><button id="appPinButton" type="button" style="width:100%;margin-top:12px;padding:12px;background:#17365D;color:#fff;border:0;border-radius:8px">ロック解除</button><p id="appPinError" style="display:none;color:#a33">暗証番号が違います。</p></div></div>
 <header><div><small>菱洋株式会社 社内用</small><h1>使用材料 概算</h1></div></header>
@@ -415,11 +424,16 @@ input,select,textarea,button{max-width:100%}
     <div>
       <h3>作業中の案件</h3>
       <p id="currentProjectLabel">未保存の計算</p>
+      <small id="projectAutoSaveStatus">変更内容は自動保存されます</small>
     </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="secondary" id="goProjectsFromMaterial" type="button">案件を切り替える</button>
-      <button class="secondary" id="duplicateCurrentProject" type="button">別パターンを作成</button>
-    </div>
+  </div>
+  <div class="quick-project-switch">
+    <label>案件を切り替える
+      <select id="quickProjectSelect"></select>
+    </label>
+    <button class="primary" id="quickNewProject" type="button">＋ 新規案件</button>
+    <button class="secondary" id="duplicateCurrentProject" type="button">別パターンを作成</button>
+    <button class="secondary" id="goProjectsFromMaterial" type="button">案件一覧・詳細</button>
   </div>
 </div>
 <div class="card" id="multiCalcCard">
@@ -548,5 +562,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=41"></script>
+<script src="app.js?v=42"></script>
 </body></html>
