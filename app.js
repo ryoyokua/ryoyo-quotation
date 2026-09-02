@@ -1533,8 +1533,8 @@ function renderProjects(){
    const count=detailLoaded?p.workItems.length:null;
    const isCurrent=String(p.id)===String(currentId);
    return `<div class="project ${isCurrent?"project-current":""}">
-     <div class="headrow">
-       <div><span class="project-name-edit-wrap"><b><span class="project-name-inline" data-project-id="${p.id}" title="クリックして案件名を編集">${esc(p.name)}</span></b><button type="button" class="project-name-pen renameproject" data-id="${p.id}" title="案件名を編集">✎</button></span>${isCurrent?'<span class="project-current-badge">作業中</span>':""}<br>
+     <div class="headrow project-card-head">
+       <div class="project-title-area"><span class="project-name-edit-wrap"><b><span class="project-name-inline" data-project-id="${p.id}" title="クリックして案件名を編集">${esc(p.name)}</span></b><button type="button" class="project-name-pen renameproject" data-id="${p.id}" title="案件名を編集">✎</button></span>${isCurrent?'<span class="project-current-badge">作業中</span>':""}<br>
        <small>更新：${new Date(p.updatedAt||p.createdAt).toLocaleString("ja-JP")} ${p.owner?"｜"+esc(p.owner):""}</small></div>
        <div class="project-actions">
          <button class="secondary openproject" data-id="${p.id}">${isCurrent?"開いています":"開く"}</button>
