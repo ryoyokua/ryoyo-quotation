@@ -1247,9 +1247,18 @@ if($("quickProjectSelect"))$("quickProjectSelect").onchange=async e=>{
  if(currentId)await autoSaveCurrentProject();
  await openProject(id);
 };
-if($("quickNewProject"))$("quickNewProject").onclick=()=>{
- const hasWork=calcItems.length>0||!!Number($("editingProjectId")?.value);
- if(hasWork&&!confirm("現在の作業内容をクリアして、新規案件を作成しますか？\n\n保存していない変更内容は失われます。"))return;
+if($("quickNewProject"))$("quickNewProject").onclick=async()=>{
+ const currentId=Number($("editingProjectId")?.value)||null;
+
+ // 保存済み案件を編集中の場合は、最新状態を確実に保存してから新規案件へ
+ if(currentId){
+   await autoSaveCurrentProject();
+ }else if(calcItems.length>0){
+   // 未保存の計算だけは、破棄前に確認する
+   const ok=confirm("現在の計算は案件として保存されていません。\n\n現在の未保存の計算を破棄して、新規案件を作成しますか？");
+   if(!ok)return;
+ }
+
  resetProjectForm(true);
  updateCurrentProjectLabel();
  renderCalcItems();
