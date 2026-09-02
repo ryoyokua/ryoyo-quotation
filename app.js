@@ -646,10 +646,37 @@ function renderAggregateMaterials(){
   const totalHtml=rows.length?rows.map(x=>`<div class="spec-summary-item"><span>${esc(x.material.name)}<br><small>${[...new Set(x.titles)].map(esc).join(" / ")}</small></span><strong>${esc(x.order)}</strong></div>`).join(""):'<div class="info">材料を設定すると表示されます。</div>';
   w.innerHTML=`<div class="aggregate-section-title">施工対象ごとの仕様</div>${targetDetails}<div class="aggregate-section-title">案件全体の材料合計</div>${totalHtml}`;
 }
+
+function beginCalcTitleEdit(id){
+  const item=calcItems.find(x=>x.id===id); if(!item) return;
+  const wrap=document.querySelector(`.inline-title-wrap[data-title-id="${id}"]`);
+  if(!wrap) return;
+  const old=item.title||"名称未設定";
+  wrap.innerHTML=`<input class="inline-title-input" type="text" value="${esc(old)}" aria-label="施工対象タイトル">`;
+  const input=wrap.querySelector("input");
+  input.focus(); input.select();
+  let finished=false;
+  const commit=()=>{
+    if(finished)return; finished=true;
+    const v=input.value.trim();
+    item.title=v||old;
+    if(selectedCalcItemId===id){
+      $("selectedCalcLabel").textContent=`${item.title} ｜ ${fmt(item.area)}㎡`;
+    }
+    renderCalcItems();
+    syncSelectedCalcItem();
+  };
+  input.addEventListener("keydown",e=>{
+    if(e.key==="Enter"){e.preventDefault();commit();}
+    else if(e.key==="Escape"){finished=true;renderCalcItems();}
+  });
+  input.addEventListener("blur",commit);
+}
+
 function renderCalcItems(){
   const list=$("calcItemList"),total=$("calcItemTotal"); if(!list||!total)return;
   total.textContent=`${fmt(calcItems.reduce((s,x)=>s+Number(x.area||0),0))}㎡`;
-  list.innerHTML=calcItems.length?calcItems.map(item=>`<div class="calc-list-item calc-item-clickable ${item.id===selectedCalcItemId?"active":""}" data-select-id="${item.id}" role="button" tabindex="0" aria-label="${esc(item.title)}の材料設定を開く"><div class="calc-list-main"><div><b>${esc(item.title)}</b><br><small>${esc(MULTI_SOURCE_LABELS[item.source]||item.source)} ｜ ${fmt(item.area)}㎡</small></div><div class="calc-list-actions"><button class="multi-select material-setting-btn" type="button" data-id="${item.id}">材料設定</button><button class="multi-duplicate duplicate-btn" type="button" data-id="${item.id}">複製</button><button class="delete multi-delete" type="button" data-id="${item.id}">削除</button></div></div></div>`).join(""):'<div class="info">まだ追加されていません。</div>';
+  list.innerHTML=calcItems.length?calcItems.map(item=>`<div class="calc-list-item calc-item-clickable ${item.id===selectedCalcItemId?"active":""}" data-select-id="${item.id}" role="button" tabindex="0" aria-label="${esc(item.title)}の材料設定を開く"><div class="calc-list-main"><div><span class="inline-title-wrap" data-title-id="${item.id}"><span class="inline-title-text" data-edit-title="${item.id}" title="クリックして名前を変更">${esc(item.title)}</span><button class="inline-title-edit" type="button" data-edit-title="${item.id}" title="名前を変更" aria-label="名前を変更">✎</button></span><br><small>${esc(MULTI_SOURCE_LABELS[item.source]||item.source)} ｜ ${fmt(item.area)}㎡</small></div><div class="calc-list-actions"><button class="multi-select material-setting-btn" type="button" data-id="${item.id}">材料設定</button><button class="multi-duplicate duplicate-btn" type="button" data-id="${item.id}">複製</button><button class="delete multi-delete" type="button" data-id="${item.id}">削除</button></div></div></div>`).join(""):'<div class="info">まだ追加されていません。</div>';
   document.querySelectorAll(".calc-item-clickable").forEach(row=>{
     row.onclick=e=>{if(e.target.closest("button"))return; selectCalcItem(Number(row.dataset.selectId));};
     row.onkeydown=e=>{if((e.key==="Enter"||e.key===" ")&&!e.target.closest("button")){e.preventDefault();selectCalcItem(Number(row.dataset.selectId));}};
@@ -657,6 +684,10 @@ function renderCalcItems(){
   document.querySelectorAll(".multi-select").forEach(b=>b.onclick=e=>{e.stopPropagation();selectCalcItem(Number(b.dataset.id));});
   document.querySelectorAll(".multi-duplicate").forEach(b=>b.onclick=e=>{e.stopPropagation();duplicateCalcItem(Number(b.dataset.id));});
   document.querySelectorAll(".multi-delete").forEach(b=>b.onclick=e=>{e.stopPropagation();deleteCalcItem(Number(b.dataset.id));});
+  document.querySelectorAll("[data-edit-title]").forEach(el=>el.onclick=e=>{
+    e.stopPropagation();
+    beginCalcTitleEdit(Number(el.dataset.editTitle));
+  });
   renderAggregateMaterials();
 }
 function selectCalcItem(id){
