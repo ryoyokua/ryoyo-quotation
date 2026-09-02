@@ -517,10 +517,6 @@ function renderSpecRows(){
       <label>ロス率<select class="spec-loss" data-id="${r.id}">
       ${[0,.05,.1,.15,.2,.25,.3,.35,.4].map(x=>`<option value="${x}" ${Math.abs(x-r.loss)<1e-9?"selected":""}>${Math.round(x*100)}%</option>`).join("")}
       </select><small class="standard-note">標準：${Math.round((m.defaultLoss??0.20)*100)}%</small></label>
-      <label>荷姿計算<select class="spec-package-mode" data-id="${r.id}">
-        <option value="optimal" ${(r.packageMode||"optimal")==="optimal"?"selected":""}>荷姿を組み合わせる</option>
-        <option value="large" ${r.packageMode==="large"?"selected":""}>大容量荷姿のみで換算</option>
-      </select><small class="standard-note">例：380Lのみの場合は必要量÷380Lを0.1SET単位で表示</small></label>
       </div></div>`;
   }).join("");
 
@@ -540,7 +536,6 @@ function renderSpecRows(){
   document.querySelectorAll(".spec-manual-usage").forEach(el=>el.oninput=()=>{const r=specRows.find(x=>x.id===el.dataset.id);if(r){r.manualUsage=el.value===""?null:Number(el.value);calcAllSpecMaterials();}});
   document.querySelectorAll(".spec-area-usage").forEach(el=>el.oninput=()=>{const r=specRows.find(x=>x.id===el.dataset.id);if(r){r.usageOverride=el.value===""?null:Number(el.value);calcAllSpecMaterials();}});
   document.querySelectorAll(".spec-loss").forEach(el=>el.onchange=()=>{const r=specRows.find(x=>x.id===el.dataset.id);if(r){r.loss=Number(el.value);calcAllSpecMaterials();}});
-  document.querySelectorAll(".spec-package-mode").forEach(el=>el.onchange=()=>{const r=specRows.find(x=>x.id===el.dataset.id);if(r){r.packageMode=el.value;calcAllSpecMaterials();}});
 }
 
 function bestPlan(req,packs){
@@ -588,7 +583,6 @@ function calcSpecRow(r,area){
       largeEquivalent=required/largest;
       largeOrder=`${largest}${m.unit}換算 ${largeEquivalent.toFixed(1)}SET`;
       largePurchase=`発注する場合 ${Math.ceil(largeEquivalent)}SET`;
-      if(r.packageMode==="large") order=`${largeOrder}（${largePurchase}）`;
     }
   }else if(validPacks.length){
     order=`換算不可（必要量:${m.unit} / 荷姿:${m.packageUnit||"未設定"}）`;
@@ -616,27 +610,34 @@ function aggregateCalcItems(){
     for(const row of item.materialConfigs||[]){
       const r=calcSpecRow(row,Number(item.area)||0); if(!r)continue;
       const key=r.material.id;
-      if(!groups.has(key))groups.set(key,{material:r.material,required:0,titles:[]});
-      const g=groups.get(key); g.required+=r.required; g.titles.push(item.title);
+      if(!groups.has(key))groups.set(key,{material:r.material,required:0,theory:0,titles:[],details:[],losses:new Set(),specs:new Set()});
+      const g=groups.get(key);
+      g.required+=r.required; g.theory+=r.theory; g.titles.push(item.title); g.losses.add(r.row.loss);
+      if(r.mode==="thickness")g.specs.add(`${fmt(r.row.thickness,1)}mm`);
+      else if(r.mode==="foam")g.specs.add(`${r.row.foamThickness}mm`);
+      else if(r.mode==="area")g.specs.add(`${fmt(r.usage,3)}${r.material.unit}/㎡`);
+      g.details.push({title:item.title,result:r});
     }
   }
   return [...groups.values()].map(g=>{
-    let order="荷姿未設定",largestPackage=null,largestEquivalent=null;
+    let order="荷姿未設定",largestPackage=null,largestEquivalent=null,packageCount=0;
     const validPacks=(g.material.packages||[]).filter(x=>Number(x)>0).map(Number);
+    packageCount=validPacks.length;
     if(validPacks.length&&g.material.packageUnit===g.material.unit){
       const plan=bestPlan(g.required,validPacks);
       if(plan)order=plan.parts.map(x=>`${x.size}${g.material.unit} × ${x.count}セット`).join(" ＋ ");
       largestPackage=Math.max(...validPacks);
       largestEquivalent=g.required/largestPackage;
     }else if(validPacks.length)order=`換算不可（必要量:${g.material.unit} / 荷姿:${g.material.packageUnit||"未設定"}）`;
-    return {...g,order,largestPackage,largestEquivalent};
+    return {...g,order,largestPackage,largestEquivalent,packageCount};
   });
 }
 function renderAggregateMaterials(){
-  const w=$("aggregateMaterialSummary"); if(!w)return;
+  const w=$("aggregateMaterialSummary"),d=$("aggregateDetails"); if(!w)return;
   const rows=aggregateCalcItems();
   if(!calcItems.length){
     w.innerHTML='<div class="info">計算を追加すると表示されます。</div>';
+    if(d)d.innerHTML="";
     return;
   }
   const targetDetails=calcItems.map(item=>{
@@ -646,10 +647,29 @@ function renderAggregateMaterials(){
     }).join("")||'<small>材料未設定</small>';
     return `<div class="aggregate-target"><b>${esc(item.title)}</b><span>${fmt(item.area)}㎡</span>${materialsHtml}</div>`;
   }).join("");
-  const totalHtml=rows.length?rows.map(x=>`<div class="spec-summary-item"><span>${esc(x.material.name)}<br><small>${[...new Set(x.titles)].map(esc).join(" / ")}</small></span><strong>${esc(x.order)}${x.largestEquivalent!=null?`<br><small>（最大荷姿の場合 ${x.largestEquivalent.toFixed(1)}SET）</small>`:""}</strong></div>`).join(""):'<div class="info">材料を設定すると表示されます。</div>';
+  const totalHtml=rows.length?rows.map(x=>`<div class="spec-summary-item"><span>${esc(x.material.name)}<br><small>${[...new Set(x.titles)].map(esc).join(" / ")}</small></span><strong>${esc(x.order)}${x.packageCount>1&&x.largestEquivalent!=null?`<br><small>（最大荷姿の場合 ${fmt(x.largestPackage)}${x.material.unit} × ${x.largestEquivalent.toFixed(1)}セット）</small>`:""}</strong></div>`).join(""):'<div class="info">材料を設定すると表示されます。</div>';
   w.innerHTML=`<div class="aggregate-section-title">施工対象ごとの仕様</div>${targetDetails}<div class="aggregate-section-title">案件全体の材料合計</div>${totalHtml}`;
-}
 
+  if(d)d.innerHTML=rows.map(x=>{
+    const m=x.material;
+    const lossText=x.losses.size===1?`${Math.round([...x.losses][0]*100)}%`:"施工対象ごとに異なる";
+    const condition=x.specs.size?`<div class="resultline"><span>${getMaterialCalcMode(m)==="foam"?"発泡厚":getMaterialCalcMode(m)==="thickness"?"膜厚":"使用量"}</span><b>${[...x.specs].join(" / ")}</b></div>`:"";
+    const largeOrder=x.largestEquivalent!=null?`${x.largestPackage}${m.unit}換算 ${x.largestEquivalent.toFixed(1)}SET`:null;
+    const largePurchase=x.largestEquivalent!=null?`発注する場合 ${Math.ceil(x.largestEquivalent)}SET`:null;
+    return `<div class="spec-detail"><b>${esc(m.series)} ${esc(m.name)}｜案件全体</b>
+      ${condition}
+      <div class="resultline"><span>合計理論量</span><b>${fmt(x.theory,2)}${m.unit}</b></div>
+      <div class="resultline"><span>ロス率</span><b>${lossText}</b></div>
+      <div class="resultline"><span>合計必要量</span><b>${fmt(x.required,2)}${m.unit}</b></div>
+      <div class="resultline"><span>通常荷姿</span><b>${m.packages?.length?m.packages.join(" / ")+" "+(m.packageUnit||""):"未設定"}</b></div>
+      ${largeOrder?`<div class="resultline"><span>大容量換算</span><b>${esc(largeOrder)}</b></div>`:""}
+      ${largePurchase?`<div class="resultline"><span>大容量のみで発注</span><b>${esc(largePurchase)}</b></div>`:""}
+      <div class="resultline"><span>発注目安</span><b>${esc(x.order)}${x.packageCount>1?`<br>（最大荷姿の場合 ${fmt(x.largestPackage)}${m.unit} × ${x.largestEquivalent.toFixed(1)}セット）`:""}</b></div>
+      <div class="calc-basis"><b>内訳・計算根拠</b>
+      ${x.details.map(v=>`<pre>${esc(v.title)}：${v.result.basis} × ${fmt(1+v.result.row.loss,2)} = ${fmt(v.result.required,2)}${m.unit}</pre>`).join("")}
+      </div></div>`;
+  }).join("");
+}
 function beginCalcTitleEdit(id){
   const item=calcItems.find(x=>x.id===id); if(!item) return;
   const wrap=document.querySelector(`.inline-title-wrap[data-title-id="${id}"]`);
