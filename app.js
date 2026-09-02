@@ -766,9 +766,15 @@ function calcAllSpecMaterials(){
     syncSelectedCalcItem();scheduleProjectAutoSave();return;
   }
 
-  $("specSummary").innerHTML=results.map(x=>`<div class="spec-summary-item">
-    <span>${esc(x.material.name)}</span><strong>${x.order}</strong>
-  </div>`).join("");
+  $("specSummary").innerHTML=results.map(x=>{
+    const packCount=(x.material.packages||[]).filter(p=>Number(p)>0).length;
+    const maxNote=packCount>1&&x.largeEquivalent!=null
+      ?`<br><small>（最大荷姿の場合 ${fmt(x.largestPackage)}${x.material.unit} × ${fmtCeil1(x.largeEquivalent)}セット）</small>`
+      :"";
+    return `<div class="spec-summary-item">
+      <span>${esc(x.material.name)}</span><strong>${x.order}${maxNote}</strong>
+    </div>`;
+  }).join("");
 
   $("specDetails").innerHTML=results.map(x=>{
     const m=x.material;
@@ -786,7 +792,7 @@ function calcAllSpecMaterials(){
       <div class="resultline"><span>通常荷姿</span><b>${m.packages?.length?m.packages.join(" / ")+" "+(m.packageUnit||""):"未設定"}</b></div>
       ${x.largeOrder?`<div class="resultline"><span>大容量換算</span><b>${esc(x.largeOrder)}</b></div>`:""}
       ${x.largePurchase?`<div class="resultline"><span>大容量のみで発注</span><b>${esc(x.largePurchase)}</b></div>`:""}
-      <div class="resultline"><span>発注目安</span><b>${x.order}</b></div>
+      <div class="resultline"><span>発注目安</span><b>${x.order}${((m.packages||[]).filter(p=>Number(p)>0).length>1&&x.largeEquivalent!=null)?`<br>（最大荷姿の場合 ${fmt(x.largestPackage)}${m.unit} × ${fmtCeil1(x.largeEquivalent)}セット）`:""}</b></div>
       <div class="calc-basis"><b>計算根拠</b><pre>${x.basis} × ${fmt(1+x.row.loss,2)} = ${fmt(x.required,2)}${m.unit}${x.plan?` → ${x.order}`:""}</pre></div></div>`;
   }).join("");
   syncSelectedCalcItem();
