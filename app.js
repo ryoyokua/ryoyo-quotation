@@ -1247,6 +1247,18 @@ if($("quickProjectSelect"))$("quickProjectSelect").onchange=async e=>{
  if(currentId)await autoSaveCurrentProject();
  await openProject(id);
 };
+if($("quickNewProject"))$("quickNewProject").onclick=()=>{
+ const hasWork=calcItems.length>0||!!Number($("editingProjectId")?.value);
+ if(hasWork&&!confirm("現在の作業内容をクリアして、新規案件を作成しますか？\n\n保存していない変更内容は失われます。"))return;
+ resetProjectForm(true);
+ updateCurrentProjectLabel();
+ renderCalcItems();
+ renderMaterialCalc();
+ renderQuickProjectSwitcher();
+ renderProjects();
+ setProjectAutoSaveStatus("新規案件","saved");
+ show("material");
+};
 if($("quickSaveAsProject"))$("quickSaveAsProject").onclick=saveCurrentWorkAsProject;
 ["projectName","projectCustomer","projectSite","projectOwner","projectMemo"].forEach(id=>{const el=$(id);if(el)el.addEventListener("input",scheduleProjectAutoSave);});
 if($("duplicateCurrentProject"))$("duplicateCurrentProject").onclick=async()=>{
