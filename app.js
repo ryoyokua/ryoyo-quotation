@@ -1074,6 +1074,47 @@ async function createQuickNewProject(){
   setProjectAutoSaveStatus("新規案件を作成しました","saved");show("material");
 }
 
+// Google Sheetsへ保存する「種別」の表示名
+const SHEET_SOURCE_LABELS={
+  roof:"屋根",
+  flat:"屋上・床・壁",
+  tank:"貯水槽",
+  vessel:"他タンク",
+  pipe:"配管",
+  product:"製品・部品塗装",
+  other:"面積直接入力"
+};
+const SHEET_SOURCE_CODES=Object.fromEntries(
+  Object.entries(SHEET_SOURCE_LABELS).map(([code,label])=>[label,code])
+);
+function sourceToSheetLabel(source){
+  const s=String(source||"");
+  return SHEET_SOURCE_LABELS[s]||s;
+}
+function sourceFromSheetLabel(source){
+  const s=String(source||"");
+  return SHEET_SOURCE_CODES[s]||s;
+}
+function projectForSheets(project){
+  return {
+    ...project,
+    workItems:(Array.isArray(project.workItems)?project.workItems:[]).map(item=>({
+      ...item,
+      source:sourceToSheetLabel(item.source)
+    }))
+  };
+}
+function projectFromSheets(project){
+  if(!project)return project;
+  return {
+    ...project,
+    workItems:(Array.isArray(project.workItems)?project.workItems:[]).map(item=>({
+      ...item,
+      source:sourceFromSheetLabel(item.source)
+    }))
+  };
+}
+
 // Google Sheets shared project storage
 const DEFAULT_GAS_ENDPOINT="https://script.google.com/macros/s/AKfycbxcq_MAMSH1wP9yXbngsyIcUVt5ytXA5K5SSAED_1UtaiBRp1SCgOA2d4O8vmNq5Yg/exec";
 let sheetSyncTimer=null;
@@ -1128,7 +1169,7 @@ async function saveProjectToSheets(project,{quiet=false}={}){
  if(!project)return false;
  try{
    if(!quiet)setSheetSyncStatus("Sheetsへ保存中…");
-   const data=await sheetPost("saveProject",project);
+   const data=await sheetPost("saveProject",projectForSheets(project));
    if(data.updatedAt){
      project.updatedAt=data.updatedAt;
      project._sheetUpdatedAt=data.updatedAt;
@@ -1184,7 +1225,7 @@ function scheduleSheetProjectSave(project){
 }
 async function fetchProjectFromSheets(id){
  const data=await sheetGet("getProject",{projectId:id});
- return data.project||null;
+ return projectFromSheets(data.project||null);
 }
 async function loadProjectsFromSheets({quiet=false}={}){
  try{
