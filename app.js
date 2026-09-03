@@ -995,21 +995,8 @@ if($("saveSealEdit"))$("saveSealEdit").onclick=()=>{
 async function saveCurrentWorkAsProject(){
  const currentId=Number($("editingProjectId")?.value)||null;
  if(currentId){
-   const p=projects.find(x=>x.id===currentId);
-   if(p){
-     const renamed=prompt("案件名を変更できます。",p.name||"");
-     if(renamed===null)return;
-     if(renamed.trim())p.name=renamed.trim();
-     p.workItems=currentWorkItemsSnapshot();
-     p.area=calcItems.reduce((s,x)=>s+(Number(x.area)||0),0);
-     p.updatedAt=new Date().toISOString();
-     save(S.projects,projects);
-     await saveProjectToSheets(p);
-     $("projectName").value=p.name;
-     updateCurrentProjectLabel();
-     renderProjects();
-     setProjectAutoSaveStatus("自動保存済み","saved");
-   }
+   await autoSaveCurrentProject({syncNow:true});
+   setProjectAutoSaveStatus("Google Sheetsへ自動上書き保存済み","saved");
    return;
  }
  if(!calcItems.length){
@@ -1069,13 +1056,32 @@ function renderQuickProjectSwitcher(){
   if(!currentId)opts.push('<option value="" selected>未保存の計算</option>');
   [...projects].sort((a,b)=>new Date(b.updatedAt||b.createdAt||0)-new Date(a.updatedAt||a.createdAt||0)).forEach(p=>opts.push(`<option value="${p.id}" ${p.id===currentId?"selected":""}>${esc(p.name||"名称未設定")}</option>`));
   sel.innerHTML=opts.join("")||'<option value="">未保存の計算</option>';
+
+  const saveBtn=$("quickSaveAsProject");
+  const dupBtn=$("duplicateCurrentProject");
+  const rule=$("projectSaveRule");
+  const p=currentId?projects.find(x=>x.id===currentId):null;
+
+  if(saveBtn)saveBtn.hidden=!!currentId;
+  if(dupBtn)dupBtn.hidden=!currentId;
+
+  if(rule){
+    if(p){
+      const pj=String(p.sheetId||"").trim();
+      rule.textContent=pj
+        ? `${pj} を編集中。変更内容は同じ案件IDへGoogle Sheets自動上書き保存されます。`
+        : "保存済み案件を編集中。変更内容は同じ案件へGoogle Sheets自動上書き保存されます。";
+    }else{
+      rule.textContent="新規案件として保存するとPJ-IDを発行し、Google Sheetsへ新規登録します。";
+    }
+  }
 }
 async function autoSaveCurrentProject({createIfNeeded=false,syncNow=false}={}){
  if(syncNow)clearTimeout(sheetSyncTimer);
  if(projectAutoSaveBusy)return;
  const id=Number($("editingProjectId")?.value)||null;
  if(!id){
-   setProjectAutoSaveStatus(calcItems.length?"案件未保存":"変更内容は自動保存されます","");
+   setProjectAutoSaveStatus(calcItems.length?"未保存の新規案件":"未保存の計算","");
    return;
  }
  const p=projects.find(x=>x.id===id);
@@ -1093,7 +1099,7 @@ async function autoSaveCurrentProject({createIfNeeded=false,syncNow=false}={}){
    else scheduleSheetProjectSave(p);
    renderProjects();
    renderQuickProjectSwitcher();
-   setProjectAutoSaveStatus(`自動保存済み ${new Date().toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"})}`,"saved");
+   setProjectAutoSaveStatus(`Google Sheetsへ自動上書き保存済み ${new Date().toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"})}`,"saved");
  }finally{projectAutoSaveBusy=false;}
 }
 function scheduleProjectAutoSave(){
@@ -1681,7 +1687,7 @@ if($("quickNewProject"))$("quickNewProject").onclick=async()=>{
  renderMaterialCalc();
  renderQuickProjectSwitcher();
  renderProjects();
- setProjectAutoSaveStatus("新規案件","saved");
+ setProjectAutoSaveStatus("未保存の新規案件","");
  show("material");
 };
 if($("quickSaveAsProject"))$("quickSaveAsProject").onclick=saveCurrentWorkAsProject;
