@@ -28,3 +28,4 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // app revision v107 - terminology, realtime calculations, unentered sealing, spinner fix
 // app revision v108 - unified mobile deduction cards
 // app revision v109 - integer spinner normalization
+// app revision v110 - tank deduction mobile layout fix

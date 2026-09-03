@@ -446,6 +446,80 @@
   }
 }
 
+
+/* v110: tank deduction mobile layout fix */
+@media (max-width:700px){
+  #tankDeductionRows{
+    display:block!important;
+  }
+  #tankDeductionRows tr{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+    gap:12px!important;
+    padding:14px!important;
+    margin:0 0 14px!important;
+    border:1px solid var(--bd)!important;
+    border-radius:14px!important;
+    background:#fff!important;
+    width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+  }
+  #tankDeductionRows td{
+    display:block!important;
+    width:auto!important;
+    min-width:0!important;
+    padding:0!important;
+    border:0!important;
+  }
+  #tankDeductionRows td::before{
+    content:attr(data-label);
+    display:block;
+    margin:0 0 6px;
+    font-weight:700;
+    color:#667085;
+  }
+  #tankDeductionRows td:nth-child(1),
+  #tankDeductionRows td:nth-child(5),
+  #tankDeductionRows td:nth-child(6){
+    grid-column:1 / -1!important;
+  }
+  #tankDeductionRows input{
+    width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+  }
+  #tankDeductionRows .calcval,
+  #tankDeductionRows .do{
+    width:100%!important;
+  }
+
+  /* Hide the old header row/wrapper behavior for tank deduction only */
+  #tankDeductionRows{
+    border-top:0!important;
+  }
+  #tankDeductionRows:has(tr) {
+    overflow:visible!important;
+  }
+  #tankDeductionRows tr:first-child{
+    border-top:1px solid var(--bd)!important;
+  }
+  #tankDeductionRows ~ *{
+    min-width:0!important;
+  }
+  #tank .quantity-section .tablewrap:has(#tankDeductionRows){
+    overflow:visible!important;
+  }
+  #tank .quantity-section table:has(#tankDeductionRows){
+    display:block!important;
+    width:100%!important;
+    table-layout:auto!important;
+  }
+  #tank .quantity-section table:has(#tankDeductionRows) thead{
+    display:none!important;
+  }
+}
+
 </style>
 
 <style>
@@ -1258,5 +1332,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=109"></script>
+<script src="app.js?v=110"></script>
 </body></html>
