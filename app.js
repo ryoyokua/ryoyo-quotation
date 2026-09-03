@@ -925,13 +925,17 @@ function selectCalcItem(id,{keepScroll=false}={}){
   show("material",{scroll:!keepScroll});
 }
 function openMaterialSettings(id){
-  selectCalcItem(id);
+  // 選択時の上端スクロールを止め、使用材料欄へだけ移動する。
+  selectCalcItem(id,{keepScroll:true});
   const card=$("materialSelectCard");
   if(!card)return;
   requestAnimationFrame(()=>{
-    card.scrollIntoView({behavior:"smooth",block:"start"});
-    card.classList.add("material-jump-highlight");
-    setTimeout(()=>card.classList.remove("material-jump-highlight"),900);
+    requestAnimationFrame(()=>{
+      const y=window.scrollY+card.getBoundingClientRect().top-16;
+      window.scrollTo({top:y,behavior:"smooth"});
+      card.classList.add("material-jump-highlight");
+      setTimeout(()=>card.classList.remove("material-jump-highlight"),1000);
+    });
   });
 }
 
