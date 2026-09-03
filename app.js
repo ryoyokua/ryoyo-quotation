@@ -212,8 +212,28 @@ function restoreExtraRows(src,data){const m={roof:["roofDeductionRows","roofJoin
 function renderWaveSelect(){
   if(!Array.isArray(waves) || waves.length===0){
     waves=structuredClone(DEFAULT_WAVES);
-    save(S.waves,waves);
   }
+
+  // v113: legacy "面積直接入力" is a separate calculation screen, not a roof material.
+  // Remove it and collapse duplicate "その他" entries.
+  const normalized=[];
+  let hasOther=false;
+  for(const raw of waves){
+    const w=raw||{};
+    const name=String(w.name||"").trim();
+    if(name==="面積直接入力") continue;
+    if(name==="その他"){
+      if(hasOther) continue;
+      hasOther=true;
+    }
+    normalized.push(w);
+  }
+  if(!hasOther){
+    normalized.push({name:"その他",factor:null,note:"現場条件に応じて入力"});
+  }
+  waves=normalized;
+  save(S.waves,waves);
+
   const sel=$("roofWaveType");
   const previous=sel.value;
   sel.innerHTML=waves.map((w,i)=>`<option value="${i}">${esc((w&&w.name)||`屋根材${i+1}`)}</option>`).join("");
