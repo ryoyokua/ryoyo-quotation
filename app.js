@@ -210,57 +210,70 @@ function captureExtraRows(src,data){const m={roof:["roofDeductionRows","roofJoin
 function restoreExtraRows(src,data){const m={roof:["roofDeductionRows","roofJointRows"],flat:["flatDeductionRows","flatJointRows"],vessel:["vesselDeductionRows","vesselJointRows"],tank:["tankDeductionRows",null]}[src];if(!m)return;if($(m[0])){$(m[0]).innerHTML="";(data.deductions||[]).forEach(r=>addDeductionRow(m[0],r))}if(m[1]&&$(m[1])){$(m[1]).innerHTML="";(data.joints||[]).forEach(r=>addJointRow(m[1],r))}}
 
 function renderWaveSelect(){
-  if(!Array.isArray(waves) || waves.length===0){
-    waves=structuredClone(DEFAULT_WAVES);
-  }
-
-  // v113: legacy "面積直接入力" is a separate calculation screen, not a roof material.
-  // Remove it and collapse duplicate "その他" entries.
-  const normalized=[];
-  let hasOther=false;
-  for(const raw of waves){
-    const w=raw||{};
-    const name=String(w.name||"").trim();
-    if(name==="面積直接入力") continue;
-    if(name==="その他"){
-      if(hasOther) continue;
-      hasOther=true;
-    }
-    normalized.push(w);
-  }
-  if(!hasOther){
-    normalized.push({name:"その他",factor:null,note:"現場条件に応じて入力"});
-  }
-  waves=normalized;
-  save(S.waves,waves);
-
+  // v114: roof choices are fixed to four practical categories.
+  // Preserve the master screen elsewhere, but normalize roof selection here.
+  const presets=[
+    {name:"折板",factor:null,note:"係数を直接入力、または断面寸法から簡易自動計算"},
+    {name:"大波スレート",factor:1.14,note:"標準係数 1.14"},
+    {name:"小波スレート",factor:1.15,note:"標準係数 1.15"},
+    {name:"その他",factor:null,note:"係数を直接入力、または断面寸法から簡易自動計算"}
+  ];
   const sel=$("roofWaveType");
   const previous=sel.value;
-  sel.innerHTML=waves.map((w,i)=>`<option value="${i}">${esc((w&&w.name)||`屋根材${i+1}`)}</option>`).join("");
-  if(previous!=="" && Number(previous)<waves.length) sel.value=previous;
-
-  sel.onchange=()=>{
-    const w=waves[Number(sel.value)];
-    if(w && w.factor!=null){
-      $("roofWaveFactor").value=Number(w.factor).toFixed(3);
-    }
-    calcRoof();
-  };
-
-  const first=waves[Number(sel.value)||0];
-  if(first && first.factor!=null){
-    $("roofWaveFactor").value=Number(first.factor).toFixed(3);
-  }
+  sel.innerHTML=presets.map((w,i)=>`<option value="${i}">${w.name}</option>`).join("");
+  if(previous!=="" && Number(previous)<presets.length) sel.value=previous;
+  sel.onchange=()=>{ updateRoofCoefficientUI(); calcRoof(); };
+  updateRoofCoefficientUI();
 }
-function getRoofSun(){return $("roofSun").value==="custom" ? n("roofSunCustom") : Number($("roofSun").value)}
+function getRoofSlopeFactor(){
+  const mode=$("roofSlopeMode")?.value||"select";
+  if(mode==="direct") return Math.max(1,n("roofSlopeDirectFactor")||1);
+  if(mode==="auto"){
+    const run=n("roofSlopeRun"), rise=n("roofSlopeRise");
+    return run>0 ? Math.sqrt(1+(rise/run)**2) : 1;
+  }
+  const sun=Number($("roofSun").value)||0;
+  return Math.sqrt(1+(sun/10)**2);
+}
+function getRoofWaveFactor(){
+  const type=Number($("roofWaveType").value)||0;
+  const mode=$("roofWaveMode")?.value||"preset";
+  if(mode==="direct") return Math.max(1,n("roofWaveDirectFactor")||1);
+  if(mode==="auto"){
+    const pitch=n("roofWavePitch"), surface=n("roofWaveSurface");
+    return pitch>0 ? Math.max(1,surface/pitch) : 1;
+  }
+  if(type===1) return 1.14;
+  if(type===2) return 1.15;
+  // 折板・その他は固定値を持たない。未入力時は1.000の仮値。
+  return Math.max(1,n("roofWaveDirectFactor")||1);
+}
+function updateRoofCoefficientUI(){
+  const sm=$("roofSlopeMode")?.value||"select";
+  $("roofSlopeSelectWrap")?.classList.toggle("hidden",sm!=="select");
+  $("roofSlopeDirectWrap")?.classList.toggle("hidden",sm!=="direct");
+  $("roofSlopeRunWrap")?.classList.toggle("hidden",sm!=="auto");
+  $("roofSlopeRiseWrap")?.classList.toggle("hidden",sm!=="auto");
+
+  const type=Number($("roofWaveType")?.value)||0;
+  const wm=$("roofWaveMode");
+  if(wm && wm.value==="preset" && (type===0 || type===3)) wm.value="direct";
+  const waveMode=wm?.value||"preset";
+  $("roofWaveDirectWrap")?.classList.toggle("hidden",waveMode!=="direct");
+  $("roofWavePitchWrap")?.classList.toggle("hidden",waveMode!=="auto");
+  $("roofWaveSurfaceWrap")?.classList.toggle("hidden",waveMode!=="auto");
+
+  const slope=getRoofSlopeFactor();
+  const wave=getRoofWaveFactor();
+  if($("roofSlopeFactorDisplay")) $("roofSlopeFactorDisplay").value=slope.toFixed(3);
+  if($("roofWaveFactor")) $("roofWaveFactor").value=wave.toFixed(3);
+}
 function ceilUnit(value,unit){if(!unit||unit<=0)return value;return Math.ceil((value-1e-12)/unit)*unit}
 function adoptedArea(value,roundId){const el=$(roundId);const unit=el?Number(el.value):0;return ceilUnit(value,unit)}
-function calcRoof(){const projection=n("roofL")*n("roofW")*Math.max(1,n("roofFaces")),sun=getRoofSun(),slope=Math.sqrt(1+(sun/10)**2),wave=Math.max(.001,n("roofWaveFactor")),gross=projection*slope*wave,deduction=deductionTotal("roofDeductionRows"),joint=jointTotal("roofJointRows"),raw=Math.max(0,gross-deduction),roundUnit=Number($("roofRound").value),adopted=ceilUnit(raw,roundUnit);state.roofGrossArea=gross;state.roofDeduction=deduction;state.roofJoint=joint;state.roofRawArea=raw;state.roofArea=adopted;if($("roofGrossSummary"))$("roofGrossSummary").textContent=`${fmt(gross,2)}㎡`;if($("roofDeductionSummary"))$("roofDeductionSummary").textContent=`− ${fmt(deduction,2)}㎡`;$("roofArea").textContent=roundUnit===1?`${fmt(adopted,0)}㎡`:`${fmt(adopted,1)}㎡`;if($("roofJointTotal"))$("roofJointTotal").textContent=`${fmt(joint)}m`;calcCommonSeal("roof");$("roofDetail").innerHTML=`<div class="resultline"><span>平面面積</span><b>${fmt(projection,2)}㎡</b></div><div class="resultline"><span>勾配</span><b>${fmt(sun,1)}寸</b></div><div class="resultline"><span>勾配係数</span><b>${fmt(slope,3)}</b></div><div class="resultline"><span>波型係数</span><b>${fmt(wave,3)}</b></div><div class="resultline"><span>屋根本体面積</span><b>${fmt(gross,2)}㎡</b></div><div class="resultline"><span>施工除外部</span><b>− ${fmt(deduction,2)}㎡</b></div>`;$("roofFormula").textContent=`${fmt(projection,2)} × ${fmt(slope,3)} × ${fmt(wave,3)} = ${fmt(gross,2)}㎡\n− 控除 ${fmt(deduction,2)}㎡ = ${fmt(raw,2)}㎡`+(roundUnit>0?`\n→ ${roundUnit===1?"1㎡":"0.1㎡"}単位切り上げ = ${roundUnit===1?fmt(adopted,0):fmt(adopted,1)}㎡`:"")}
+function calcRoof(){updateRoofCoefficientUI();const projection=n("roofL")*n("roofW")*Math.max(1,n("roofFaces")),slope=getRoofSlopeFactor(),wave=getRoofWaveFactor(),gross=projection*slope*wave,deduction=deductionTotal("roofDeductionRows"),joint=jointTotal("roofJointRows"),raw=Math.max(0,gross-deduction),roundUnit=Number($("roofRound").value),adopted=ceilUnit(raw,roundUnit);state.roofGrossArea=gross;state.roofDeduction=deduction;state.roofJoint=joint;state.roofRawArea=raw;state.roofArea=adopted;if($("roofGrossSummary"))$("roofGrossSummary").textContent=`${fmt(gross,2)}㎡`;if($("roofDeductionSummary"))$("roofDeductionSummary").textContent=`− ${fmt(deduction,2)}㎡`;$("roofArea").textContent=roundUnit===1?`${fmt(adopted,0)}㎡`:`${fmt(adopted,1)}㎡`;if($("roofJointTotal"))$("roofJointTotal").textContent=`${fmt(joint)}m`;calcCommonSeal("roof");$("roofDetail").innerHTML=`<div class="resultline"><span>平面面積</span><b>${fmt(projection,2)}㎡</b></div><div class="resultline"><span>勾配</span><b>${fmt(sun,1)}寸</b></div><div class="resultline"><span>勾配係数</span><b>${fmt(slope,3)}</b></div><div class="resultline"><span>波型係数</span><b>${fmt(wave,3)}</b></div><div class="resultline"><span>屋根本体面積</span><b>${fmt(gross,2)}㎡</b></div><div class="resultline"><span>施工除外部</span><b>− ${fmt(deduction,2)}㎡</b></div>`;$("roofFormula").textContent=`${fmt(projection,2)} × ${fmt(slope,3)} × ${fmt(wave,3)} = ${fmt(gross,2)}㎡\n− 控除 ${fmt(deduction,2)}㎡ = ${fmt(raw,2)}㎡`+(roundUnit>0?`\n→ ${roundUnit===1?"1㎡":"0.1㎡"}単位切り上げ = ${roundUnit===1?fmt(adopted,0):fmt(adopted,1)}㎡`:"")}
 if($("calcRoof"))$("calcRoof").onclick=calcRoof;
-["roofL","roofW","roofFaces","roofWaveFactor"].forEach(id=>$(id).addEventListener("input",calcRoof));
-$("roofRound").addEventListener("change",calcRoof);
-$("roofSun").addEventListener("change",()=>{$("roofSunCustomWrap").classList.toggle("hidden",$("roofSun").value!=="custom");calcRoof()});
-$("roofSunCustom").addEventListener("input",calcRoof);
+["roofL","roofW","roofFaces","roofSlopeDirectFactor","roofSlopeRun","roofSlopeRise","roofWaveDirectFactor","roofWavePitch","roofWaveSurface"].forEach(id=>$(id)?.addEventListener("input",calcRoof));
+["roofRound","roofSun","roofSlopeMode","roofWaveType","roofWaveMode"].forEach(id=>$(id)?.addEventListener("change",calcRoof));
 
 
 function sealLengthForSource(src){return Number({roof:state.roofJoint,flat:state.flatJoint,vessel:state.vesselJoint,tank:state.tankSeal}[src])||0}
@@ -731,7 +744,7 @@ function restoreSourceData(src,data){
 
 function recalcSource(src){
   if(src==="roof"){
-    $("roofSunCustomWrap").classList.toggle("hidden",$("roofSun").value!=="custom");
+    updateRoofCoefficientUI();
     calcRoof();
   }else if(src==="flat"){
     calcFlat();

@@ -540,6 +540,19 @@
   min-height:18px;
 }
 
+
+/* v114: roof coefficient input modes */
+#roof .formgrid label > input[readonly]{
+  background:#f4f7fb;
+  color:#334155;
+  font-weight:700;
+}
+@media(max-width:700px){
+  #roof .formgrid{
+    grid-template-columns:1fr!important;
+  }
+}
+
 </style>
 
 <style>
@@ -1430,5 +1443,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=113"></script>
+<script src="app.js?v=114"></script>
 </body></html>

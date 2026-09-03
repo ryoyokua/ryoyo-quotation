@@ -32,3 +32,4 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // app revision v111 - explicit tank deduction mobile card layout
 // app revision v112 - hide unused sealing from results
 // app revision v113 - roof wave UI alignment and legacy direct-area cleanup
+// app revision v114 - selectable/direct/auto roof coefficients
