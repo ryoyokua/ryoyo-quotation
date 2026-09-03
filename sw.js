@@ -21,3 +21,4 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // app revision v100 - persistent device auth via localStorage + cookie fallback
 // app revision v101 - lower quantity section add buttons
 // app revision v102 - mobile quantity heading/button layout fix
+// app revision v103 - desktop quantity add buttons right aligned
