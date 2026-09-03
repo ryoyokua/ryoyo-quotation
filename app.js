@@ -2130,12 +2130,8 @@ function v107UpdateSealUnentered(){
   ["roof","flat","vessel"].forEach(p=>{
     const has=v107SealHasInput(p);
     const total=$(p+"JointTotal");
-    const resultCount=$(p+"ResultSealCount");
-    const resultReserve=$(p+"ResultSealReserve");
     if(!has){
       if(total)total.textContent="未入力";
-      if(resultCount)resultCount.textContent="未入力";
-      if(resultReserve)resultReserve.textContent="未入力";
     }
   });
 }
@@ -2207,5 +2203,50 @@ document.addEventListener("change", e=>{
   const el=e.target;
   if(!el || !el.matches || !el.matches('input.integer-spinner[type="number"]')) return;
   v109SpinnerPrev.set(el, Number(el.value));
+});
+
+
+
+/* v112: do not reflect unused sealing in the result area */
+function v112SealIsUsed(prefix){
+  const enabled=$(prefix+"SealEnabled");
+  if(!enabled || !enabled.checked) return false;
+
+  const rows=document.querySelectorAll("#"+prefix+"JointRows tr");
+  for(const row of rows){
+    const nums=[...row.querySelectorAll('input[type="number"]')];
+    if(nums.some(x=>Number(x.value)>0)) return true;
+  }
+  return false;
+}
+
+function v112UpdateSealingResultVisibility(){
+  ["roof","flat","vessel"].forEach(prefix=>{
+    const used=v112SealIsUsed(prefix);
+    const resultCount=$(prefix+"ResultSealCount");
+    const group=resultCount ? resultCount.closest(".sealing-result-group") : null;
+    if(group) group.classList.toggle("is-unused", !used);
+  });
+}
+
+document.addEventListener("DOMContentLoaded",()=>{
+  ["roof","flat","vessel"].forEach(prefix=>{
+    const enabled=$(prefix+"SealEnabled");
+    if(enabled) enabled.addEventListener("change",()=>setTimeout(v112UpdateSealingResultVisibility,0));
+    const rows=$(prefix+"JointRows");
+    if(rows){
+      rows.addEventListener("input",()=>setTimeout(v112UpdateSealingResultVisibility,0));
+      rows.addEventListener("change",()=>setTimeout(v112UpdateSealingResultVisibility,0));
+    }
+  });
+  setTimeout(v112UpdateSealingResultVisibility,100);
+});
+
+const _v112SealVisObserver=new MutationObserver(()=>setTimeout(v112UpdateSealingResultVisibility,0));
+document.addEventListener("DOMContentLoaded",()=>{
+  ["roof","flat","vessel"].forEach(prefix=>{
+    const rows=$(prefix+"JointRows");
+    if(rows)_v112SealVisObserver.observe(rows,{childList:true,subtree:true});
+  });
 });
 
