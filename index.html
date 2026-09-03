@@ -404,6 +404,48 @@
 
 /* v107: legacy calculation is now realtime */
 #calcTank,#calcPipeBtn,#calcProductBtn,#calcOtherBtn,#clearAllCalcItems{display:none!important;}
+
+/* v108: unify mobile deduction-card layout across all quantity screens */
+@media (max-width:700px){
+  #roofDeductionRows tr,
+  #flatDeductionRows tr,
+  #vesselDeductionRows tr,
+  #tankDeductionRows tr{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  }
+
+  #roofDeductionRows td:nth-child(1),
+  #flatDeductionRows td:nth-child(1),
+  #vesselDeductionRows td:nth-child(1),
+  #tankDeductionRows td:nth-child(1),
+  #roofDeductionRows td:nth-child(5),
+  #flatDeductionRows td:nth-child(5),
+  #vesselDeductionRows td:nth-child(5),
+  #tankDeductionRows td:nth-child(5),
+  #roofDeductionRows td:nth-child(6),
+  #flatDeductionRows td:nth-child(6),
+  #vesselDeductionRows td:nth-child(6),
+  #tankDeductionRows td:nth-child(6){
+    grid-column:1 / -1!important;
+  }
+
+  /* 全画面を「名称 → 長さ/幅 → 数量 → 控除面積 → 削除」に統一 */
+  #roofDeductionRows td:nth-child(2),
+  #flatDeductionRows td:nth-child(2),
+  #vesselDeductionRows td:nth-child(2),
+  #tankDeductionRows td:nth-child(2),
+  #roofDeductionRows td:nth-child(3),
+  #flatDeductionRows td:nth-child(3),
+  #vesselDeductionRows td:nth-child(3),
+  #tankDeductionRows td:nth-child(3),
+  #roofDeductionRows td:nth-child(4),
+  #flatDeductionRows td:nth-child(4),
+  #vesselDeductionRows td:nth-child(4),
+  #tankDeductionRows td:nth-child(4){
+    grid-column:auto!important;
+  }
+}
+
 </style>
 
 <style>
@@ -427,68 +469,6 @@
 </style>
 
 
-<style>
-@media (max-width: 700px){
-  #flat .tablewrap{overflow:visible}
-  #flat table{display:block;width:100%;min-width:0}
-  #flat thead{display:none}
-  #flat tbody{display:grid;gap:12px;width:100%}
-  #flat tbody tr{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:10px 12px;
-    width:100%;
-    padding:14px;
-    border:1px solid var(--bd);
-    border-radius:12px;
-    background:#fff;
-    box-sizing:border-box;
-  }
-  #flat tbody td{
-    display:flex;
-    flex-direction:column;
-    gap:5px;
-    padding:0;
-    border:0;
-    min-width:0;
-  }
-  #flat tbody td::before{
-    content:attr(data-label);
-    font-size:12px;
-    font-weight:700;
-    color:var(--muted);
-  }
-  #flat tbody td:nth-child(2),
-  #flat tbody td:nth-child(6),
-  #flat tbody td:nth-child(7){
-    grid-column:1 / -1;
-  }
-  #flat tbody input,
-  #flat tbody select{
-    width:100%;
-    min-width:0;
-    min-height:42px;
-    box-sizing:border-box;
-  }
-  #flat tbody td.fo{
-    background:var(--green);
-    border-radius:10px;
-    padding:10px 12px;
-    font-size:20px;
-    font-weight:700;
-    color:#1f4e29;
-  }
-  #flat tbody .delete{
-    width:100%;
-    min-height:40px;
-  }
-  #flat .headrow{
-    align-items:center;
-    gap:10px;
-  }
-  #flat .headrow p{margin:0}
-}
-</style>
 
 
 <style>
@@ -1278,5 +1258,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=107"></script>
+<script src="app.js?v=108"></script>
 </body></html>
