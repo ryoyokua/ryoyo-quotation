@@ -443,6 +443,64 @@ input,select,textarea,button{max-width:100%}
   .calc-list-actions .quantity-edit-btn{width:auto}
 }
 </style>
+<style>
+/* v79: 施工対象アクションUI整理 */
+.calc-list-actions{
+  display:grid;
+  grid-template-columns:repeat(4,auto);
+  gap:7px;
+  align-items:center;
+}
+.calc-list-actions button{
+  min-height:38px;
+  height:38px;
+  padding:0 13px;
+  border-radius:8px;
+  font-weight:700;
+  font-size:13px;
+  white-space:nowrap;
+}
+.quantity-edit-btn{
+  background:#eaf3fb!important;
+  color:#19446f!important;
+  border:1px solid #b8d2ea!important;
+}
+.quantity-edit-btn:hover{background:#deedf9!important}
+.material-setting-btn{
+  background:#19446f!important;
+  color:#fff!important;
+  border:1px solid #19446f!important;
+}
+.material-setting-btn:hover{filter:brightness(.94)}
+.duplicate-btn{
+  background:#f5f7f9!important;
+  color:#435466!important;
+  border:1px solid #d4dbe2!important;
+}
+.duplicate-btn:hover{background:#e9edf1!important}
+.calc-list-actions .multi-delete{
+  background:#fff7f6!important;
+  color:#b42318!important;
+  border:1px solid #f1c8c3!important;
+}
+.calc-list-actions .multi-delete:hover{background:#fdecea!important}
+#materialSelectCard.material-jump-highlight{
+  outline:3px solid rgba(25,68,111,.2);
+  outline-offset:2px;
+}
+@media(max-width:700px){
+  .calc-list-actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    width:100%;
+    gap:8px;
+  }
+  .calc-list-actions button{
+    width:100%;
+    min-width:0;
+  }
+}
+</style>
 </head>
 <body><div id="appLock" style="position:fixed;inset:0;z-index:99999;background:#f5f7fa;display:flex;align-items:center;justify-content:center;padding:20px"><div style="width:min(420px,100%);background:#fff;border:1px solid #d7dde5;border-radius:16px;padding:24px"><div style="font-size:13px;color:#667085">菱洋株式会社</div><h2>使用材料 概算</h2><p>暗証番号を入力してください。</p><input id="appPinInput" type="password" style="width:100%;padding:12px"><button id="appPinButton" type="button" style="width:100%;margin-top:12px;padding:12px;background:#17365D;color:#fff;border:0;border-radius:8px">ロック解除</button><p id="appPinError" style="display:none;color:#a33">暗証番号が違います。</p></div></div>
 <header><div><small>菱洋株式会社 社内用</small><h1>使用材料 概算</h1></div></header>
@@ -735,7 +793,7 @@ input,select,textarea,button{max-width:100%}
 </div>
 </div>
 
-<div class="card">
+<div class="card" id="materialSelectCard">
 <div class="headrow">
 <div><h3>使用材料を選択</h3><p>今回使う材料を追加してください。選択・入力内容は下の必要材料一覧へ自動反映します。</p></div>
 <button class="secondary" id="addSpecMaterial">＋ 使用材料を追加</button>

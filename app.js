@@ -899,13 +899,13 @@ function renderCalcItems(){
     clearSelectedCalcState();
   }
   total.textContent=`${fmt(calcItems.reduce((s,x)=>s+Number(x.area||0),0))}㎡`;
-  list.innerHTML=calcItems.length?calcItems.map(item=>`<div class="calc-list-item calc-item-clickable ${item.id===selectedCalcItemId?"active":""}" data-select-id="${item.id}" role="button" tabindex="0" aria-label="${esc(item.title)}の材料設定を開く"><div class="calc-list-main"><div><span class="inline-title-wrap" data-title-id="${item.id}"><span class="inline-title-text" data-edit-title="${item.id}" title="クリックして名前を変更">${esc(item.title)}</span><button class="inline-title-edit" type="button" data-edit-title="${item.id}" title="名前を変更" aria-label="名前を変更">✎</button></span><br><small>${esc(MULTI_SOURCE_LABELS[item.source]||item.source)} ｜ ${fmt(item.area)}㎡</small></div><div class="calc-list-actions"><button class="secondary quantity-edit-btn" type="button" data-id="${item.id}">数量修正</button><button class="multi-select material-setting-btn" type="button" data-id="${item.id}">材料設定</button><button class="multi-duplicate duplicate-btn" type="button" data-id="${item.id}">複製</button><button class="delete multi-delete" type="button" data-id="${item.id}">削除</button></div></div></div>`).join(""):'<div class="calc-empty-state">まだ追加されていません。</div>';
+  list.innerHTML=calcItems.length?calcItems.map(item=>`<div class="calc-list-item calc-item-clickable ${item.id===selectedCalcItemId?"active":""}" data-select-id="${item.id}" role="button" tabindex="0" aria-label="${esc(item.title)}の材料設定を開く"><div class="calc-list-main"><div><span class="inline-title-wrap" data-title-id="${item.id}"><span class="inline-title-text" data-edit-title="${item.id}" title="クリックして名前を変更">${esc(item.title)}</span><button class="inline-title-edit" type="button" data-edit-title="${item.id}" title="名前を変更" aria-label="名前を変更">✎</button></span><br><small>${esc(MULTI_SOURCE_LABELS[item.source]||item.source)} ｜ ${fmt(item.area)}㎡</small></div><div class="calc-list-actions"><button class="multi-select material-setting-btn" type="button" data-id="${item.id}">使用材料</button><button class="secondary quantity-edit-btn" type="button" data-id="${item.id}">数量修正</button><button class="multi-duplicate duplicate-btn" type="button" data-id="${item.id}">複製</button><button class="delete multi-delete" type="button" data-id="${item.id}">削除</button></div></div></div>`).join(""):'<div class="calc-empty-state">まだ追加されていません。</div>';
   document.querySelectorAll(".calc-item-clickable").forEach(row=>{
     row.onclick=e=>{if(e.target.closest("button"))return; selectCalcItem(Number(row.dataset.selectId));};
     row.onkeydown=e=>{if((e.key==="Enter"||e.key===" ")&&!e.target.closest("button")){e.preventDefault();selectCalcItem(Number(row.dataset.selectId));}};
   });
   document.querySelectorAll(".quantity-edit-btn").forEach(b=>b.onclick=e=>{e.stopPropagation();beginQuantityEdit(Number(b.dataset.id));});
-  document.querySelectorAll(".multi-select").forEach(b=>b.onclick=e=>{e.stopPropagation();selectCalcItem(Number(b.dataset.id));});
+  document.querySelectorAll(".multi-select").forEach(b=>b.onclick=e=>{e.stopPropagation();openMaterialSettings(Number(b.dataset.id));});
   document.querySelectorAll(".multi-duplicate").forEach(b=>b.onclick=e=>{e.stopPropagation();duplicateCalcItem(Number(b.dataset.id));});
   document.querySelectorAll(".multi-delete").forEach(b=>b.onclick=e=>{e.stopPropagation();deleteCalcItem(Number(b.dataset.id));});
   document.querySelectorAll("[data-edit-title]").forEach(el=>el.onclick=e=>{
@@ -922,6 +922,17 @@ function selectCalcItem(id){
   if(!specRows.length)addSpecMaterial(0); else {renderSpecRows();calcAllSpecMaterials();}
   $("selectedCalcLabel").textContent=`${item.title} ｜ ${fmt(item.area)}㎡`; renderCalcItems(); show("material");
 }
+function openMaterialSettings(id){
+  selectCalcItem(id);
+  const card=$("materialSelectCard");
+  if(!card)return;
+  requestAnimationFrame(()=>{
+    card.scrollIntoView({behavior:"smooth",block:"start"});
+    card.classList.add("material-jump-highlight");
+    setTimeout(()=>card.classList.remove("material-jump-highlight"),900);
+  });
+}
+
 function duplicateCalcItem(id){
   syncSelectedCalcItem();
   const src=calcItems.find(x=>x.id===id); if(!src)return;
