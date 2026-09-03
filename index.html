@@ -426,6 +426,15 @@ input,select,textarea,button{max-width:100%}
   #projectSwitchCard #duplicateCurrentProject{width:100%;max-width:none}
 }
 </style>
+<style>
+/* v72: 既存案件の安心用・手動保存 */
+#projectSwitchCard .manual-project-save-block{margin-top:14px}
+#projectSwitchCard .manual-project-save-block #manualProjectSave{width:100%;max-width:220px}
+#projectSwitchCard .manual-project-save-block #manualProjectSave:disabled{opacity:.65;cursor:wait}
+@media(max-width:560px){
+  #projectSwitchCard .manual-project-save-block #manualProjectSave{width:100%;max-width:none}
+}
+</style>
 </head>
 <body><div id="appLock" style="position:fixed;inset:0;z-index:99999;background:#f5f7fa;display:flex;align-items:center;justify-content:center;padding:20px"><div style="width:min(420px,100%);background:#fff;border:1px solid #d7dde5;border-radius:16px;padding:24px"><div style="font-size:13px;color:#667085">菱洋株式会社</div><h2>使用材料 概算</h2><p>暗証番号を入力してください。</p><input id="appPinInput" type="password" style="width:100%;padding:12px"><button id="appPinButton" type="button" style="width:100%;margin-top:12px;padding:12px;background:#17365D;color:#fff;border:0;border-radius:8px">ロック解除</button><p id="appPinError" style="display:none;color:#a33">暗証番号が違います。</p></div></div>
 <header><div><small>菱洋株式会社 社内用</small><h1>使用材料 概算</h1></div></header>
@@ -678,6 +687,10 @@ input,select,textarea,button{max-width:100%}
     <small id="projectAutoSaveStatus">未保存の計算です</small>
     <small id="projectSaveRule" class="project-save-rule">この案件を保存するとPJ-IDを発行し、Google Sheetsへ新規登録します。</small>
 
+    <div id="manualProjectSaveBlock" class="manual-project-save-block" hidden>
+      <button class="secondary" id="manualProjectSave" type="button">今すぐ保存</button>
+    </div>
+
     <div id="unsavedProjectSaveBlock" class="unsaved-project-save-block">
       <button class="primary" id="quickSaveAsProject" type="button">この案件を保存</button>
     </div>
@@ -836,5 +849,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=70"></script>
+<script src="app.js?v=72"></script>
 </body></html>

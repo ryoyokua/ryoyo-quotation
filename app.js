@@ -152,7 +152,18 @@ save(S.materials,materials);
 
 
 function show(v){document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id===v));document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("active",x.dataset.view===v));scrollTo({top:0,behavior:"smooth"})}
-document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>show(b.dataset.view));
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
+  const view=b.dataset.view;
+  // HOMEは純粋な画面移動。案件保存・案件切替処理から材料計算へ戻されないようにする。
+  if(view==="home"){
+    clearTimeout(projectAutoSaveTimer);
+    const currentId=Number($("editingProjectId")?.value)||null;
+    if(currentId) autoSaveCurrentProject();
+    show("home");
+    return;
+  }
+  show(view);
+});
 document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>show(b.dataset.go));
 
 document.querySelectorAll(".help").forEach(b=>b.onclick=()=>{$("helpTitle").textContent=b.dataset.help==="tank"?"貯水槽・シーリングの拾い方":"拾い方・計算方法";$("helpBody").innerHTML=HELP[b.dataset.help];$("helpDialog").showModal()});
@@ -1065,6 +1076,8 @@ function renderQuickProjectSwitcher(){
   if(saveBtn)saveBtn.hidden=!!currentId;
   const saveBlock=$("unsavedProjectSaveBlock");
   if(saveBlock)saveBlock.hidden=!!currentId;
+  const manualSaveBlock=$("manualProjectSaveBlock");
+  if(manualSaveBlock)manualSaveBlock.hidden=!currentId;
   if(dupBtn)dupBtn.hidden=!currentId;
   const dupBlock=$("duplicateProjectBlock");
   if(dupBlock)dupBlock.hidden=!currentId;
@@ -1564,7 +1577,11 @@ async function openProject(id,{skipAutoSave=false,forceRemote=false,skipBackgrou
  selectedCalcItemId=null;
  renderCalcItems();updateCurrentProjectLabel();
  setProjectAutoSaveStatus("変更内容は自動保存されます");
- if(calcItems.length)selectCalcItem(calcItems[0].id);else show("material");
+ // openProjectが完了する前にユーザーが別画面（HOME等）へ移動した場合は画面を奪わない。
+ const activeView=document.querySelector(".view.active")?.id||"";
+ if(activeView==="material"||activeView==="projects"){
+   if(calcItems.length)selectCalcItem(calcItems[0].id);else show("material");
+ }
 
  // 表示後に裏側で最新版を確認。画面切替えは待たせない。
  if(!skipBackgroundCheck&&Array.isArray(p.workItems)){
@@ -1693,6 +1710,26 @@ if($("quickNewProject"))$("quickNewProject").onclick=()=>{
  renderProjects();
  setProjectAutoSaveStatus("未保存の新規案件","");
  show("material");
+};
+if($("manualProjectSave"))$("manualProjectSave").onclick=async()=>{
+ const id=Number($("editingProjectId")?.value)||null;
+ if(!id)return;
+ const btn=$("manualProjectSave");
+ btn.disabled=true;
+ const oldText=btn.textContent;
+ btn.textContent="保存中…";
+ setProjectAutoSaveStatus("Google Sheetsへ保存中…","saving");
+ try{
+   await autoSaveCurrentProject({syncNow:true});
+   setProjectAutoSaveStatus(`Google Sheetsへ保存しました ${new Date().toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"})}`,"saved");
+ }catch(err){
+   console.error("Manual project save failed",err);
+   setProjectAutoSaveStatus("保存に失敗しました","");
+   alert("Google Sheetsへの保存に失敗しました。\n\n"+(err?.message||err));
+ }finally{
+   btn.disabled=false;
+   btn.textContent=oldText;
+ }
 };
 if($("quickSaveAsProject"))$("quickSaveAsProject").onclick=saveCurrentWorkAsProject;
 ["projectName","projectCustomer","projectSite","projectOwner","projectMemo"].forEach(id=>{const el=$(id);if(el)el.addEventListener("input",scheduleProjectAutoSave);});
