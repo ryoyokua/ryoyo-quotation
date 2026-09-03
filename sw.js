@@ -25,3 +25,4 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // app revision v104 - rebuilt mobile quantity input cards
 // app revision v105 - separate construction area and sealing UI
 // app revision v106 - result separation, sealing flow, spinner consistency, tank UI
+// app revision v107 - terminology, realtime calculations, unentered sealing, spinner fix

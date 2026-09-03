@@ -100,7 +100,7 @@ tank:`<p><b>貯水槽は「面積」と「シーリング」を別々に拾い�
 <tr><td>壁のパネル継目</td><td>各壁で列間・段間を拾う</td><td>長辺壁・短辺壁ごとに計算</td></tr>
 <tr><td>壁四隅</td><td>高さ×4箇所</td><td>高さ2m → 8m</td></tr>
 </table>
-<p><b>シール延長</b>＝上記を施工対象ごとに合計した長さです。</p>
+<p><b>シーリング延長</b>＝上記を施工対象ごとに合計した長さです。</p>
 <p>マンホール、配管貫通、内部柱、補強材、特殊なパネル割などはこの自動計算に含めず、必要に応じて別途確認します。</p>`,
 flat:`<table><tr><th>部位</th><th>式</th></tr><tr><td>平場</td><td>長さ×幅</td></tr><tr><td>壁</td><td>幅×高さ×面数</td></tr>
 <tr><td>立上り</td><td>周長×高さ</td></tr><tr><td>仕切り</td><td>長さ×高さ×面数</td></tr><tr><td>設備基礎</td><td>周長×高さ</td></tr><tr><td>控除</td><td>未施工面積をマイナス</td></tr></table>`,
@@ -370,7 +370,7 @@ function calcTank(){
     <div class="resultline"><span>床－壁 入隅</span><b>${fmt(floorWallCorner,1)}m</b></div>
     <div class="resultline"><span>壁四隅</span><b>${fmt(wallVerticalCorners,1)}m</b></div>
     ${ceil?`<div class="resultline"><span>天井－壁 入隅</span><b>${fmt(ceilingWallCorner,1)}m</b></div>`:""}
-    <div class="resultline"><span><b>合計 シール延長</b></span><b>${fmt(sealLength,1)}m</b></div>
+    <div class="resultline"><span><b>合計 シーリング延長</b></span><b>${fmt(sealLength,1)}m</b></div>
   `;
 
   // シーリング本数側も入力済みなら同時更新
@@ -2095,5 +2095,59 @@ document.addEventListener("DOMContentLoaded",()=>{
     });
   });
   syncSeparatedSealingResults();
+});
+
+
+
+/* v107: realtime quantity calculation across all quantity screens */
+function v107RunRealtimeFor(el){
+  const view=el && el.closest ? el.closest(".view") : null;
+  if(!view)return;
+  const buttons=[...view.querySelectorAll("button")].filter(b=>{
+    const t=(b.textContent||"").trim();
+    return /^(計算|面積計算|概算計算|再計算)$/.test(t) && !/材料|シーリング/.test(t);
+  });
+  buttons.forEach(b=>{ try{ b.click(); }catch(e){} });
+}
+document.addEventListener("input",e=>{
+  if(e.target.matches('input[type="number"],input[type="text"]')) v107RunRealtimeFor(e.target);
+});
+document.addEventListener("change",e=>{
+  if(e.target.matches("input,select")) v107RunRealtimeFor(e.target);
+});
+
+
+
+function v107SealHasInput(prefix){
+  const rows=document.querySelectorAll("#"+prefix+"JointRows tr");
+  for(const row of rows){
+    const nums=[...row.querySelectorAll('input[type="number"]')];
+    if(nums.some(x=>Number(x.value)>0))return true;
+  }
+  return false;
+}
+function v107UpdateSealUnentered(){
+  ["roof","flat","vessel"].forEach(p=>{
+    const has=v107SealHasInput(p);
+    const total=$(p+"JointTotal");
+    const resultCount=$(p+"ResultSealCount");
+    const resultReserve=$(p+"ResultSealReserve");
+    if(!has){
+      if(total)total.textContent="未入力";
+      if(resultCount)resultCount.textContent="未入力";
+      if(resultReserve)resultReserve.textContent="未入力";
+    }
+  });
+}
+const _v107SealObserver=new MutationObserver(()=>setTimeout(v107UpdateSealUnentered,0));
+document.addEventListener("DOMContentLoaded",()=>{
+  ["roof","flat","vessel"].forEach(p=>{
+    const el=$(p+"JointRows");
+    if(el)_v107SealObserver.observe(el,{childList:true,subtree:true,characterData:true,attributes:true,attributeFilter:["value"]});
+  });
+  document.addEventListener("input",e=>{
+    if(e.target.closest && e.target.closest('[id$="JointRows"]'))setTimeout(v107UpdateSealUnentered,0);
+  });
+  setTimeout(v107UpdateSealUnentered,50);
 });
 
