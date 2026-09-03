@@ -7,3 +7,4 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // app revision v86
 // app revision v87 - cache bust fixed
 // app revision v88 - project list recovery
+// app revision v89 - Sheets project list is source of truth

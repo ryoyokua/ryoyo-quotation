@@ -1252,7 +1252,11 @@ function renderQuickProjectSwitcher(){
   const currentId=Number($("editingProjectId")?.value)||null;
   const opts=[];
   if(!currentId)opts.push('<option value="" selected>未保存の計算</option>');
-  [...projects].sort((a,b)=>new Date(b.updatedAt||b.createdAt||0)-new Date(a.updatedAt||a.createdAt||0)).forEach(p=>opts.push(`<option value="${p.id}" ${p.id===currentId?"selected":""}>${esc(p.name||"名称未設定")}</option>`));
+  [...projects].sort((a,b)=>new Date(b.updatedAt||b.createdAt||0)-new Date(a.updatedAt||a.createdAt||0)).forEach(p=>{
+    const pj=String(p.sheetId||"").trim();
+    const label=`${p.name||"名称未設定"}${pj?` ｜ ${pj}`:""}`;
+    opts.push(`<option value="${p.id}" ${p.id===currentId?"selected":""}>${esc(label)}</option>`);
+  });
   sel.innerHTML=opts.join("")||'<option value="">未保存の計算</option>';
 
   const saveBtn=$("quickSaveAsProject");
@@ -1544,18 +1548,15 @@ async function loadProjectsFromSheets({quiet=false}={}){
    if(!quiet)setSheetSyncStatus("案件一覧を同期中…");
    const data=await sheetGet("listProjects");
 
-   // 古いバージョンで残った「非表示ID」が原因でSheets上の案件が消えて見えることがあるため、
-   // 現在の削除済み案件（ゴミ箱）に実在するIDだけを非表示として扱う。
-   const trashHiddenKeys=new Set(
-     (trash.projects||[]).flatMap(p=>[String(p.sheetId||""),String(p.id||"")]).filter(Boolean)
-   );
-   remoteHiddenIds=remoteHiddenIds.filter(x=>trashHiddenKeys.has(String(x)));
+   // Google Sheetsを保存済み案件の正本として扱う。
+   // Sheets上に存在するPJ-IDは、過去のローカル非表示情報に関係なく必ず表示する。
+   const remoteIds=new Set((data.projects||[]).map(r=>String(r.id||"")).filter(Boolean));
+   remoteHiddenIds=remoteHiddenIds.filter(x=>!remoteIds.has(String(x)));
    save(S.remoteHidden,remoteHiddenIds);
-   const hidden=new Set(remoteHiddenIds.map(String));
+
    for(const rp of (data.projects||[])){
      const sheetId=String(rp.id||"");
      const legacyId=String(rp.legacyId||"");
-     if(hidden.has(sheetId)||hidden.has(legacyId))continue;
      let local=projects.find(p=>String(p.sheetId||"")===sheetId);
      if(!local&&legacyId)local=projects.find(p=>String(p.id)===legacyId);
      if(local){
@@ -1582,7 +1583,7 @@ async function loadProjectsFromSheets({quiet=false}={}){
        });
      }
    }
-   projects=projects.filter(p=>!hidden.has(String(p.sheetId||p.id)));
+   // Sheetsにある案件はすべて保持。ローカルだけの未同期案件も消さない。
    save(S.projects,projects);
    renderProjects();renderQuickProjectSwitcher();updateCurrentProjectLabel();
    setSheetSyncStatus(`同期済み ${new Date().toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"})}`,"ok");
@@ -1947,7 +1948,13 @@ renderSealMaster();
 renderProjects();
 renderQuickProjectSwitcher();
 updateCurrentProjectLabel();
-loadProjectsFromSheets({quiet:true});
+loadProjectsFromSheets({quiet:true}).then(ok=>{
+  if(ok){
+    renderQuickProjectSwitcher();
+    renderProjects();
+    updateCurrentProjectLabel();
+  }
+});
 loadMaterialsFromSheets({quiet:true});
 renderCalcItems();
 addFlat({type:"平場",name:"A面",a:10,b:8,q:1});
