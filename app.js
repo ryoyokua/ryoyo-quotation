@@ -1281,40 +1281,48 @@ function renderQuickProjectSwitcher(){
   }
 }
 async function autoSaveCurrentProject({createIfNeeded=false,syncNow=false}={}){
- if(syncNow)clearTimeout(sheetSyncTimer);
- if(projectAutoSaveBusy)return;
+ if(syncNow){
+   clearTimeout(sheetSyncTimer);
+   clearTimeout(projectAutoSaveTimer);
+ }
  const id=Number($("editingProjectId")?.value)||null;
  if(!id){
    setProjectAutoSaveStatus(calcItems.length?"未保存の新規案件":"未保存の計算","");
-   return;
+   return false;
  }
  const p=projects.find(x=>x.id===id);
- if(!p)return;
- projectAutoSaveBusy=true;
- setProjectAutoSaveStatus("保存中…","saving");
- try{
-   p.workItems=currentWorkItemsSnapshot();
-   p.area=calcItems.reduce((s,x)=>s+(Number(x.area)||0),0);
-   const enteredName=($("projectName")?.value||"").trim();
-   if(enteredName)p.name=enteredName;
-   p.updatedAt=new Date().toISOString();
-   save(S.projects,projects);
-   if(syncNow){
-     const ok=await saveProjectToSheets(p,{quiet:true,manualConflict:true});
-     if(ok)setProjectAutoSaveStatus(`Google Sheetsへ自動上書き保存済み ${new Date().toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"})}`,"saved");
-   }else{
-     scheduleSheetProjectSave(p);
-     setProjectAutoSaveStatus("端末に保存済み・Google Sheetsへ同期中…","saving");
+ if(!p)return false;
+
+ // まず端末へ即時保存。ここではGoogle Sheets通信を待たない。
+ p.workItems=currentWorkItemsSnapshot();
+ p.area=calcItems.reduce((s,x)=>s+(Number(x.area)||0),0);
+ const enteredName=($("projectName")?.value||"").trim();
+ if(enteredName)p.name=enteredName;
+ p.updatedAt=new Date().toISOString();
+ save(S.projects,projects);
+ renderProjects();
+ renderQuickProjectSwitcher();
+
+ if(syncNow){
+   setProjectAutoSaveStatus("Google Sheetsへ保存中…","saving");
+   const ok=await saveProjectToSheets(p,{quiet:true,manualConflict:true});
+   if(ok){
+     setProjectAutoSaveStatus(`Google Sheetsへ保存済み ${new Date().toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"})}`,"saved");
    }
-   renderProjects();
-   renderQuickProjectSwitcher();
- }finally{projectAutoSaveBusy=false;}
+   return ok;
+ }
+
+ // 連続編集中はSheetsへ毎回送らず、最後の変更から4秒後にまとめて1回同期。
+ setProjectAutoSaveStatus("端末に保存済み","");
+ scheduleSheetProjectSave(p);
+ return true;
 }
 function scheduleProjectAutoSave(){
   if(!Number($("editingProjectId")?.value))return;
   clearTimeout(projectAutoSaveTimer);
-  setProjectAutoSaveStatus("変更を保存しています…","saving");
-  projectAutoSaveTimer=setTimeout(()=>autoSaveCurrentProject(),450);
+  // 入力のたびに通信待ち表示は出さず、少し落ち着いてから端末保存へまとめる。
+  setProjectAutoSaveStatus("編集中…","");
+  projectAutoSaveTimer=setTimeout(()=>autoSaveCurrentProject(),250);
 }
 async function createQuickNewProject(){
   clearTimeout(projectAutoSaveTimer);
@@ -1491,13 +1499,15 @@ async function sheetPostRaw(action,payload={}){
 function scheduleSheetProjectSave(project){
  clearTimeout(sheetSyncTimer);
  sheetSyncTimer=setTimeout(async()=>{
-   const ok=await saveProjectToSheets(project,{quiet:true});
+   const latest=projects.find(x=>String(x.id)===String(project.id))||project;
+   const ok=await saveProjectToSheets(latest,{quiet:true});
    const isStillOpen=String($("editingProjectId")?.value||"")===String(project.id);
    if(isStillOpen){
-     if(ok)setProjectAutoSaveStatus(`Google Sheetsへ自動上書き保存済み ${new Date().toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"})}`,"saved");
-     else setProjectAutoSaveStatus("端末には保存済み・Google Sheets同期失敗","");
+     if(ok)setProjectAutoSaveStatus(`Google Sheetsへ自動保存済み ${new Date().toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"})}`,"saved");
+     else if(latest._remoteNewer)setProjectAutoSaveStatus("別端末の更新あり・「今すぐ保存」で確認してください","");
+     else setProjectAutoSaveStatus("端末に保存済み・Sheets同期失敗","");
    }
- },1500);
+ },4000);
 }
 async function fetchProjectFromSheets(id){
  const local=projects.find(x=>String(x.id)===String(id));
@@ -1902,26 +1912,11 @@ if($("manualProjectSave"))$("manualProjectSave").onclick=async()=>{
  btn.disabled=true;
  const oldText=btn.textContent;
  btn.textContent="保存中…";
- setProjectAutoSaveStatus("Google Sheetsへ保存中…","saving");
  try{
-   const p=projects.find(x=>x.id===id);
-   if(!p)throw new Error("保存対象の案件が見つかりません。");
-   p.workItems=currentWorkItemsSnapshot();
-   p.area=calcItems.reduce((s,x)=>s+(Number(x.area)||0),0);
-   const enteredName=($("projectName")?.value||"").trim();
-   if(enteredName)p.name=enteredName;
-   p.updatedAt=new Date().toISOString();
-   save(S.projects,projects);
-
-   // 手動保存は必ず現在画面の施工対象をそのままSheetsへ送る。
-   const ok=await saveProjectToSheets(p,{quiet:true,manualConflict:true});
-   if(!ok){
-     setProjectAutoSaveStatus("保存をキャンセルしました","");
-     return;
+   const ok=await autoSaveCurrentProject({syncNow:true});
+   if(!ok && !projects.find(x=>x.id===id)?._remoteNewer){
+     setProjectAutoSaveStatus("保存できませんでした","");
    }
-   renderProjects();
-   renderQuickProjectSwitcher();
-   setProjectAutoSaveStatus(`Google Sheetsへ保存しました ${new Date().toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"})}`,"saved");
  }catch(err){
    console.error("Manual project save failed",err);
    setProjectAutoSaveStatus("保存に失敗しました","");
