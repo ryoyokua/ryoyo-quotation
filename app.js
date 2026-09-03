@@ -151,7 +151,20 @@ for(const m of materials){
 save(S.materials,materials);
 
 
-function show(v){document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id===v));document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("active",x.dataset.view===v));scrollTo({top:0,behavior:"smooth"})}
+const LAST_VIEW_KEY="ryoyo_last_view_v1";
+function show(v){
+  document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id===v));
+  document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("active",x.dataset.view===v));
+  try{sessionStorage.setItem(LAST_VIEW_KEY,v);}catch(e){}
+  scrollTo({top:0,behavior:"smooth"});
+}
+function restoreLastView(){
+  let v="";
+  try{v=sessionStorage.getItem(LAST_VIEW_KEY)||"";}catch(e){}
+  if(v && document.getElementById(v)?.classList.contains("view")){
+    show(v);
+  }
+}
 document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
   const view=b.dataset.view;
   // HOMEは純粋な画面移動。案件保存・案件切替処理から材料計算へ戻されないようにする。
@@ -1760,3 +1773,5 @@ addSpecMaterial(0);
 if($("calcSealCount"))$("calcSealCount").onclick=()=>calcSealCount(true);
 ["sealVolume","sealWidth","sealDepth"].forEach(id=>{if($(id))$(id).addEventListener("input",()=>calcSealCount(false));});
 if($("sealReserve"))$("sealReserve").addEventListener("change",()=>calcSealCount(false));
+// ページ更新・アプリ更新後も、このタブで最後に開いていた画面を維持する。
+restoreLastView();
