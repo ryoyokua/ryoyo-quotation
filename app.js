@@ -1126,7 +1126,7 @@ async function autoSaveCurrentProject({createIfNeeded=false,syncNow=false}={}){
    p.updatedAt=new Date().toISOString();
    save(S.projects,projects);
    if(syncNow){
-     const ok=await saveProjectToSheets(p,{quiet:true});
+     const ok=await saveProjectToSheets(p,{quiet:true,manualConflict:true});
      if(ok)setProjectAutoSaveStatus(`Google Sheetsへ自動上書き保存済み ${new Date().toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"})}`,"saved");
    }else{
      scheduleSheetProjectSave(p);
@@ -1233,7 +1233,7 @@ async function sheetGet(action,params={}){
  if(!data||data.ok===false)throw new Error(data?.error||"Google Sheets処理に失敗しました。");
  return data;
 }
-async function sheetPost(action,project){
+async function sheetPost(action,project,{force=false}={}){
  const endpoint=getGasEndpoint();
  if(!endpoint)throw new Error("Apps Script URLが設定されていません。");
  const r=await fetch(endpoint,{
@@ -1243,7 +1243,7 @@ async function sheetPost(action,project){
    body:JSON.stringify({
      action,
      project,
-     expectedUpdatedAt: project._sheetUpdatedAt || ""
+     expectedUpdatedAt: force ? "" : (project._sheetUpdatedAt || "")
    })
  });
  if(!r.ok)throw new Error(`通信エラー ${r.status}`);
@@ -1257,11 +1257,11 @@ async function sheetPost(action,project){
  if(!data||data.ok===false)throw new Error(data?.error||"Google Sheets保存に失敗しました。");
  return data;
 }
-async function saveProjectToSheets(project,{quiet=false}={}){
+async function saveProjectToSheets(project,{quiet=false,force=false,manualConflict=false}={}){
  if(!project)return false;
  try{
    if(!quiet)setSheetSyncStatus("Sheetsへ保存中…");
-   const data=await sheetPost("saveProject",projectForSheets(project));
+   const data=await sheetPost("saveProject",projectForSheets(project),{force});
    if(data.projectId)project.sheetId=String(data.projectId);
    if(Array.isArray(data.itemIds)&&Array.isArray(project.workItems)){
      const byLegacy=new Map(data.itemIds.map(x=>[String(x.legacyId||""),String(x.itemId||"")]));
@@ -1280,6 +1280,20 @@ async function saveProjectToSheets(project,{quiet=false}={}){
    console.error("Sheets save failed",err);
    if(err?.code==="PROJECT_CONFLICT"){
      setSheetSyncStatus("別端末の更新を検出","error");
+
+     if(manualConflict){
+       const overwrite=confirm(
+         "Google Sheets側に、この案件の新しい更新が見つかりました。\n\n"+
+         "現在画面の内容でGoogle Sheetsを上書き保存しますか？\n\n"+
+         "［OK］現在の内容で上書き保存\n"+
+         "［キャンセル］保存せず現在の画面を残す"
+       );
+       if(overwrite){
+         return await saveProjectToSheets(project,{quiet,force:true,manualConflict:false});
+       }
+       return false;
+     }
+
      const reload=confirm(
        "この案件は、開いた後に別の端末で更新されています。\n\n"+
        "このまま上書きはせず、保存を停止しました。\n"+
@@ -1313,7 +1327,7 @@ async function saveProjectToSheets(project,{quiet=false}={}){
      }
      return false;
    }
-   setSheetSyncStatus("Sheets保存失敗","error");
+      setSheetSyncStatus("Sheets保存失敗","error");
    if(!quiet)alert("Googleスプレッドシートへの保存に失敗しました。\nローカルには保存されています。\n\n"+err.message);
    return false;
  }
@@ -1760,7 +1774,10 @@ if($("manualProjectSave"))$("manualProjectSave").onclick=async()=>{
 
    // 手動保存は必ず現在画面の施工対象をそのままSheetsへ送る。
    const ok=await saveProjectToSheets(p,{quiet:true});
-   if(!ok)throw new Error("Google Sheetsへの保存が完了しませんでした。");
+   if(!ok){
+     setProjectAutoSaveStatus("保存をキャンセルしました","");
+     return;
+   }
    renderProjects();
    renderQuickProjectSwitcher();
    setProjectAutoSaveStatus(`Google Sheetsへ保存しました ${new Date().toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"})}`,"saved");
