@@ -17,3 +17,4 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // app revision v96 - roof/flat/vessel stacked vertical layout
 // app revision v97 - quantity add button alignment
 // app revision v98 - mobile/local stale project duplicate cleanup
+// app revision v99 - align quantity section titles and add buttons at right edge
