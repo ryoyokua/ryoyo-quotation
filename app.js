@@ -1465,21 +1465,13 @@ async function saveProjectToSheets(project,{quiet=false,force=false,manualConfli
      project._remoteNewer=true;
      save(S.projects,projects);
 
-     // 「今すぐ保存」を押した時だけ、上書き確認を1回表示する。
+     // 「今すぐ保存」はユーザーの明示操作なので、競合確認を出さず
+     // 現在画面の内容を同じ案件IDへ強制上書き保存する。
      if(manualConflict){
-       const overwrite=confirm(
-         "Google Sheets側に、この案件の新しい更新が見つかりました。\n\n"+
-         "現在画面の内容でGoogle Sheetsを上書き保存しますか？\n\n"+
-         "［OK］現在の内容で上書き保存\n"+
-         "［キャンセル］保存せず現在の画面を残す"
-       );
-       if(overwrite){
-         return await saveProjectToSheets(project,{quiet,force:true,manualConflict:false});
-       }
-       return false;
+       return await saveProjectToSheets(project,{quiet,force:true,manualConflict:false});
      }
 
-     // 自動保存・バックグラウンド同期ではポップアップを出さない。
+     // 自動保存・バックグラウンド同期では競合時に上書きしない。
      const isStillOpen=String($("editingProjectId")?.value||"")===String(project.id);
      if(isStillOpen){
        setProjectAutoSaveStatus("別端末の更新あり・「今すぐ保存」で確認してください","");
