@@ -48,6 +48,10 @@
 @media(max-width:900px){
   .quantity-result-card{position:static}
 }
+
+.quantity-stack{display:grid;grid-template-columns:1fr;gap:16px}
+.quantity-stack>.card{width:100%}
+.quantity-result-card{position:static!important;top:auto!important}
 </style>
 
 <style>
@@ -552,7 +556,7 @@ input,select,textarea,button{max-width:100%}
 
 <section id="roof" class="view">
 <div class="title"><div><span class="badge">ROOF</span><h2>屋根</h2></div><button class="help" data-help="roof">？拾い方</button></div>
-<div class="twocol quantity-twocol">
+<div class="quantity-stack">
 <div class="card quantity-input-card"><h3>入力</h3><div class="input-subtitle">基本面積</div>
 <div class="formgrid">
 <label>長さ L(m)<input id="roofL" type="number" value="10" step=".01"><small>図面・真上から見た平面寸法</small></label>
@@ -653,7 +657,7 @@ input,select,textarea,button{max-width:100%}
 
 <section id="flat" class="view">
 <div class="title"><div><span class="badge">FLAT</span><h2>屋上・床・壁</h2></div><button class="help" data-help="flat">？拾い方</button></div>
-<div class="twocol quantity-twocol">
+<div class="quantity-stack">
 <div class="card quantity-input-card"><h3>入力</h3><div class="input-subtitle">基本面積</div>
 <div class="headrow"><p>部位を追加して拾います。</p><button class="secondary" id="addFlat">＋部位追加</button></div>
 <div class="formgrid" style="margin-bottom:12px"><label>面積の端数処理<select id="flatRound"><option value="0">端数処理なし</option><option value="0.1">0.1㎡単位で切り上げ</option><option value="1" selected>1㎡単位で切り上げ</option></select></label></div>
@@ -671,7 +675,7 @@ input,select,textarea,button{max-width:100%}
 
 <section id="vessel" class="view">
 <div class="title"><div><span class="badge">TANK / VESSEL</span><h2>他タンク</h2></div></div>
-<div class="twocol quantity-twocol">
+<div class="quantity-stack">
 <div class="card quantity-input-card"><h3>入力</h3><div class="input-subtitle">基本面積</div>
 <div class="formgrid">
 <label>形状<select id="vesselShape"><option value="cylinder">円筒</option><option value="rect">角型</option></select></label>
@@ -922,5 +926,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=95"></script>
+<script src="app.js?v=96"></script>
 </body></html>

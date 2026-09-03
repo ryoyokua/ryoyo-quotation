@@ -14,3 +14,4 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // app revision v93 - quantity UI unified
 // app revision v94 - desktop two-column quantity screens
 // app revision v95 - sealing width/depth spinner step 1
+// app revision v96 - roof/flat/vessel stacked vertical layout
