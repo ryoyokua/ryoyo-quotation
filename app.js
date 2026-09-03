@@ -2077,3 +2077,23 @@ if($("calcSealCount"))$("calcSealCount").onclick=()=>calcSealCount(true);
 if($("sealReserve"))$("sealReserve").addEventListener("change",()=>calcSealCount(false));
 // ページ更新・アプリ更新後も、このタブで最後に開いていた画面を維持する。
 restoreLastView();
+
+
+function syncSeparatedSealingResults(){
+  ["roof","flat","vessel"].forEach(p=>{
+    const count=$(p+"SealCount"), reserve=$(p+"SealCountReserve");
+    const outCount=$(p+"ResultSealCount"), outReserve=$(p+"ResultSealReserve");
+    if(outCount)outCount.textContent=count?count.textContent:"—";
+    if(outReserve)outReserve.textContent=reserve?reserve.textContent:"—";
+  });
+}
+const _v106Observer=new MutationObserver(syncSeparatedSealingResults);
+document.addEventListener("DOMContentLoaded",()=>{
+  ["roof","flat","vessel"].forEach(p=>{
+    [$(p+"SealCount"),$(p+"SealCountReserve")].forEach(el=>{
+      if(el)_v106Observer.observe(el,{childList:true,subtree:true,characterData:true});
+    });
+  });
+  syncSeparatedSealingResults();
+});
+
