@@ -175,6 +175,187 @@
     flex:1 1 auto!important;
   }
 }
+
+/* v104: quantity screens - clean mobile card UI */
+@media(max-width:700px){
+  .quantity-input-card{
+    padding:16px!important;
+    overflow:hidden;
+  }
+
+  /* Headings and add buttons */
+  .quantity-input-card .input-subtitle,
+  .quantity-input-card .headrow > b,
+  .quantity-input-card .headrow > span{
+    writing-mode:horizontal-tb!important;
+    word-break:normal!important;
+    white-space:normal!important;
+  }
+  .quantity-input-card .headrow,
+  .quantity-input-card .quantity-section > .headrow,
+  .quantity-input-card .quantity-add-row{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+    gap:8px!important;
+  }
+  .quantity-input-card .headrow > button,
+  .quantity-input-card .quantity-section > .headrow > button,
+  .quantity-input-card .quantity-add-row > button{
+    width:100%!important;
+    min-height:44px!important;
+    margin:0!important;
+  }
+
+  /* Only the quantity entry tables become cards. */
+  #flatRows,
+  #roofDeductionRows,#roofJointRows,
+  #flatDeductionRows,#flatJointRows,
+  #vesselDeductionRows,#vesselJointRows,
+  #tankDeductionRows{
+    display:grid!important;
+    gap:12px!important;
+    width:100%!important;
+  }
+
+  #flatRows tr,
+  #roofDeductionRows tr,#roofJointRows tr,
+  #flatDeductionRows tr,#flatJointRows tr,
+  #vesselDeductionRows tr,#vesselJointRows tr,
+  #tankDeductionRows tr{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+    gap:12px!important;
+    width:100%!important;
+    min-width:0!important;
+    padding:14px!important;
+    border:1px solid var(--bd)!important;
+    border-radius:12px!important;
+    background:#fff!important;
+  }
+
+  /* Hide header rows for card-style input tables */
+  #flatRows.closest,
+  .quantity-input-card .tablewrap:has(#flatRows) thead,
+  .quantity-input-card .tablewrap:has(#roofDeductionRows) thead,
+  .quantity-input-card .tablewrap:has(#roofJointRows) thead,
+  .quantity-input-card .tablewrap:has(#flatDeductionRows) thead,
+  .quantity-input-card .tablewrap:has(#flatJointRows) thead,
+  .quantity-input-card .tablewrap:has(#vesselDeductionRows) thead,
+  .quantity-input-card .tablewrap:has(#vesselJointRows) thead,
+  .quantity-input-card .tablewrap:has(#tankDeductionRows) thead{
+    display:none!important;
+  }
+
+  .quantity-input-card .tablewrap:has(#flatRows),
+  .quantity-input-card .tablewrap:has(#roofDeductionRows),
+  .quantity-input-card .tablewrap:has(#roofJointRows),
+  .quantity-input-card .tablewrap:has(#flatDeductionRows),
+  .quantity-input-card .tablewrap:has(#flatJointRows),
+  .quantity-input-card .tablewrap:has(#vesselDeductionRows),
+  .quantity-input-card .tablewrap:has(#vesselJointRows),
+  .quantity-input-card .tablewrap:has(#tankDeductionRows){
+    overflow:visible!important;
+    width:100%!important;
+  }
+
+  .quantity-input-card .tablewrap:has(#flatRows) table,
+  .quantity-input-card .tablewrap:has(#roofDeductionRows) table,
+  .quantity-input-card .tablewrap:has(#roofJointRows) table,
+  .quantity-input-card .tablewrap:has(#flatDeductionRows) table,
+  .quantity-input-card .tablewrap:has(#flatJointRows) table,
+  .quantity-input-card .tablewrap:has(#vesselDeductionRows) table,
+  .quantity-input-card .tablewrap:has(#vesselJointRows) table,
+  .quantity-input-card .tablewrap:has(#tankDeductionRows) table{
+    display:block!important;
+    width:100%!important;
+    min-width:0!important;
+  }
+
+  #flatRows td,
+  #roofDeductionRows td,#roofJointRows td,
+  #flatDeductionRows td,#flatJointRows td,
+  #vesselDeductionRows td,#vesselJointRows td,
+  #tankDeductionRows td{
+    display:flex!important;
+    flex-direction:column!important;
+    gap:5px!important;
+    padding:0!important;
+    border:0!important;
+    min-width:0!important;
+    width:auto!important;
+  }
+
+  #flatRows td::before,
+  #roofDeductionRows td::before,#roofJointRows td::before,
+  #flatDeductionRows td::before,#flatJointRows td::before,
+  #vesselDeductionRows td::before,#vesselJointRows td::before,
+  #tankDeductionRows td::before{
+    content:attr(data-label)!important;
+    display:block!important;
+    font-size:12px!important;
+    line-height:1.3!important;
+    font-weight:700!important;
+    color:var(--muted)!important;
+  }
+
+  #flatRows input,#flatRows select,
+  #roofDeductionRows input,#roofJointRows input,
+  #flatDeductionRows input,#flatJointRows input,
+  #vesselDeductionRows input,#vesselJointRows input,
+  #tankDeductionRows input{
+    width:100%!important;
+    min-width:0!important;
+    min-height:44px!important;
+  }
+
+  /* Full-width fields inside each mobile card */
+  #flatRows td:nth-child(2),
+  #flatRows td:nth-child(6),
+  #flatRows td:nth-child(7),
+  #roofDeductionRows td:nth-child(1),#roofDeductionRows td:nth-child(5),#roofDeductionRows td:nth-child(6),
+  #flatDeductionRows td:nth-child(1),#flatDeductionRows td:nth-child(5),#flatDeductionRows td:nth-child(6),
+  #vesselDeductionRows td:nth-child(1),#vesselDeductionRows td:nth-child(5),#vesselDeductionRows td:nth-child(6),
+  #tankDeductionRows td:nth-child(1),#tankDeductionRows td:nth-child(5),#tankDeductionRows td:nth-child(6),
+  #roofJointRows td:nth-child(1),#roofJointRows td:nth-child(4),#roofJointRows td:nth-child(5),
+  #flatJointRows td:nth-child(1),#flatJointRows td:nth-child(4),#flatJointRows td:nth-child(5),
+  #vesselJointRows td:nth-child(1),#vesselJointRows td:nth-child(4),#vesselJointRows td:nth-child(5){
+    grid-column:1 / -1!important;
+  }
+
+  /* Calculated values look like results rather than tiny table cells */
+  #flatRows .fo,
+  #roofDeductionRows .do,#flatDeductionRows .do,#vesselDeductionRows .do,#tankDeductionRows .do,
+  #roofJointRows .jo,#flatJointRows .jo,#vesselJointRows .jo{
+    background:var(--green)!important;
+    border-radius:10px!important;
+    padding:10px 12px!important;
+    font-size:18px!important;
+    font-weight:700!important;
+    color:#1f4e29!important;
+  }
+
+  #flatRows .delete,
+  #roofDeductionRows .delete,#roofJointRows .delete,
+  #flatDeductionRows .delete,#flatJointRows .delete,
+  #vesselDeductionRows .delete,#vesselJointRows .delete,
+  #tankDeductionRows .delete{
+    width:100%!important;
+    min-height:44px!important;
+  }
+
+  .quantity-input-card .quantity-section{
+    margin-top:22px!important;
+  }
+  .quantity-input-card .quantity-section > small{
+    display:block!important;
+    margin:8px 0 10px!important;
+    line-height:1.55!important;
+  }
+  .quantity-input-card .seal-panel{
+    margin-top:14px!important;
+  }
+}
 </style>
 
 <style>
@@ -1049,5 +1230,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=103"></script>
+<script src="app.js?v=104"></script>
 </body></html>
