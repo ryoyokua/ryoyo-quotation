@@ -411,8 +411,9 @@ input,select,textarea,button{max-width:100%}
 /* v69: 新規案件と作業中案件を明確に分離 */
 #projectSwitchCard .project-action-section h3{margin:0 0 10px}
 #projectSwitchCard .project-action-divider{height:1px;background:#dfe6ec;margin:20px 0}
-#projectSwitchCard .new-project-section #quickNewProject,
-#projectSwitchCard .new-project-section #quickSaveAsProject{width:100%;max-width:360px}
+#projectSwitchCard .new-project-section #quickNewProject{width:100%;max-width:360px}
+#projectSwitchCard .unsaved-project-save-block{margin-top:14px}
+#projectSwitchCard .unsaved-project-save-block #quickSaveAsProject{width:100%;max-width:360px}
 #projectSwitchCard .project-switch-block{margin-top:16px;max-width:520px}
 #projectSwitchCard .project-switch-block label{margin:0;font-weight:700}
 #projectSwitchCard .project-switch-block select{width:100%;margin-top:6px}
@@ -421,7 +422,7 @@ input,select,textarea,button{max-width:100%}
 #projectSwitchCard #duplicateCurrentProject{width:auto;min-width:190px}
 @media(max-width:560px){
   #projectSwitchCard .new-project-section #quickNewProject,
-  #projectSwitchCard .new-project-section #quickSaveAsProject,
+  #projectSwitchCard .unsaved-project-save-block #quickSaveAsProject,
   #projectSwitchCard #duplicateCurrentProject{width:100%;max-width:none}
 }
 </style>
@@ -665,9 +666,8 @@ input,select,textarea,button{max-width:100%}
 <div class="title"><div><span class="badge">MATERIAL</span><h2>材料計算</h2></div><button class="help" data-help="material">？計算方法</button></div>
 <div class="card" id="projectSwitchCard">
   <div class="project-action-section new-project-section">
-    <h3>新しい案件</h3>
+    <h3>新規案件を作成</h3>
     <button class="primary" id="quickNewProject" type="button">＋ 新規案件を開始</button>
-    <button class="primary" id="quickSaveAsProject" type="button">新規案件として保存</button>
   </div>
 
   <div class="project-action-divider"></div>
@@ -676,7 +676,11 @@ input,select,textarea,button{max-width:100%}
     <h3>作業中の案件</h3>
     <p id="currentProjectLabel">現在：未保存の計算</p>
     <small id="projectAutoSaveStatus">未保存の計算です</small>
-    <small id="projectSaveRule" class="project-save-rule">新規案件として保存するとPJ-IDを発行し、Google Sheetsへ新規登録します。</small>
+    <small id="projectSaveRule" class="project-save-rule">この案件を保存するとPJ-IDを発行し、Google Sheetsへ新規登録します。</small>
+
+    <div id="unsavedProjectSaveBlock" class="unsaved-project-save-block">
+      <button class="primary" id="quickSaveAsProject" type="button">この案件を保存</button>
+    </div>
 
     <div class="project-switch-block">
       <label>案件を切り替える
@@ -832,5 +836,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=69"></script>
+<script src="app.js?v=70"></script>
 </body></html>

@@ -1025,7 +1025,7 @@ async function saveCurrentWorkAsProject(){
  updateCurrentProjectLabel();
  renderProjects();
  renderQuickProjectSwitcher();
- setProjectAutoSaveStatus("案件として保存しました","saved");
+ setProjectAutoSaveStatus("この案件を保存しました","saved");
 }
 
 // project autosave / quick switching
@@ -1063,6 +1063,8 @@ function renderQuickProjectSwitcher(){
   const p=currentId?projects.find(x=>x.id===currentId):null;
 
   if(saveBtn)saveBtn.hidden=!!currentId;
+  const saveBlock=$("unsavedProjectSaveBlock");
+  if(saveBlock)saveBlock.hidden=!!currentId;
   if(dupBtn)dupBtn.hidden=!currentId;
   const dupBlock=$("duplicateProjectBlock");
   if(dupBlock)dupBlock.hidden=!currentId;
@@ -1074,7 +1076,7 @@ function renderQuickProjectSwitcher(){
         ? `${pj} を編集中。変更内容は同じ案件IDへGoogle Sheets自動上書き保存されます。`
         : "保存済み案件を編集中。変更内容は同じ案件へGoogle Sheets自動上書き保存されます。";
     }else{
-      rule.textContent="新規案件として保存するとPJ-IDを発行し、Google Sheetsへ新規登録します。";
+      rule.textContent="この案件を保存するとPJ-IDを発行し、Google Sheetsへ新規登録します。";
     }
   }
 }
