@@ -6,3 +6,4 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // app revision v85
 // app revision v86
 // app revision v87 - cache bust fixed
+// app revision v88 - project list recovery

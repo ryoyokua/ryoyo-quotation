@@ -1543,6 +1543,14 @@ async function loadProjectsFromSheets({quiet=false}={}){
  try{
    if(!quiet)setSheetSyncStatus("案件一覧を同期中…");
    const data=await sheetGet("listProjects");
+
+   // 古いバージョンで残った「非表示ID」が原因でSheets上の案件が消えて見えることがあるため、
+   // 現在の削除済み案件（ゴミ箱）に実在するIDだけを非表示として扱う。
+   const trashHiddenKeys=new Set(
+     (trash.projects||[]).flatMap(p=>[String(p.sheetId||""),String(p.id||"")]).filter(Boolean)
+   );
+   remoteHiddenIds=remoteHiddenIds.filter(x=>trashHiddenKeys.has(String(x)));
+   save(S.remoteHidden,remoteHiddenIds);
    const hidden=new Set(remoteHiddenIds.map(String));
    for(const rp of (data.projects||[])){
      const sheetId=String(rp.id||"");
@@ -1811,7 +1819,8 @@ function restoreDeletedProject(idx){
  const restored={...p,updatedAt:new Date().toISOString()};delete restored.deletedAt;
  if(projects.some(x=>x.id===restored.id))restored.id=Date.now()+Math.floor(Math.random()*100000);
  projects.unshift(restored);trash.projects.splice(idx,1);
- remoteHiddenIds=remoteHiddenIds.filter(x=>String(x)!==String(restored.id));
+ const restoreKeys=new Set([String(restored.id||""),String(restored.sheetId||"")]);
+ remoteHiddenIds=remoteHiddenIds.filter(x=>!restoreKeys.has(String(x)));
  save(S.remoteHidden,remoteHiddenIds);
  save(S.projects,projects);saveTrash();scheduleSheetProjectSave(restored);renderProjects();renderQuickProjectSwitcher();renderProjectTrash();
 }
