@@ -12,3 +12,4 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // app revision v91 - common sealing calculation and raw-area display cleanup
 // app revision v92 - seal field alignment
 // app revision v93 - quantity UI unified
+// app revision v94 - desktop two-column quantity screens
