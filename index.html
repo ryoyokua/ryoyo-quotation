@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ja">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
 <meta name="theme-color" content="#17365D">
 <title>菱洋 使用材料 概算</title>
 <link rel="manifest" href="manifest.json"><link rel="stylesheet" href="styles.css">
@@ -553,6 +553,18 @@
   }
 }
 
+
+/* v115: 屋根 勾配・波型係数の選択/直接入力/簡易自動計算 */
+#roof .formgrid label > input[readonly]{
+  background:#f3f6f9;
+  color:#334155;
+  font-weight:700;
+}
+#roof .formgrid label small{line-height:1.45}
+@media(max-width:700px){
+  #roof .formgrid{grid-template-columns:1fr!important}
+}
+
 </style>
 
 <style>
@@ -1079,13 +1091,30 @@ input,select,textarea,button{max-width:100%}
 <label>長さ L(m)<input id="roofL" type="number" value="10" step="1" class="integer-spinner"><small>図面・真上から見た平面寸法</small></label>
 <label>幅 W(m)<input id="roofW" type="number" value="10" step="1" class="integer-spinner"><small>図面・真上から見た平面寸法</small></label>
 <label>面数<input id="roofFaces" type="number" value="1" min="1"></label>
-<label>勾配<select id="roofSun"><option value="2.5">2.5寸</option><option value="3" selected>3.0寸</option><option value="3.5">3.5寸</option><option value="4">4.0寸</option><option value="4.5">4.5寸</option><option value="5">5.0寸</option><option value="5.5">5.5寸</option><option value="6">6.0寸</option><option value="custom">直接入力</option></select></label>
-<label id="roofSunCustomWrap" class="hidden">勾配 直接入力(寸)<input id="roofSunCustom" type="number" value="3" step="1" class="integer-spinner"></label>
-<label class="roof-wave-field">屋根材<select id="roofWaveType"><option value="0">平板・折板（係数なし）</option><option value="1">大波スレート</option><option value="2">小波スレート</option><option value="3">波板</option><option value="4">その他</option></select></label>
-<label class="roof-wave-field">波型係数<input id="roofWaveFactor" type="number" value="1" step=".001"><small>屋根材選択で自動入力。必要時は上書き可</small></label>
+<label>勾配の求め方<select id="roofSlopeMode">
+<option value="select" selected>寸勾配から選択</option>
+<option value="direct">勾配係数を直接入力</option>
+<option value="auto">簡易自動計算（水平距離＋高低差）</option>
+</select></label>
+<label id="roofSlopeSelectWrap">勾配<select id="roofSun"><option value="2.5">2.5寸</option><option value="3" selected>3.0寸</option><option value="3.5">3.5寸</option><option value="4">4.0寸</option><option value="4.5">4.5寸</option><option value="5">5.0寸</option><option value="5.5">5.5寸</option><option value="6">6.0寸</option></select></label>
+<label id="roofSlopeDirectWrap" class="hidden">勾配係数 直接入力<input id="roofSlopeDirectFactor" type="number" value="1.044" min="1" step=".001"><small>図面・仕様書等で係数が分かる場合</small></label>
+<label id="roofSlopeRunWrap" class="hidden">水平距離 (m)<input id="roofSlopeRun" type="number" value="5" min=".001" step=".1"><small>例：軒から棟までの水平距離</small></label>
+<label id="roofSlopeRiseWrap" class="hidden">高低差 (m)<input id="roofSlopeRise" type="number" value="1.5" min="0" step=".1"><small>例：棟高－軒高</small></label>
+<label>勾配係数<input id="roofSlopeFactorDisplay" type="number" value="1.044" step=".001" readonly><small>選択・入力内容から自動表示</small></label>
+
+<label class="roof-wave-field">屋根材<select id="roofWaveType"><option value="0">折板</option><option value="1">大波スレート</option><option value="2">小波スレート</option><option value="3">その他</option></select></label>
+<label class="roof-wave-field">波型係数の求め方<select id="roofWaveMode">
+<option value="preset" selected>屋根材から選択</option>
+<option value="direct">波型係数を直接入力</option>
+<option value="auto">簡易自動計算（断面実長÷水平幅）</option>
+</select></label>
+<label id="roofWaveDirectWrap" class="hidden">波型係数 直接入力<input id="roofWaveDirectFactor" type="number" value="1.000" min="1" step=".001"><small>メーカー資料等で係数が分かる場合</small></label>
+<label id="roofWavePitchWrap" class="hidden">1ピッチ水平幅 (mm)<input id="roofWavePitch" type="number" value="500" min="1" step="1" class="integer-spinner"></label>
+<label id="roofWaveSurfaceWrap" class="hidden">1ピッチ表面実長 (mm)<input id="roofWaveSurface" type="number" value="500" min="1" step="1" class="integer-spinner"><small>断面の凹凸に沿った1ピッチ分の実長</small></label>
+<label class="roof-wave-field">波型係数<input id="roofWaveFactor" type="number" value="1.000" step=".001" readonly><small>屋根材・入力内容から自動表示</small></label>
 <label>面積の端数処理<select id="roofRound"><option value="1" selected>1㎡単位で切り上げ</option><option value="0.1">0.1㎡単位で切り上げ</option><option value="0">端数処理なし</option></select></label>
 </div>
-<div class="info" style="margin-top:10px"><b>寸法入力：</b>斜面そのものを実測した長さではなく、図面・平面上の長さと幅を入力します。</div>
+<div class="info" style="margin-top:10px"><b>寸法入力：</b>斜面そのものを実測した長さではなく、図面・平面上の長さと幅を入力します。<br><b>係数：</b>勾配・波型係数は「選択／直接入力／簡易自動計算」に対応しています。<br><b>面積：</b>平面積 × 勾配係数 × 波型係数 で概算します。</div>
 
 <div class="quantity-section"><div class="headrow"><b>施工除外部</b><button class="secondary" type="button" id="addRoofDeduction">＋施工除外部を追加</button></div><small>例：トップライト、換気設備、架台、ダクト、開口部など施工しない箇所</small><div class="tablewrap"><table><thead><tr><th>名称</th><th>長さ(m)</th><th>幅(m)</th><th>数量</th><th>控除面積</th><th></th></tr></thead><tbody id="roofDeductionRows"></tbody></table></div></div>
 
@@ -1443,5 +1472,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=114"></script>
+<script src="app.js?v=115"></script>
 </body></html>
