@@ -25,6 +25,12 @@
 #quickNewProject:hover{background:#d8ebce!important}
 #goProjectsFromMaterial{background:#f7f9fb!important;color:#28425f!important;border:1px solid #cfd9e3!important}
 @media(max-width:560px){.project-name-edit-wrap{max-width:100%}.project-name-inline{overflow-wrap:anywhere}}
+/* v92: 共通シーリング計算の1段目を左右で揃える */
+.seal-settings-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:start}
+.seal-settings-grid>label{display:flex;flex-direction:column;min-width:0;margin:0}
+.seal-settings-grid>label>select,.seal-settings-grid>label>input{width:100%;box-sizing:border-box;min-height:42px}
+.seal-settings-grid>label>small{display:block;min-height:18px;margin-top:4px}
+@media(max-width:560px){.seal-settings-grid{grid-template-columns:1fr}}
 </style>
 
 <style>
@@ -561,7 +567,7 @@ input,select,textarea,button{max-width:100%}
 <div style="grid-column:1/-1"><div class="headrow"><b>目地・取合い</b><button class="secondary" type="button" id="addRoofJoint">＋目地・取合いを追加</button></div><small>例：設備周囲、架台周囲、ダクト取合い、既存目地など</small><div class="tablewrap"><table><thead><tr><th>名称</th><th>長さ(m)</th><th>本数</th><th>延長</th><th></th></tr></thead><tbody id="roofJointRows"></tbody></table></div>
 <div class="card" style="margin-top:12px"><label class="checks"><input id="roofSealEnabled" type="checkbox"> シーリング材を計算する</label>
 <div id="roofSealBox" class="hidden"><div class="info"><b>対象延長：</b>上の「目地・取合い総延長」を使用します。目地・取合いの記録だけで、シーリングを施工しない場合はチェック不要です。</div>
-<div class="formgrid" style="margin-top:10px"><label>シーリング材<select id="roofSealProduct"></select><small>製品は「マスタ」画面から登録できます</small></label><label>容量 (mL)<input id="roofSealVolume" type="number" value="320" min="1" step="1"></label><label>目地幅 (mm)<input id="roofSealWidth" type="number" value="10" min="0.1" step="1"></label><label>目地深さ (mm)<input id="roofSealDepth" type="number" value="10" min="0.1" step="1"></label><label>予備率<select id="roofSealReserve"><option value="0">0%</option><option value=".05">5%</option><option value=".1" selected>10%</option><option value=".15">15%</option><option value=".2">20%</option></select></label></div>
+<div class="seal-settings-grid" style="margin-top:10px"><label>シーリング材<select id="roofSealProduct"></select><small>製品は「マスタ」画面から登録できます</small></label><label>容量 (mL)<input id="roofSealVolume" type="number" value="320" min="1" step="1"></label><label>目地幅 (mm)<input id="roofSealWidth" type="number" value="10" min="0.1" step="1"></label><label>目地深さ (mm)<input id="roofSealDepth" type="number" value="10" min="0.1" step="1"></label><label>予備率<select id="roofSealReserve"><option value="0">0%</option><option value=".05">5%</option><option value=".1" selected>10%</option><option value=".15">15%</option><option value=".2">20%</option></select></label></div>
 <div class="metrics"><div><span>対象延長</span><strong id="roofSealLength">0.00m</strong></div><div><span>1本あたり</span><strong id="roofSealEach">—</strong></div><div><span>必要本数</span><strong id="roofSealCount">—</strong></div><div><span>予備込み</span><strong id="roofSealCountReserve">—</strong></div></div></div></div></div>
 <label>面積の端数処理
 <select id="roofRound">
@@ -666,7 +672,7 @@ input,select,textarea,button{max-width:100%}
 <div class="headrow" style="margin-top:16px"><b>目地・取合い</b><button class="secondary" type="button" id="addFlatJoint">＋目地・取合いを追加</button></div><small>例：既存目地、伸縮目地、入隅、架台・設備基礎周囲など</small><div class="tablewrap"><table><thead><tr><th>名称</th><th>長さ(m)</th><th>本数</th><th>延長</th><th></th></tr></thead><tbody id="flatJointRows"></tbody></table></div>
 <div class="card" style="margin-top:12px"><label class="checks"><input id="flatSealEnabled" type="checkbox"> シーリング材を計算する</label>
 <div id="flatSealBox" class="hidden"><div class="info"><b>対象延長：</b>上の「目地・取合い総延長」を使用します。目地・取合いの記録だけで、シーリングを施工しない場合はチェック不要です。</div>
-<div class="formgrid" style="margin-top:10px"><label>シーリング材<select id="flatSealProduct"></select><small>製品は「マスタ」画面から登録できます</small></label><label>容量 (mL)<input id="flatSealVolume" type="number" value="320" min="1" step="1"></label><label>目地幅 (mm)<input id="flatSealWidth" type="number" value="10" min="0.1" step="1"></label><label>目地深さ (mm)<input id="flatSealDepth" type="number" value="10" min="0.1" step="1"></label><label>予備率<select id="flatSealReserve"><option value="0">0%</option><option value=".05">5%</option><option value=".1" selected>10%</option><option value=".15">15%</option><option value=".2">20%</option></select></label></div>
+<div class="seal-settings-grid" style="margin-top:10px"><label>シーリング材<select id="flatSealProduct"></select><small>製品は「マスタ」画面から登録できます</small></label><label>容量 (mL)<input id="flatSealVolume" type="number" value="320" min="1" step="1"></label><label>目地幅 (mm)<input id="flatSealWidth" type="number" value="10" min="0.1" step="1"></label><label>目地深さ (mm)<input id="flatSealDepth" type="number" value="10" min="0.1" step="1"></label><label>予備率<select id="flatSealReserve"><option value="0">0%</option><option value=".05">5%</option><option value=".1" selected>10%</option><option value=".15">15%</option><option value=".2">20%</option></select></label></div>
 <div class="metrics"><div><span>対象延長</span><strong id="flatSealLength">0.00m</strong></div><div><span>1本あたり</span><strong id="flatSealEach">—</strong></div><div><span>必要本数</span><strong id="flatSealCount">—</strong></div><div><span>予備込み</span><strong id="flatSealCountReserve">—</strong></div></div></div></div>
 <div class="resultline"><span>本体・部位面積</span><b id="flatGrossArea">0.00㎡</b></div><div class="resultline"><span>施工除外部</span><b id="flatDeductionTotal">0.00㎡</b></div><div class="resultline"><span>目地・取合い総延長</span><b id="flatJointTotal">0.00m</b></div><div class="big"><span>概算施工面積</span><strong id="flatArea">0.00㎡</strong></div><div class="send-to-material">
 <label>タイトル<input id="flatTitle" type="text" placeholder="例：屋上・床・壁①"></label>
@@ -693,7 +699,7 @@ input,select,textarea,button{max-width:100%}
 </div><div class="headrow" style="margin-top:16px"><b>施工除外部</b><button class="secondary" type="button" id="addVesselDeduction">＋施工除外部を追加</button></div><small>例：マンホール、開口部、施工しない底面・接地部など</small><div class="tablewrap"><table><thead><tr><th>名称</th><th>長さ(m)</th><th>幅(m)</th><th>数量</th><th>控除面積</th><th></th></tr></thead><tbody id="vesselDeductionRows"></tbody></table></div><div class="headrow" style="margin-top:16px"><b>目地・取合い</b><button class="secondary" type="button" id="addVesselJoint">＋目地・取合いを追加</button></div><small>例：板継目、溶接部、入隅、ノズル周囲、架台との取合いなど</small><div class="tablewrap"><table><thead><tr><th>名称</th><th>長さ(m)</th><th>本数</th><th>延長</th><th></th></tr></thead><tbody id="vesselJointRows"></tbody></table></div>
 <div class="card" style="margin-top:12px"><label class="checks"><input id="vesselSealEnabled" type="checkbox"> シーリング材を計算する</label>
 <div id="vesselSealBox" class="hidden"><div class="info"><b>対象延長：</b>上の「目地・取合い総延長」を使用します。目地・取合いの記録だけで、シーリングを施工しない場合はチェック不要です。</div>
-<div class="formgrid" style="margin-top:10px"><label>シーリング材<select id="vesselSealProduct"></select><small>製品は「マスタ」画面から登録できます</small></label><label>容量 (mL)<input id="vesselSealVolume" type="number" value="320" min="1" step="1"></label><label>目地幅 (mm)<input id="vesselSealWidth" type="number" value="10" min="0.1" step="1"></label><label>目地深さ (mm)<input id="vesselSealDepth" type="number" value="10" min="0.1" step="1"></label><label>予備率<select id="vesselSealReserve"><option value="0">0%</option><option value=".05">5%</option><option value=".1" selected>10%</option><option value=".15">15%</option><option value=".2">20%</option></select></label></div>
+<div class="seal-settings-grid" style="margin-top:10px"><label>シーリング材<select id="vesselSealProduct"></select><small>製品は「マスタ」画面から登録できます</small></label><label>容量 (mL)<input id="vesselSealVolume" type="number" value="320" min="1" step="1"></label><label>目地幅 (mm)<input id="vesselSealWidth" type="number" value="10" min="0.1" step="1"></label><label>目地深さ (mm)<input id="vesselSealDepth" type="number" value="10" min="0.1" step="1"></label><label>予備率<select id="vesselSealReserve"><option value="0">0%</option><option value=".05">5%</option><option value=".1" selected>10%</option><option value=".15">15%</option><option value=".2">20%</option></select></label></div>
 <div class="metrics"><div><span>対象延長</span><strong id="vesselSealLength">0.00m</strong></div><div><span>1本あたり</span><strong id="vesselSealEach">—</strong></div><div><span>必要本数</span><strong id="vesselSealCount">—</strong></div><div><span>予備込み</span><strong id="vesselSealCountReserve">—</strong></div></div></div></div><button class="primary" id="calcVesselBtn">計算</button></div><div class="card result"><h3>結果</h3><div class="big"><span>施工面積</span><strong id="vesselArea">—</strong></div><div class="resultline"><span>本体面積</span><b id="vesselGrossArea">—</b></div><div class="resultline"><span>施工除外部</span><b id="vesselDeductionTotal">0.00㎡</b></div><div class="resultline"><span>目地・取合い総延長</span><b id="vesselJointTotal">0.00m</b></div><pre id="vesselFormula"></pre><div class="send-to-material">
 <label>タイトル<input id="vesselTitle" type="text" placeholder="例：他タンク①"></label>
 <button class="primary send" type="button" data-source="vessel">材料計算へ追加</button>
@@ -931,5 +937,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=91"></script>
+<script src="app.js?v=92"></script>
 </body></html>
