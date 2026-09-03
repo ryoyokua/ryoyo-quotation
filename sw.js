@@ -29,3 +29,4 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // app revision v108 - unified mobile deduction cards
 // app revision v109 - integer spinner normalization
 // app revision v110 - tank deduction mobile layout fix
+// app revision v111 - explicit tank deduction mobile card layout
