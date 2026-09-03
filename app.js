@@ -1125,11 +1125,15 @@ async function autoSaveCurrentProject({createIfNeeded=false,syncNow=false}={}){
    if(enteredName)p.name=enteredName;
    p.updatedAt=new Date().toISOString();
    save(S.projects,projects);
-   if(syncNow)await saveProjectToSheets(p,{quiet:true});
-   else scheduleSheetProjectSave(p);
+   if(syncNow){
+     const ok=await saveProjectToSheets(p,{quiet:true});
+     if(ok)setProjectAutoSaveStatus(`Google Sheetsへ自動上書き保存済み ${new Date().toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"})}`,"saved");
+   }else{
+     scheduleSheetProjectSave(p);
+     setProjectAutoSaveStatus("端末に保存済み・Google Sheetsへ同期中…","saving");
+   }
    renderProjects();
    renderQuickProjectSwitcher();
-   setProjectAutoSaveStatus(`Google Sheetsへ自動上書き保存済み ${new Date().toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"})}`,"saved");
  }finally{projectAutoSaveBusy=false;}
 }
 function scheduleProjectAutoSave(){
@@ -1321,7 +1325,14 @@ async function sheetPostRaw(action,payload={}){
 }
 function scheduleSheetProjectSave(project){
  clearTimeout(sheetSyncTimer);
- sheetSyncTimer=setTimeout(()=>saveProjectToSheets(project,{quiet:true}),1500);
+ sheetSyncTimer=setTimeout(async()=>{
+   const ok=await saveProjectToSheets(project,{quiet:true});
+   const isStillOpen=String($("editingProjectId")?.value||"")===String(project.id);
+   if(isStillOpen){
+     if(ok)setProjectAutoSaveStatus(`Google Sheetsへ自動上書き保存済み ${new Date().toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"})}`,"saved");
+     else setProjectAutoSaveStatus("端末には保存済み・Google Sheets同期失敗","");
+   }
+ },1500);
 }
 async function fetchProjectFromSheets(id){
  const local=projects.find(x=>String(x.id)===String(id));
@@ -1548,10 +1559,15 @@ async function openProject(id,{skipAutoSave=false,forceRemote=false,skipBackgrou
      setProjectAutoSaveStatus("案件データを取得中…","saving");
      const remote=await fetchProjectFromSheets(id);
      if(remote){
+       const remoteItems=Array.isArray(remote.workItems)?remote.workItems:[];
+       const localItems=Array.isArray(p.workItems)?p.workItems:[];
+       // Sheets側が空でもローカルに施工対象が残っている場合は、ローカル施工対象を優先する。
+       // これにより「案件行だけSheetsにあり、施工対象行が欠落」の案件を今すぐ保存で復旧できる。
        const normalized={
          ...p,...remote,
          id:p.id,
          sheetId:remote.sheetId||p.sheetId||"",
+         workItems:(remoteItems.length||!localItems.length)?remoteItems:localItems,
          customer:p.customer||"",site:p.site||"",owner:p.owner||"",memo:p.memo||"",
          _sheetUpdatedAt:remote.updatedAt||"",
          _remoteNewer:false,
@@ -1733,7 +1749,20 @@ if($("manualProjectSave"))$("manualProjectSave").onclick=async()=>{
  btn.textContent="保存中…";
  setProjectAutoSaveStatus("Google Sheetsへ保存中…","saving");
  try{
-   await autoSaveCurrentProject({syncNow:true});
+   const p=projects.find(x=>x.id===id);
+   if(!p)throw new Error("保存対象の案件が見つかりません。");
+   p.workItems=currentWorkItemsSnapshot();
+   p.area=calcItems.reduce((s,x)=>s+(Number(x.area)||0),0);
+   const enteredName=($("projectName")?.value||"").trim();
+   if(enteredName)p.name=enteredName;
+   p.updatedAt=new Date().toISOString();
+   save(S.projects,projects);
+
+   // 手動保存は必ず現在画面の施工対象をそのままSheetsへ送る。
+   const ok=await saveProjectToSheets(p,{quiet:true});
+   if(!ok)throw new Error("Google Sheetsへの保存が完了しませんでした。");
+   renderProjects();
+   renderQuickProjectSwitcher();
    setProjectAutoSaveStatus(`Google Sheetsへ保存しました ${new Date().toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"})}`,"saved");
  }catch(err){
    console.error("Manual project save failed",err);
