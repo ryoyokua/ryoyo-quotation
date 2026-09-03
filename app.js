@@ -152,11 +152,11 @@ save(S.materials,materials);
 
 
 const LAST_VIEW_KEY="ryoyo_last_view_v1";
-function show(v){
+function show(v,{scroll=true}={}){
   document.querySelectorAll(".view").forEach(x=>x.classList.toggle("active",x.id===v));
   document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("active",x.dataset.view===v));
   try{sessionStorage.setItem(LAST_VIEW_KEY,v);}catch(e){}
-  scrollTo({top:0,behavior:"smooth"});
+  if(scroll)scrollTo({top:0,behavior:"smooth"});
 }
 function restoreLastView(){
   let v="";
@@ -915,12 +915,14 @@ function renderCalcItems(){
   renderAggregateMaterials();
   scheduleProjectAutoSave();
 }
-function selectCalcItem(id){
+function selectCalcItem(id,{keepScroll=false}={}){
   const item=calcItems.find(x=>x.id===id); if(!item)return;
   selectedCalcItemId=id; state.lastSource=item.source; $("matArea").value=Number(item.area||0).toFixed(2);
   specRows=cloneSpecRows(item.materialConfigs||[]);
   if(!specRows.length)addSpecMaterial(0); else {renderSpecRows();calcAllSpecMaterials();}
-  $("selectedCalcLabel").textContent=`${item.title} ｜ ${fmt(item.area)}㎡`; renderCalcItems(); show("material");
+  $("selectedCalcLabel").textContent=`${item.title} ｜ ${fmt(item.area)}㎡`;
+  renderCalcItems();
+  show("material",{scroll:!keepScroll});
 }
 function openMaterialSettings(id){
   selectCalcItem(id);
@@ -1796,7 +1798,7 @@ async function openProject(id,{skipAutoSave=false,forceRemote=false,skipBackgrou
  // openProjectが完了する前にユーザーが別画面（HOME等）へ移動した場合は画面を奪わない。
  const activeView=document.querySelector(".view.active")?.id||"";
  if(activeView==="material"||activeView==="projects"){
-   if(calcItems.length)selectCalcItem(calcItems[0].id);else show("material");
+   if(calcItems.length)selectCalcItem(calcItems[0].id,{keepScroll:true});else show("material",{scroll:false});
  }
 
  // 表示後に裏側で最新版を確認。画面切替えは待たせない。
