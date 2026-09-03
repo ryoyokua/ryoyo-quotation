@@ -655,6 +655,130 @@ function calcSpecRow(r,area){
 function cloneSpecRows(rows=specRows){
   return rows.map((r,i)=>({id:"multi-"+Date.now()+"-"+i+"-"+Math.random().toString(16).slice(2),materialIndex:r.materialIndex,thickness:r.thickness,foamThickness:r.foamThickness,loss:r.loss,manualUsage:r.manualUsage??null,usageOverride:r.usageOverride??null,packageMode:r.packageMode||"optimal"}));
 }
+
+let editingQuantityItemId=null;
+
+function captureSourceData(src){
+  const section=$(src);
+  if(!section)return null;
+  const controls={};
+  section.querySelectorAll("input[id],select[id],textarea[id]").forEach(el=>{
+    if(el.id===src+"Title")return;
+    controls[el.id]={
+      type:el.type||el.tagName.toLowerCase(),
+      value:el.value,
+      checked:("checked" in el)?!!el.checked:undefined
+    };
+  });
+  const data={controls};
+  if(src==="flat"){
+    data.flatRows=[...$("flatRows").children].map(tr=>({
+      type:tr.querySelector(".ft")?.value||"平場",
+      name:tr.querySelector(".fn")?.value||"",
+      a:tr.querySelector(".fa")?.value||"",
+      b:tr.querySelector(".fb")?.value||"",
+      q:tr.querySelector(".fq")?.value||1
+    }));
+  }
+  return data;
+}
+
+function restoreSourceData(src,data){
+  if(!data)return false;
+  const section=$(src);if(!section)return false;
+  if(src==="flat"&&Array.isArray(data.flatRows)){
+    $("flatRows").innerHTML="";
+    data.flatRows.forEach(r=>addFlat(r));
+    if(!data.flatRows.length)addFlat();
+  }
+  Object.entries(data.controls||{}).forEach(([id,saved])=>{
+    const el=$(id);if(!el)return;
+    if("checked" in el&&saved.checked!==undefined)el.checked=!!saved.checked;
+    if(saved.value!==undefined){
+      const values=el.tagName==="SELECT"?[...el.options].map(o=>String(o.value)):null;
+      if(!values||values.includes(String(saved.value)))el.value=String(saved.value);
+    }
+  });
+  recalcSource(src);
+  return true;
+}
+
+function recalcSource(src){
+  if(src==="roof"){
+    $("roofSunCustomWrap").classList.toggle("hidden",$("roofSun").value!=="custom");
+    calcRoof();
+  }else if(src==="flat"){
+    calcFlat();
+  }else if(src==="tank"){
+    calcTank();
+  }else if(src==="vessel"){
+    updateVesselFields();
+  }else if(src==="pipe"){
+    calcPipe();
+  }else if(src==="product"){
+    updateProductFields();
+  }else if(src==="other"){
+    calcOther();
+  }
+}
+
+function setQuantityEditMode(item){
+  editingQuantityItemId=item?.id||null;
+  document.querySelectorAll(".send").forEach(btn=>{
+    btn.textContent=(editingQuantityItemId&&btn.dataset.source===item.source)?"変更を反映":"材料計算へ追加";
+  });
+  document.querySelectorAll(".quantity-edit-cancel").forEach(x=>x.remove());
+  if(editingQuantityItemId){
+    const send=document.querySelector(`.send[data-source="${item.source}"]`);
+    if(send){
+      const cancel=document.createElement("button");
+      cancel.type="button";cancel.className="secondary quantity-edit-cancel";cancel.textContent="編集をキャンセル";
+      cancel.onclick=()=>{editingQuantityItemId=null;setQuantityEditMode(null);show("material");};
+      send.insertAdjacentElement("afterend",cancel);
+    }
+  }
+}
+
+function beginQuantityEdit(id){
+  syncSelectedCalcItem();
+  const item=calcItems.find(x=>x.id===id);if(!item)return;
+  if(!item.sourceData){
+    alert("この施工対象は、数量入力データ保存機能を追加する前に作成されたデータのため、元の寸法を復元できません。\n\n一度元の計算画面で再計算し直してください。");
+    return;
+  }
+  if(!restoreSourceData(item.source,item.sourceData)){
+    alert("数量入力データを復元できませんでした。");
+    return;
+  }
+  const titleInput=$(item.source+"Title");if(titleInput)titleInput.value=item.title||"";
+  setQuantityEditMode(item);
+  show(item.source);
+}
+
+function applyQuantityEdit(item){
+  const src=item.source;
+  recalcSource(src);
+  const area=getSourceArea(src);
+  if(area<=0){alert("施工面積が0㎡です。入力内容を確認してください。");return false;}
+  const titleInput=$(src+"Title");
+  const title=(titleInput?.value||"").trim()||item.title;
+  item.title=title;
+  item.area=area;
+  item.sourceData=captureSourceData(src);
+  if(titleInput)titleInput.value="";
+  selectedCalcItemId=item.id;
+  $("matArea").value=Number(area).toFixed(2);
+  specRows=cloneSpecRows(item.materialConfigs||[]);
+  $("selectedCalcLabel").textContent=`${item.title} ｜ ${fmt(item.area)}㎡`;
+  editingQuantityItemId=null;
+  setQuantityEditMode(null);
+  renderCalcItems();
+  calcAllSpecMaterials();
+  scheduleProjectAutoSave();
+  show("material");
+  return true;
+}
+
 function getSourceArea(src){
   return Number({roof:state.roofArea,flat:state.flatArea,tank:state.tankArea,vessel:state.vesselArea,pipe:state.pipeArea,product:state.productArea,other:state.otherArea}[src])||0;
 }
@@ -775,11 +899,12 @@ function renderCalcItems(){
     clearSelectedCalcState();
   }
   total.textContent=`${fmt(calcItems.reduce((s,x)=>s+Number(x.area||0),0))}㎡`;
-  list.innerHTML=calcItems.length?calcItems.map(item=>`<div class="calc-list-item calc-item-clickable ${item.id===selectedCalcItemId?"active":""}" data-select-id="${item.id}" role="button" tabindex="0" aria-label="${esc(item.title)}の材料設定を開く"><div class="calc-list-main"><div><span class="inline-title-wrap" data-title-id="${item.id}"><span class="inline-title-text" data-edit-title="${item.id}" title="クリックして名前を変更">${esc(item.title)}</span><button class="inline-title-edit" type="button" data-edit-title="${item.id}" title="名前を変更" aria-label="名前を変更">✎</button></span><br><small>${esc(MULTI_SOURCE_LABELS[item.source]||item.source)} ｜ ${fmt(item.area)}㎡</small></div><div class="calc-list-actions"><button class="multi-select material-setting-btn" type="button" data-id="${item.id}">材料設定</button><button class="multi-duplicate duplicate-btn" type="button" data-id="${item.id}">複製</button><button class="delete multi-delete" type="button" data-id="${item.id}">削除</button></div></div></div>`).join(""):'<div class="calc-empty-state">まだ追加されていません。</div>';
+  list.innerHTML=calcItems.length?calcItems.map(item=>`<div class="calc-list-item calc-item-clickable ${item.id===selectedCalcItemId?"active":""}" data-select-id="${item.id}" role="button" tabindex="0" aria-label="${esc(item.title)}の材料設定を開く"><div class="calc-list-main"><div><span class="inline-title-wrap" data-title-id="${item.id}"><span class="inline-title-text" data-edit-title="${item.id}" title="クリックして名前を変更">${esc(item.title)}</span><button class="inline-title-edit" type="button" data-edit-title="${item.id}" title="名前を変更" aria-label="名前を変更">✎</button></span><br><small>${esc(MULTI_SOURCE_LABELS[item.source]||item.source)} ｜ ${fmt(item.area)}㎡</small></div><div class="calc-list-actions"><button class="secondary quantity-edit-btn" type="button" data-id="${item.id}">数量修正</button><button class="multi-select material-setting-btn" type="button" data-id="${item.id}">材料設定</button><button class="multi-duplicate duplicate-btn" type="button" data-id="${item.id}">複製</button><button class="delete multi-delete" type="button" data-id="${item.id}">削除</button></div></div></div>`).join(""):'<div class="calc-empty-state">まだ追加されていません。</div>';
   document.querySelectorAll(".calc-item-clickable").forEach(row=>{
     row.onclick=e=>{if(e.target.closest("button"))return; selectCalcItem(Number(row.dataset.selectId));};
     row.onkeydown=e=>{if((e.key==="Enter"||e.key===" ")&&!e.target.closest("button")){e.preventDefault();selectCalcItem(Number(row.dataset.selectId));}};
   });
+  document.querySelectorAll(".quantity-edit-btn").forEach(b=>b.onclick=e=>{e.stopPropagation();beginQuantityEdit(Number(b.dataset.id));});
   document.querySelectorAll(".multi-select").forEach(b=>b.onclick=e=>{e.stopPropagation();selectCalcItem(Number(b.dataset.id));});
   document.querySelectorAll(".multi-duplicate").forEach(b=>b.onclick=e=>{e.stopPropagation();duplicateCalcItem(Number(b.dataset.id));});
   document.querySelectorAll(".multi-delete").forEach(b=>b.onclick=e=>{e.stopPropagation();deleteCalcItem(Number(b.dataset.id));});
@@ -805,6 +930,7 @@ function duplicateCalcItem(id){
     source:src.source,
     title:`${src.title}（複製）`,
     area:Number(src.area)||0,
+    sourceData:src.sourceData?structuredClone(src.sourceData):null,
     materialConfigs:cloneSpecRows(src.materialConfigs||[])
   };
   const idx=calcItems.findIndex(x=>x.id===id);
@@ -822,9 +948,23 @@ function deleteCalcItem(id){
   renderCalcItems();renderProjectTrash();
 }
 function addCurrentSourceToMaterial(src){
+  if(editingQuantityItemId){
+    const item=calcItems.find(x=>x.id===editingQuantityItemId);
+    if(!item){editingQuantityItemId=null;setQuantityEditMode(null);}
+    else{
+      if(item.source!==src){alert("編集中の施工対象と計算画面が一致しません。");return;}
+      applyQuantityEdit(item);
+      return;
+    }
+  }
   const area=getSourceArea(src); if(area<=0){alert("先に施工面積を計算してください。");return;}
   const titleInput=$(src+"Title"); const title=(titleInput?.value||"").trim()||defaultCalcTitle(src);
-  const item={id:Date.now()+Math.floor(Math.random()*100000),source:src,title,area,materialConfigs:cloneSpecRows()};
+  const item={
+    id:Date.now()+Math.floor(Math.random()*100000),
+    source:src,title,area,
+    sourceData:captureSourceData(src),
+    materialConfigs:cloneSpecRows()
+  };
   calcItems.push(item); selectedCalcItemId=item.id; state.lastSource=src;
   $("matArea").value=Number(area).toFixed(2); if(titleInput)titleInput.value="";
   if(!specRows.length)addSpecMaterial(0);
@@ -1078,6 +1218,7 @@ function currentWorkItemsSnapshot(){
     id:x.id,
     sheetItemId:String(x.sheetItemId||""),
     source:x.source,title:x.title,area:Number(x.area)||0,
+    sourceData:x.sourceData?structuredClone(x.sourceData):null,
     materialConfigs:cloneSpecRows(x.materialConfigs||[])
   }));
 }
@@ -1631,6 +1772,7 @@ async function openProject(id,{skipAutoSave=false,forceRemote=false,skipBackgrou
    source:x.source||"other",
    title:x.title||`計算${i+1}`,
    area:Number(x.area)||0,
+   sourceData:x.sourceData?structuredClone(x.sourceData):null,
    materialConfigs:cloneSpecRows(x.materialConfigs||[])
  }));
  if(calcItems.length){
@@ -1666,6 +1808,7 @@ function duplicateProject(id){
      ...x,
      id:Date.now()+i+Math.floor(Math.random()*100000),
      sheetItemId:"",
+     sourceData:x.sourceData?structuredClone(x.sourceData):null,
      materialConfigs:cloneSpecRows(x.materialConfigs||[])
    }))
  };
