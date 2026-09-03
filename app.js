@@ -1064,6 +1064,8 @@ function renderQuickProjectSwitcher(){
 
   if(saveBtn)saveBtn.hidden=!!currentId;
   if(dupBtn)dupBtn.hidden=!currentId;
+  const dupBlock=$("duplicateProjectBlock");
+  if(dupBlock)dupBlock.hidden=!currentId;
 
   if(rule){
     if(p){
@@ -1669,20 +1671,20 @@ if($("quickProjectSelect"))$("quickProjectSelect").onchange=async e=>{
  if(currentId)autoSaveCurrentProject();
  await openProject(id,{skipAutoSave:true});
 };
-if($("quickNewProject"))$("quickNewProject").onclick=async()=>{
+if($("quickNewProject"))$("quickNewProject").onclick=()=>{
  const currentId=Number($("editingProjectId")?.value)||null;
 
- // 保存済み案件を編集中の場合は、最新状態を確実に保存してから新規案件へ
+ // 既存案件はローカルへ即時保存し、Google Sheets保存はバックグラウンドで行う。
  if(currentId){
-   await autoSaveCurrentProject({syncNow:true});
+   autoSaveCurrentProject();
  }else if(calcItems.length>0){
-   // 未保存の計算だけは、破棄前に確認する
-   const ok=confirm("現在の計算は案件として保存されていません。\n\n現在の未保存の計算を破棄して、新規案件を作成しますか？");
+   const ok=confirm("現在の計算は案件として保存されていません。\n\n現在の未保存の計算を破棄して、新規案件を開始しますか？");
    if(!ok)return;
  }
 
+ clearTimeout(projectAutoSaveTimer);
  resetProjectForm(true);
- updateCurrentProjectLabel();
+ specRows=[];
  renderCalcItems();
  renderMaterialCalc();
  renderQuickProjectSwitcher();

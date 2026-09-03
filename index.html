@@ -407,6 +407,24 @@ input,select,textarea,button{max-width:100%}
   display:none !important;
 }
 </style>
+<style>
+/* v69: 新規案件と作業中案件を明確に分離 */
+#projectSwitchCard .project-action-section h3{margin:0 0 10px}
+#projectSwitchCard .project-action-divider{height:1px;background:#dfe6ec;margin:20px 0}
+#projectSwitchCard .new-project-section #quickNewProject,
+#projectSwitchCard .new-project-section #quickSaveAsProject{width:100%;max-width:360px}
+#projectSwitchCard .project-switch-block{margin-top:16px;max-width:520px}
+#projectSwitchCard .project-switch-block label{margin:0;font-weight:700}
+#projectSwitchCard .project-switch-block select{width:100%;margin-top:6px}
+#projectSwitchCard .project-reuse-block{margin-top:20px}
+#projectSwitchCard .project-action-label{font-weight:700;margin-bottom:7px}
+#projectSwitchCard #duplicateCurrentProject{width:auto;min-width:190px}
+@media(max-width:560px){
+  #projectSwitchCard .new-project-section #quickNewProject,
+  #projectSwitchCard .new-project-section #quickSaveAsProject,
+  #projectSwitchCard #duplicateCurrentProject{width:100%;max-width:none}
+}
+</style>
 </head>
 <body><div id="appLock" style="position:fixed;inset:0;z-index:99999;background:#f5f7fa;display:flex;align-items:center;justify-content:center;padding:20px"><div style="width:min(420px,100%);background:#fff;border:1px solid #d7dde5;border-radius:16px;padding:24px"><div style="font-size:13px;color:#667085">菱洋株式会社</div><h2>使用材料 概算</h2><p>暗証番号を入力してください。</p><input id="appPinInput" type="password" style="width:100%;padding:12px"><button id="appPinButton" type="button" style="width:100%;margin-top:12px;padding:12px;background:#17365D;color:#fff;border:0;border-radius:8px">ロック解除</button><p id="appPinError" style="display:none;color:#a33">暗証番号が違います。</p></div></div>
 <header><div><small>菱洋株式会社 社内用</small><h1>使用材料 概算</h1></div></header>
@@ -646,22 +664,30 @@ input,select,textarea,button{max-width:100%}
 <section id="material" class="view">
 <div class="title"><div><span class="badge">MATERIAL</span><h2>材料計算</h2></div><button class="help" data-help="material">？計算方法</button></div>
 <div class="card" id="projectSwitchCard">
-  <div class="headrow">
-    <div>
-      <h3>作業中の案件</h3>
-      <p id="currentProjectLabel">未保存の計算</p>
-      <small id="projectAutoSaveStatus">未保存の計算です</small>
-      <small id="projectSaveRule" class="project-save-rule">新規案件として保存するとPJ-IDを発行し、Google Sheetsへ登録します。</small>
-    </div>
-  </div>
-  <div class="quick-project-switch">
-    <label>案件を選択
-      <select id="quickProjectSelect"></select>
-    </label>
-    <button class="secondary" id="quickNewProject" type="button">＋ 新規案件</button>
+  <div class="project-action-section new-project-section">
+    <h3>新しい案件</h3>
+    <button class="primary" id="quickNewProject" type="button">＋ 新規案件を開始</button>
     <button class="primary" id="quickSaveAsProject" type="button">新規案件として保存</button>
-    <button class="secondary" id="duplicateCurrentProject" type="button">複製して新規案件</button>
-    <button class="secondary" id="goProjectsFromMaterial" type="button">案件一覧・詳細</button>
+  </div>
+
+  <div class="project-action-divider"></div>
+
+  <div class="project-action-section current-project-section">
+    <h3>作業中の案件</h3>
+    <p id="currentProjectLabel">現在：未保存の計算</p>
+    <small id="projectAutoSaveStatus">未保存の計算です</small>
+    <small id="projectSaveRule" class="project-save-rule">新規案件として保存するとPJ-IDを発行し、Google Sheetsへ新規登録します。</small>
+
+    <div class="project-switch-block">
+      <label>案件を切り替える
+        <select id="quickProjectSelect"></select>
+      </label>
+    </div>
+
+    <div id="duplicateProjectBlock" class="project-reuse-block">
+      <div class="project-action-label">現在の内容を流用する</div>
+      <button class="secondary" id="duplicateCurrentProject" type="button">現在の案件を複製</button>
+    </div>
   </div>
 </div>
 <div class="card" id="multiCalcCard">
@@ -806,5 +832,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=68"></script>
+<script src="app.js?v=69"></script>
 </body></html>
