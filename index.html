@@ -52,6 +52,21 @@
 .quantity-stack{display:grid;grid-template-columns:1fr;gap:16px}
 .quantity-stack>.card{width:100%}
 .quantity-result-card{position:static!important;top:auto!important}
+
+.quantity-input-card .headrow{
+  justify-content:flex-start;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.quantity-input-card .headrow > b,
+.quantity-input-card .headrow > h3{
+  margin:0;
+}
+.quantity-input-card .headrow button{
+  margin-left:0;
+  white-space:nowrap;
+}
 </style>
 
 <style>
@@ -659,7 +674,7 @@ input,select,textarea,button{max-width:100%}
 <div class="title"><div><span class="badge">FLAT</span><h2>屋上・床・壁</h2></div><button class="help" data-help="flat">？拾い方</button></div>
 <div class="quantity-stack">
 <div class="card quantity-input-card"><h3>入力</h3><div class="input-subtitle">基本面積</div>
-<div class="headrow"><p>部位を追加して拾います。</p><button class="secondary" id="addFlat">＋部位追加</button></div>
+<div class="headrow"><div class="headrow quantity-add-row"><span>部位を追加して拾います。</span><button class="secondary" id="addFlat">＋部位追加</button></div></div>
 <div class="formgrid" style="margin-bottom:12px"><label>面積の端数処理<select id="flatRound"><option value="0">端数処理なし</option><option value="0.1">0.1㎡単位で切り上げ</option><option value="1" selected>1㎡単位で切り上げ</option></select></label></div>
 <div class="tablewrap"><table><thead><tr><th>種別</th><th>名称</th><th>長さ</th><th>幅/高さ</th><th>数量</th><th>面積</th><th></th></tr></thead><tbody id="flatRows"></tbody></table></div>
 
@@ -926,5 +941,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=96"></script>
+<script src="app.js?v=97"></script>
 </body></html>
