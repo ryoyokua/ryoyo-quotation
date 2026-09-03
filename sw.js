@@ -19,3 +19,4 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // app revision v98 - mobile/local stale project duplicate cleanup
 // app revision v99 - remove stale local projects missing from Sheets
 // app revision v100 - persistent device auth via localStorage + cookie fallback
+// app revision v101 - lower quantity section add buttons

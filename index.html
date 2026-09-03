@@ -67,6 +67,20 @@
   margin-left:0;
   white-space:nowrap;
 }
+
+/* v101: quantity add buttons vertically aligned slightly lower than section titles */
+.quantity-input-card .headrow{
+  align-items:flex-start;
+}
+.quantity-input-card .headrow > button{
+  margin-top:4px;
+}
+.quantity-input-card .quantity-add-row{
+  align-items:center;
+}
+.quantity-input-card .quantity-add-row > button{
+  margin-top:0;
+}
 </style>
 
 <style>
@@ -941,5 +955,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=100"></script>
+<script src="app.js?v=101"></script>
 </body></html>
