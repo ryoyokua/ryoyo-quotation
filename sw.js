@@ -23,3 +23,4 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // app revision v102 - mobile quantity heading/button layout fix
 // app revision v103 - desktop quantity add buttons right aligned
 // app revision v104 - rebuilt mobile quantity input cards
+// app revision v105 - separate construction area and sealing UI
