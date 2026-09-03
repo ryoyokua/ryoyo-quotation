@@ -1450,7 +1450,10 @@ async function saveProjectToSheets(project,{quiet=false,force=false,manualConfli
    console.error("Sheets save failed",err);
    if(err?.code==="PROJECT_CONFLICT"){
      setSheetSyncStatus("別端末の更新を検出","error");
+     project._remoteNewer=true;
+     save(S.projects,projects);
 
+     // 「今すぐ保存」を押した時だけ、上書き確認を1回表示する。
      if(manualConflict){
        const overwrite=confirm(
          "Google Sheets側に、この案件の新しい更新が見つかりました。\n\n"+
@@ -1464,40 +1467,14 @@ async function saveProjectToSheets(project,{quiet=false,force=false,manualConfli
        return false;
      }
 
-     const reload=confirm(
-       "この案件は、開いた後に別の端末で更新されています。\n\n"+
-       "このまま上書きはせず、保存を停止しました。\n"+
-       "［OK］最新データを読み込む\n"+
-       "［キャンセル］現在の画面を残す"
-     );
-     if(reload){
-       try{
-         const remote=await fetchProjectFromSheets(project.id);
-         if(remote){
-           const normalized={
-             ...project,...remote,
-             id:project.id,
-             sheetId:remote.sheetId||project.sheetId||"",
-             _sheetUpdatedAt:remote.updatedAt||"",
-             _sheetMeta:false
-           };
-           const idx=projects.findIndex(x=>String(x.id)===String(project.id));
-           if(idx>=0)projects[idx]=normalized;
-           save(S.projects,projects);
-           if(String($("editingProjectId")?.value)===String(project.id)){
-             await openProject(normalized.id,{skipAutoSave:true,forceRemote:false});
-           }else{
-             renderProjects();renderQuickProjectSwitcher();
-           }
-           setSheetSyncStatus("最新データを読み込みました","ok");
-         }
-       }catch(loadErr){
-         alert("最新データの取得に失敗しました。\n\n"+loadErr.message);
-       }
+     // 自動保存・バックグラウンド同期ではポップアップを出さない。
+     const isStillOpen=String($("editingProjectId")?.value||"")===String(project.id);
+     if(isStillOpen){
+       setProjectAutoSaveStatus("別端末の更新あり・「今すぐ保存」で確認してください","");
      }
      return false;
    }
-      setSheetSyncStatus("Sheets保存失敗","error");
+         setSheetSyncStatus("Sheets保存失敗","error");
    if(!quiet)alert("Googleスプレッドシートへの保存に失敗しました。\nローカルには保存されています。\n\n"+err.message);
    return false;
  }
@@ -1541,31 +1518,12 @@ async function checkOpenedProjectForRemoteUpdate(projectId,openedSheetStamp){
      current._remoteNewer=true;
      save(S.projects,projects);
      setSheetSyncStatus("別端末の更新あり","error");
-     const reload=confirm(
-       "この案件は別の端末で更新されています。\n\n"+
-       "［OK］最新データを読み込む\n"+
-       "［キャンセル］現在の画面をそのまま使う"
-     );
-     if(reload){
-       const normalized={
-         ...current,...remote,
-         id:current.id,
-         sheetId:remote.sheetId||current.sheetId||"",
-         customer:current.customer||"",
-         site:current.site||"",
-         owner:current.owner||"",
-         memo:current.memo||"",
-         _sheetUpdatedAt:latest,
-         _remoteNewer:false,
-         _sheetMeta:false
-       };
-       const idx=projects.findIndex(x=>String(x.id)===String(projectId));
-       if(idx>=0)projects[idx]=normalized;
-       save(S.projects,projects);
-       await openProject(normalized.id,{skipAutoSave:true,forceRemote:false,skipBackgroundCheck:true});
-       setSheetSyncStatus("最新データを読み込みました","ok");
-     }
-   }else if(latest){
+     setProjectAutoSaveStatus("別端末の更新あり・「今すぐ保存」で確認してください","");
+     // 画面を開いただけでは何も上書き・再読込しない。
+     return;
+   }
+
+   if(latest){
      current._sheetUpdatedAt=latest;
      current._remoteNewer=false;
      current._sheetMeta=false;
@@ -1794,7 +1752,7 @@ async function openProject(id,{skipAutoSave=false,forceRemote=false,skipBackgrou
    clearSelectedCalcState();
  }
  renderCalcItems();updateCurrentProjectLabel();
- setProjectAutoSaveStatus("変更内容は自動保存されます");
+ setProjectAutoSaveStatus(p._remoteNewer?"別端末の更新あり・「今すぐ保存」で確認してください":"変更内容は自動保存されます");
  // openProjectが完了する前にユーザーが別画面（HOME等）へ移動した場合は画面を奪わない。
  const activeView=document.querySelector(".view.active")?.id||"";
  if(activeView==="material"||activeView==="projects"){
@@ -1906,7 +1864,10 @@ if($("quickProjectSelect"))$("quickProjectSelect").onchange=async e=>{
    const ok=confirm("現在の計算は案件として保存されていません。\n\n選択した案件を開くと現在の計算内容は破棄されます。\n保存せずに開きますか？");
    if(!ok){renderQuickProjectSwitcher();return;}
  }
- if(currentId)autoSaveCurrentProject();
+ if(currentId){
+   clearTimeout(projectAutoSaveTimer);
+   autoSaveCurrentProject();
+ }
  await openProject(id,{skipAutoSave:true});
 };
 if($("quickNewProject"))$("quickNewProject").onclick=()=>{
@@ -1949,7 +1910,7 @@ if($("manualProjectSave"))$("manualProjectSave").onclick=async()=>{
    save(S.projects,projects);
 
    // 手動保存は必ず現在画面の施工対象をそのままSheetsへ送る。
-   const ok=await saveProjectToSheets(p,{quiet:true});
+   const ok=await saveProjectToSheets(p,{quiet:true,manualConflict:true});
    if(!ok){
      setProjectAutoSaveStatus("保存をキャンセルしました","");
      return;
