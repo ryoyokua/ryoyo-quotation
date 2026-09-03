@@ -557,6 +557,8 @@ input,select,textarea,button{max-width:100%}
 </select></label>
 <label>波型係数<input id="roofWaveFactor" type="number" value="1" step=".001"><small>屋根材選択で自動入力。必要時は上書き可</small></label>
 <div class="info" style="grid-column:1/-1"><b>寸法入力：</b>斜面そのものを実測した長さではなく、図面・平面上の長さと幅を入力します。</div>
+<div style="grid-column:1/-1"><div class="headrow"><b>施工除外部</b><button class="secondary" type="button" id="addRoofDeduction">＋施工除外部を追加</button></div><small>例：トップライト、換気設備、架台、ダクト、開口部など施工しない箇所</small><div class="tablewrap"><table><thead><tr><th>名称</th><th>長さ(m)</th><th>幅(m)</th><th>数量</th><th>控除面積</th><th></th></tr></thead><tbody id="roofDeductionRows"></tbody></table></div></div>
+<div style="grid-column:1/-1"><div class="headrow"><b>目地・取合い</b><button class="secondary" type="button" id="addRoofJoint">＋目地・取合いを追加</button></div><small>例：設備周囲、架台周囲、ダクト取合い、既存目地など</small><div class="tablewrap"><table><thead><tr><th>名称</th><th>長さ(m)</th><th>本数</th><th>延長</th><th></th></tr></thead><tbody id="roofJointRows"></tbody></table></div></div>
 <label>面積の端数処理
 <select id="roofRound">
 <option value="1" selected>1㎡単位で切り上げ</option>
@@ -566,7 +568,7 @@ input,select,textarea,button{max-width:100%}
 </div><button class="primary" id="calcRoof">計算</button></div>
 <div class="card result"><h3>結果</h3><div class="big"><span>採用面積</span><strong id="roofArea">—</strong></div>
 <div class="resultline"><span>計算面積（丸め前）</span><b id="roofRawArea">—</b></div>
-<div id="roofDetail"></div><pre id="roofFormula"></pre><div class="send-to-material">
+<div id="roofDetail"></div><div class="resultline"><span>目地・取合い総延長</span><b id="roofJointTotal">0.00m</b></div><pre id="roofFormula"></pre><div class="send-to-material">
 <label>タイトル<input id="roofTitle" type="text" placeholder="例：屋根①"></label>
 <button class="primary send" type="button" data-source="roof">材料計算へ追加</button>
 </div></div>
@@ -589,9 +591,9 @@ input,select,textarea,button{max-width:100%}
 </select></label></div>
 <div class="checks"><label><input id="tankFloor" type="checkbox" checked>床</label><label><input id="tankWalls" type="checkbox" checked>壁</label>
 <label><input id="tankCeiling" type="checkbox">天井</label><label><input id="tankInternal" type="checkbox" checked>パネル継目</label><label><input id="tankCorners" type="checkbox" checked>入隅・四隅</label></div>
-<button class="primary" id="calcTank">計算</button></div>
+<div class="headrow" style="margin-top:16px"><b>施工除外部</b><button class="secondary" type="button" id="addTankDeduction">＋施工除外部を追加</button></div><small>例：マンホール、開口部、施工しない箇所など</small><div class="tablewrap"><table><thead><tr><th>名称</th><th>長さ(m)</th><th>幅(m)</th><th>数量</th><th>控除面積</th><th></th></tr></thead><tbody id="tankDeductionRows"></tbody></table></div><button class="primary" id="calcTank">計算</button></div>
 <div class="card result"><h3>結果</h3><div class="metrics"><div><span>施工面積</span><strong id="tankArea">—</strong></div><div><span>パネル</span><strong id="tankPanels">—</strong></div><div><span>シール延長</span><strong id="tankSeal">—</strong></div></div>
-<div class="tablewrap"><table><thead><tr><th>部位</th><th>面積</th><th>パネル</th><th>パネル継目</th><th>入隅・四隅</th></tr></thead><tbody id="tankRows"></tbody></table></div>
+<div class="resultline"><span>施工除外部</span><b id="tankDeductionTotal">0.00㎡</b></div><div class="tablewrap"><table><thead><tr><th>部位</th><th>面積</th><th>パネル</th><th>パネル継目</th><th>入隅・四隅</th></tr></thead><tbody id="tankRows"></tbody></table></div>
 
 <div class="info" style="margin-top:14px">
 <b>シール延長の内訳</b>
@@ -656,7 +658,9 @@ input,select,textarea,button{max-width:100%}
 <option value="1" selected>1㎡単位で切り上げ</option>
 </select></label></div>
 <div class="tablewrap"><table><thead><tr><th>種別</th><th>名称</th><th>長さ</th><th>幅/高さ</th><th>数量</th><th>面積</th><th></th></tr></thead><tbody id="flatRows"></tbody></table></div>
-<div class="big"><span>概算施工面積</span><strong id="flatArea">0.00㎡</strong></div><div class="send-to-material">
+<div class="headrow" style="margin-top:16px"><b>施工除外部</b><button class="secondary" type="button" id="addFlatDeduction">＋施工除外部を追加</button></div><small>例：架台、設備基礎、機械設備、開口部、施工しない箇所など</small><div class="tablewrap"><table><thead><tr><th>名称</th><th>長さ(m)</th><th>幅(m)</th><th>数量</th><th>控除面積</th><th></th></tr></thead><tbody id="flatDeductionRows"></tbody></table></div>
+<div class="headrow" style="margin-top:16px"><b>目地・取合い</b><button class="secondary" type="button" id="addFlatJoint">＋目地・取合いを追加</button></div><small>例：既存目地、伸縮目地、入隅、架台・設備基礎周囲など</small><div class="tablewrap"><table><thead><tr><th>名称</th><th>長さ(m)</th><th>本数</th><th>延長</th><th></th></tr></thead><tbody id="flatJointRows"></tbody></table></div>
+<div class="resultline"><span>本体・部位面積</span><b id="flatGrossArea">0.00㎡</b></div><div class="resultline"><span>施工除外部</span><b id="flatDeductionTotal">0.00㎡</b></div><div class="resultline"><span>目地・取合い総延長</span><b id="flatJointTotal">0.00m</b></div><div class="big"><span>概算施工面積</span><strong id="flatArea">0.00㎡</strong></div><div class="send-to-material">
 <label>タイトル<input id="flatTitle" type="text" placeholder="例：屋上・床・壁①"></label>
 <button class="primary send" type="button" data-source="flat">材料計算へ追加</button>
 </div></div>
@@ -678,7 +682,7 @@ input,select,textarea,button{max-width:100%}
 <option value="0.1">0.1㎡単位で切り上げ</option>
 <option value="1" selected>1㎡単位で切り上げ</option>
 </select></label>
-</div><button class="primary" id="calcVesselBtn">計算</button></div><div class="card result"><h3>結果</h3><div class="big"><span>施工面積</span><strong id="vesselArea">—</strong></div><pre id="vesselFormula"></pre><div class="send-to-material">
+</div><div class="headrow" style="margin-top:16px"><b>施工除外部</b><button class="secondary" type="button" id="addVesselDeduction">＋施工除外部を追加</button></div><small>例：マンホール、開口部、施工しない底面・接地部など</small><div class="tablewrap"><table><thead><tr><th>名称</th><th>長さ(m)</th><th>幅(m)</th><th>数量</th><th>控除面積</th><th></th></tr></thead><tbody id="vesselDeductionRows"></tbody></table></div><div class="headrow" style="margin-top:16px"><b>目地・取合い</b><button class="secondary" type="button" id="addVesselJoint">＋目地・取合いを追加</button></div><small>例：板継目、溶接部、入隅、ノズル周囲、架台との取合いなど</small><div class="tablewrap"><table><thead><tr><th>名称</th><th>長さ(m)</th><th>本数</th><th>延長</th><th></th></tr></thead><tbody id="vesselJointRows"></tbody></table></div><button class="primary" id="calcVesselBtn">計算</button></div><div class="card result"><h3>結果</h3><div class="big"><span>施工面積</span><strong id="vesselArea">—</strong></div><div class="resultline"><span>本体面積</span><b id="vesselGrossArea">—</b></div><div class="resultline"><span>施工除外部</span><b id="vesselDeductionTotal">0.00㎡</b></div><div class="resultline"><span>目地・取合い総延長</span><b id="vesselJointTotal">0.00m</b></div><pre id="vesselFormula"></pre><div class="send-to-material">
 <label>タイトル<input id="vesselTitle" type="text" placeholder="例：他タンク①"></label>
 <button class="primary send" type="button" data-source="vessel">材料計算へ追加</button>
 </div></div></div>
@@ -915,5 +919,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=89"></script>
+<script src="app.js?v=90"></script>
 </body></html>

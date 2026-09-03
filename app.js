@@ -182,6 +182,15 @@ document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>show(b.dataset.g
 document.querySelectorAll(".help").forEach(b=>b.onclick=()=>{$("helpTitle").textContent=b.dataset.help==="tank"?"貯水槽・シーリングの拾い方":"拾い方・計算方法";$("helpBody").innerHTML=HELP[b.dataset.help];$("helpDialog").showModal()});
 $("closeHelp").onclick=()=>$("helpDialog").close();
 
+function addDeductionRow(tbodyId,d={}){const body=$(tbodyId);if(!body)return;const tr=document.createElement("tr");tr.innerHTML=`<td><input class="dn" value="${esc(d.name||"")}"></td><td><input class="da" type="number" step="1" min="0" value="${d.a??""}"></td><td><input class="db" type="number" step="1" min="0" value="${d.b??""}"></td><td><input class="dq" type="number" step="1" min="1" value="${d.q??1}"></td><td class="do">0.00㎡</td><td><button class="delete">削除</button></td>`;body.appendChild(tr);tr.querySelectorAll("input").forEach(x=>x.oninput=()=>recalcExtraByBody(tbodyId));tr.querySelector(".delete").onclick=()=>{tr.remove();recalcExtraByBody(tbodyId)};recalcExtraByBody(tbodyId)}
+function addJointRow(tbodyId,d={}){const body=$(tbodyId);if(!body)return;const tr=document.createElement("tr");tr.innerHTML=`<td><input class="jn" value="${esc(d.name||"")}"></td><td><input class="ja" type="number" step="1" min="0" value="${d.a??""}"></td><td><input class="jq" type="number" step="1" min="1" value="${d.q??1}"></td><td class="jo">0.00m</td><td><button class="delete">削除</button></td>`;body.appendChild(tr);tr.querySelectorAll("input").forEach(x=>x.oninput=()=>recalcExtraByBody(tbodyId));tr.querySelector(".delete").onclick=()=>{tr.remove();recalcExtraByBody(tbodyId)};recalcExtraByBody(tbodyId)}
+function deductionRows(id){const body=$(id);if(!body)return[];return [...body.children].map(tr=>{const name=tr.querySelector(".dn")?.value||"",a=Number(tr.querySelector(".da")?.value)||0,b=Number(tr.querySelector(".db")?.value)||0,q=Math.max(1,Number(tr.querySelector(".dq")?.value)||1),area=a*b*q;tr.querySelector(".do").textContent=`${fmt(area)}㎡`;return{name,a,b,q,area}})}
+function jointRows(id){const body=$(id);if(!body)return[];return [...body.children].map(tr=>{const name=tr.querySelector(".jn")?.value||"",a=Number(tr.querySelector(".ja")?.value)||0,q=Math.max(1,Number(tr.querySelector(".jq")?.value)||1),length=a*q;tr.querySelector(".jo").textContent=`${fmt(length)}m`;return{name,a,q,length}})}
+function deductionTotal(id){return deductionRows(id).reduce((s,x)=>s+x.area,0)} function jointTotal(id){return jointRows(id).reduce((s,x)=>s+x.length,0)}
+function recalcExtraByBody(id){if(id.startsWith("roof"))calcRoof();else if(id.startsWith("flat"))calcFlat();else if(id.startsWith("vessel"))calcVessel();else if(id.startsWith("tank"))calcTank()}
+function captureExtraRows(src,data){const m={roof:["roofDeductionRows","roofJointRows"],flat:["flatDeductionRows","flatJointRows"],vessel:["vesselDeductionRows","vesselJointRows"],tank:["tankDeductionRows",null]}[src];if(!m)return;data.deductions=deductionRows(m[0]).map(({name,a,b,q})=>({name,a,b,q}));if(m[1])data.joints=jointRows(m[1]).map(({name,a,q})=>({name,a,q}))}
+function restoreExtraRows(src,data){const m={roof:["roofDeductionRows","roofJointRows"],flat:["flatDeductionRows","flatJointRows"],vessel:["vesselDeductionRows","vesselJointRows"],tank:["tankDeductionRows",null]}[src];if(!m)return;if($(m[0])){$(m[0]).innerHTML="";(data.deductions||[]).forEach(r=>addDeductionRow(m[0],r))}if(m[1]&&$(m[1])){$(m[1]).innerHTML="";(data.joints||[]).forEach(r=>addJointRow(m[1],r))}}
+
 function renderWaveSelect(){
   if(!Array.isArray(waves) || waves.length===0){
     waves=structuredClone(DEFAULT_WAVES);
@@ -208,23 +217,7 @@ function renderWaveSelect(){
 function getRoofSun(){return $("roofSun").value==="custom" ? n("roofSunCustom") : Number($("roofSun").value)}
 function ceilUnit(value,unit){if(!unit||unit<=0)return value;return Math.ceil((value-1e-12)/unit)*unit}
 function adoptedArea(value,roundId){const el=$(roundId);const unit=el?Number(el.value):0;return ceilUnit(value,unit)}
-function calcRoof(){
-  const projection=n("roofL")*n("roofW")*Math.max(1,n("roofFaces"));
-  const sun=getRoofSun(), slope=Math.sqrt(1+(sun/10)**2);
-  const wave=Math.max(.001,n("roofWaveFactor"));
-  const raw=projection*slope*wave,roundUnit=Number($("roofRound").value),adopted=ceilUnit(raw,roundUnit);
-  state.roofRawArea=raw;state.roofArea=adopted;
-  $("roofArea").textContent=roundUnit===1?`${fmt(adopted,0)}㎡`:`${fmt(adopted,1)}㎡`;
-  $("roofRawArea").textContent=`${fmt(raw,2)}㎡`;
-  $("roofDetail").innerHTML=
-    `<div class="resultline"><span>平面面積</span><b>${fmt(projection,2)}㎡</b></div>`+
-    `<div class="resultline"><span>勾配</span><b>${fmt(sun,1)}寸</b></div>`+
-    `<div class="resultline"><span>勾配係数</span><b>${fmt(slope,3)}</b></div>`+
-    `<div class="resultline"><span>波型係数</span><b>${fmt(wave,3)}</b></div>`;
-  $("roofFormula").textContent=
-    `${fmt(projection,2)} × ${fmt(slope,3)} × ${fmt(wave,3)} = ${fmt(raw,2)}㎡`+
-    (roundUnit>0?`\n→ ${roundUnit===1?"1㎡":"0.1㎡"}単位切り上げ = ${roundUnit===1?fmt(adopted,0):fmt(adopted,1)}㎡`:"");
-}
+function calcRoof(){const projection=n("roofL")*n("roofW")*Math.max(1,n("roofFaces")),sun=getRoofSun(),slope=Math.sqrt(1+(sun/10)**2),wave=Math.max(.001,n("roofWaveFactor")),gross=projection*slope*wave,deduction=deductionTotal("roofDeductionRows"),joint=jointTotal("roofJointRows"),raw=Math.max(0,gross-deduction),roundUnit=Number($("roofRound").value),adopted=ceilUnit(raw,roundUnit);state.roofGrossArea=gross;state.roofDeduction=deduction;state.roofJoint=joint;state.roofRawArea=raw;state.roofArea=adopted;$("roofArea").textContent=roundUnit===1?`${fmt(adopted,0)}㎡`:`${fmt(adopted,1)}㎡`;$("roofRawArea").textContent=`${fmt(raw,2)}㎡`;if($("roofJointTotal"))$("roofJointTotal").textContent=`${fmt(joint)}m`;$("roofDetail").innerHTML=`<div class="resultline"><span>平面面積</span><b>${fmt(projection,2)}㎡</b></div><div class="resultline"><span>勾配</span><b>${fmt(sun,1)}寸</b></div><div class="resultline"><span>勾配係数</span><b>${fmt(slope,3)}</b></div><div class="resultline"><span>波型係数</span><b>${fmt(wave,3)}</b></div><div class="resultline"><span>屋根本体面積</span><b>${fmt(gross,2)}㎡</b></div><div class="resultline"><span>施工除外部</span><b>− ${fmt(deduction,2)}㎡</b></div>`;$("roofFormula").textContent=`${fmt(projection,2)} × ${fmt(slope,3)} × ${fmt(wave,3)} = ${fmt(gross,2)}㎡\n− 控除 ${fmt(deduction,2)}㎡ = ${fmt(raw,2)}㎡`+(roundUnit>0?`\n→ ${roundUnit===1?"1㎡":"0.1㎡"}単位切り上げ = ${roundUnit===1?fmt(adopted,0):fmt(adopted,1)}㎡`:"")}
 $("calcRoof").onclick=calcRoof;
 ["roofL","roofW","roofFaces","roofWaveFactor"].forEach(id=>$(id).addEventListener("input",calcRoof));
 $("roofRound").addEventListener("change",calcRoof);
@@ -306,16 +299,21 @@ function calcTank(){
   const wallVerticalCorners=(walls&&corners)?4*H:0;
   const ceilingWallCorner=(ceil&&walls&&corners)?2*(L+W):0;
 
-  const area=floorArea+longWallArea+shortWallArea+ceilingArea;
+  const grossArea=floorArea+longWallArea+shortWallArea+ceilingArea;
+  const deduction=deductionTotal("tankDeductionRows");
+  const area=Math.max(0,grossArea-deduction);
   const panels=floorPanels+longWallPanels+shortWallPanels+ceilingPanels;
   const sealLength=
     floorSeams+longWallSeams+shortWallSeams+ceilingSeams+
     floorWallCorner+wallVerticalCorners+ceilingWallCorner;
 
   const adopted=adoptedArea(area,"tankRound");
+  state.tankGrossArea=grossArea;
+  state.tankDeduction=deduction;
   state.tankRawArea=area;
   state.tankArea=adopted;
   state.tankSeal=sealLength;
+  if($("tankDeductionTotal"))$("tankDeductionTotal").textContent=`− ${fmt(deduction)}㎡`;
   state.tankPanels=panels;
 
   $("tankArea").textContent=`${fmt(adopted)}㎡`;
@@ -407,36 +405,18 @@ function addFlat(d={type:"平場",name:"",a:"",b:"",q:1}){
  const tr=document.createElement("tr");tr.innerHTML=`<td data-label="種別"><select class="ft">${Object.keys(types).map(x=>`<option ${x===d.type?"selected":""}>${x}</option>`).join("")}</select></td><td data-label="名称"><input class="fn" value="${esc(d.name)}"></td><td data-label="長さ"><input class="fa" type="number" step="1" value="${d.a}"></td><td data-label="幅 / 高さ"><input class="fb" type="number" step="1" value="${d.b}"></td><td data-label="数量"><input class="fq" type="number" min="1" value="${d.q}"></td><td class="fo" data-label="面積">0㎡</td><td data-label=""><button class="delete">削除</button></td>`;
  $("flatRows").appendChild(tr);tr.querySelectorAll("input,select").forEach(x=>x.oninput=calcFlat);tr.querySelector(".delete").onclick=()=>{tr.remove();calcFlat()};calcFlat();
 }
-function calcFlat(){
- let t=0,rows=[];
- [...$("flatRows").children].forEach(tr=>{
-   const type=tr.querySelector(".ft").value,name=tr.querySelector(".fn").value;
-   const a=Number(tr.querySelector(".fa").value)||0,b=Number(tr.querySelector(".fb").value)||0,q=Number(tr.querySelector(".fq").value)||1;
-   let v=type==="直接入力"?a*q:a*b*q;v*=types[type];
-   tr.querySelector(".fo").textContent=`${fmt(v)}㎡`;t+=v;
-   rows.push({type,name,a,b,q,area:v});
- });
- const raw=Math.max(0,t),adopted=adoptedArea(raw,"flatRound");
- state.flatRawArea=raw;state.flatArea=adopted;state.flatRows=rows;
- $("flatArea").textContent=`${fmt(adopted)}㎡`;
-}
+function calcFlat(){let gross=0,rows=[];[...$("flatRows").children].forEach(tr=>{const type=tr.querySelector(".ft").value,name=tr.querySelector(".fn").value,a=Number(tr.querySelector(".fa").value)||0,b=Number(tr.querySelector(".fb").value)||0,q=Number(tr.querySelector(".fq").value)||1;let v=type==="直接入力"?a*q:a*b*q;v*=types[type];tr.querySelector(".fo").textContent=`${fmt(v)}㎡`;gross+=v;rows.push({type,name,a,b,q,area:v})});gross=Math.max(0,gross);const deduction=deductionTotal("flatDeductionRows"),joint=jointTotal("flatJointRows"),raw=Math.max(0,gross-deduction),adopted=adoptedArea(raw,"flatRound");state.flatGrossArea=gross;state.flatDeduction=deduction;state.flatJoint=joint;state.flatRawArea=raw;state.flatArea=adopted;state.flatRows=rows;$("flatArea").textContent=`${fmt(adopted)}㎡`;if($("flatGrossArea"))$("flatGrossArea").textContent=`${fmt(gross)}㎡`;if($("flatDeductionTotal"))$("flatDeductionTotal").textContent=`− ${fmt(deduction)}㎡`;if($("flatJointTotal"))$("flatJointTotal").textContent=`${fmt(joint)}m`}
 $("addFlat").onclick=()=>addFlat();if($("flatRound"))$("flatRound").addEventListener("change",calcFlat);
+if($("addRoofDeduction"))$("addRoofDeduction").onclick=()=>addDeductionRow("roofDeductionRows");
+if($("addRoofJoint"))$("addRoofJoint").onclick=()=>addJointRow("roofJointRows");
+if($("addFlatDeduction"))$("addFlatDeduction").onclick=()=>addDeductionRow("flatDeductionRows");
+if($("addFlatJoint"))$("addFlatJoint").onclick=()=>addJointRow("flatJointRows");
+if($("addVesselDeduction"))$("addVesselDeduction").onclick=()=>addDeductionRow("vesselDeductionRows");
+if($("addVesselJoint"))$("addVesselJoint").onclick=()=>addJointRow("vesselJointRows");
+if($("addTankDeduction"))$("addTankDeduction").onclick=()=>addDeductionRow("tankDeductionRows");
 
 // 他タンク
-function calcVessel(){
-  const shape=$("vesselShape").value,scope=$("vesselScope").value,q=Math.max(1,n("vesselQty"));
-  let area=0,formula="";
-  if(shape==="cylinder"){
-    const D=n("vesselD"),H=n("vesselH"),side=Math.PI*D*H,disc=Math.PI*D*D/4;
-    area=(scope==="side"?side:scope==="inside"?side+disc:side+2*disc)*q;
-    formula=`円筒：側面 π×${fmt(D)}×${fmt(H)}${scope==="side"?"":scope==="inside"?" ＋ 底面":" ＋ 上下面"} × ${q}基`;
-  }else{
-    const L=n("vesselL"),W=n("vesselW"),H=n("vesselRH"),side=2*(L+W)*H,base=L*W;
-    area=(scope==="side"?side:scope==="inside"?side+base:side+2*base)*q;
-    formula=`角型：側面 2×(${fmt(L)}＋${fmt(W)})×${fmt(H)}${scope==="side"?"":scope==="inside"?" ＋ 底面":" ＋ 上下面"} × ${q}基`;
-  }
-  const adopted=adoptedArea(area,"vesselRound");state.vesselRawArea=area;state.vesselArea=adopted;$("vesselArea").textContent=`${fmt(adopted)}㎡`;$("vesselFormula").textContent=formula+`\n= ${fmt(area)}㎡`;
-}
+function calcVessel(){const shape=$("vesselShape").value,scope=$("vesselScope").value,q=Math.max(1,n("vesselQty"));let gross=0,formula="";if(shape==="cylinder"){const D=n("vesselD"),H=n("vesselH"),side=Math.PI*D*H,disc=Math.PI*D*D/4;gross=(scope==="side"?side:scope==="inside"?side+disc:side+2*disc)*q;formula=`円筒：側面 π×${fmt(D)}×${fmt(H)}${scope==="side"?"":scope==="inside"?" ＋ 底面":" ＋ 上下面"} × ${q}基`}else{const L=n("vesselL"),W=n("vesselW"),H=n("vesselRH"),side=2*(L+W)*H,base=L*W;gross=(scope==="side"?side:scope==="inside"?side+base:side+2*base)*q;formula=`角型：側面 2×(${fmt(L)}＋${fmt(W)})×${fmt(H)}${scope==="side"?"":scope==="inside"?" ＋ 底面":" ＋ 上下面"} × ${q}基`}const deduction=deductionTotal("vesselDeductionRows"),joint=jointTotal("vesselJointRows"),area=Math.max(0,gross-deduction),adopted=adoptedArea(area,"vesselRound");state.vesselGrossArea=gross;state.vesselDeduction=deduction;state.vesselJoint=joint;state.vesselRawArea=area;state.vesselArea=adopted;$("vesselArea").textContent=`${fmt(adopted)}㎡`;if($("vesselGrossArea"))$("vesselGrossArea").textContent=`${fmt(gross)}㎡`;if($("vesselDeductionTotal"))$("vesselDeductionTotal").textContent=`− ${fmt(deduction)}㎡`;if($("vesselJointTotal"))$("vesselJointTotal").textContent=`${fmt(joint)}m`;$("vesselFormula").textContent=formula+`\n本体 ${fmt(gross)}㎡ − 控除 ${fmt(deduction)}㎡ = ${fmt(area)}㎡`}
 function updateVesselFields(){const c=$("vesselShape").value==="cylinder";document.querySelectorAll(".vessel-cylinder").forEach(x=>x.classList.toggle("hidden",!c));document.querySelectorAll(".vessel-rect").forEach(x=>x.classList.toggle("hidden",c));calcVessel()}
 ["vesselD","vesselH","vesselL","vesselW","vesselRH","vesselQty"].forEach(id=>$(id).addEventListener("input",calcVessel));
 $("vesselShape").addEventListener("change",updateVesselFields);$("vesselScope").addEventListener("change",calcVessel);if($("calcVesselBtn"))$("calcVesselBtn").onclick=calcVessel;
@@ -680,6 +660,7 @@ function captureSourceData(src){
       q:tr.querySelector(".fq")?.value||1
     }));
   }
+  captureExtraRows(src,data);
   return data;
 }
 
@@ -691,6 +672,7 @@ function restoreSourceData(src,data){
     data.flatRows.forEach(r=>addFlat(r));
     if(!data.flatRows.length)addFlat();
   }
+  restoreExtraRows(src,data);
   Object.entries(data.controls||{}).forEach(([id,saved])=>{
     const el=$(id);if(!el)return;
     if("checked" in el&&saved.checked!==undefined)el.checked=!!saved.checked;
@@ -765,6 +747,7 @@ function applyQuantityEdit(item){
   item.title=title;
   item.area=area;
   item.sourceData=captureSourceData(src);
+  item.jointLength=Number({roof:state.roofJoint,flat:state.flatJoint,vessel:state.vesselJoint,tank:state.tankSeal}[src])||0;
   if(titleInput)titleInput.value="";
   selectedCalcItemId=item.id;
   $("matArea").value=Number(area).toFixed(2);
@@ -980,6 +963,7 @@ function addCurrentSourceToMaterial(src){
     id:Date.now()+Math.floor(Math.random()*100000),
     source:src,title,area,
     sourceData:captureSourceData(src),
+    jointLength:Number({roof:state.roofJoint,flat:state.flatJoint,vessel:state.vesselJoint,tank:state.tankSeal}[src])||0,
     materialConfigs:cloneSpecRows()
   };
   calcItems.push(item); selectedCalcItemId=item.id; state.lastSource=src;
