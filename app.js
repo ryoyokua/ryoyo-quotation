@@ -1537,6 +1537,85 @@ async function checkOpenedProjectForRemoteUpdate(projectId,openedSheetStamp){
    console.warn("Background Sheets check failed",err);
  }
 }
+
+// 端末localStorageに残った旧案件の重複を整理する。
+// 同じPJ-IDは必ず1件に統合し、PJ-ID付き案件と直前に作られた同名ローカル案件も
+// 同一内容と判断できる場合のみ統合する。異なるPJ-ID同士は統合しない。
+function cleanupLocalProjectDuplicates(){
+  if(!Array.isArray(projects)||projects.length<2)return false;
+  const currentId=Number($("editingProjectId")?.value)||null;
+  const removedToKept=new Map();
+  const bySheet=new Map();
+
+  const richness=p=>{
+    let s=0;
+    if(String(p.sheetId||"").trim())s+=100;
+    if(Array.isArray(p.workItems))s+=20+p.workItems.length;
+    if(p.name)s+=2;
+    if(p.updatedAt)s+=1;
+    if(currentId&&String(p.id)===String(currentId))s+=50;
+    return s;
+  };
+  const mergeInto=(keep,drop)=>{
+    if((!Array.isArray(keep.workItems)||keep.workItems.length===0)&&Array.isArray(drop.workItems)&&drop.workItems.length){
+      keep.workItems=drop.workItems;
+      keep.area=drop.area;
+    }
+    for(const k of ["customer","site","owner","memo"]){
+      if(!keep[k]&&drop[k])keep[k]=drop[k];
+    }
+    if(!keep.createdAt&&drop.createdAt)keep.createdAt=drop.createdAt;
+    if(!keep.updatedAt&&drop.updatedAt)keep.updatedAt=drop.updatedAt;
+    removedToKept.set(String(drop.id),keep.id);
+  };
+
+  // 1) 同一PJ-IDのローカル重複は必ず1件にする。
+  for(const p of projects){
+    const sid=String(p.sheetId||"").trim();
+    if(!sid)continue;
+    if(!bySheet.has(sid)){bySheet.set(sid,p);continue;}
+    const other=bySheet.get(sid);
+    const keep=richness(p)>richness(other)?p:other;
+    const drop=keep===p?other:p;
+    mergeInto(keep,drop);
+    bySheet.set(sid,keep);
+  }
+
+  let filtered=projects.filter(p=>!removedToKept.has(String(p.id)));
+
+  // 2) PJ-ID付き案件の直前に作られた「同名・ほぼ同内容」の旧ローカル複製だけ整理。
+  //    異なるPJ-IDが付いている案件同士は絶対に統合しない。
+  const linked=filtered.filter(p=>String(p.sheetId||"").trim());
+  for(const lp of [...filtered]){
+    if(String(lp.sheetId||"").trim())continue;
+    const lname=String(lp.name||"").trim();
+    if(!lname)continue;
+    const lt=Date.parse(lp.updatedAt||lp.createdAt||"")||0;
+    const candidate=linked.find(rp=>{
+      if(String(rp.name||"").trim()!==lname)return false;
+      const rt=Date.parse(rp.updatedAt||rp.createdAt||"")||0;
+      if(lt&&rt&&Math.abs(lt-rt)>15000)return false;
+      const la=Number(lp.area)||0,ra=Number(rp.area)||0;
+      if(la&&ra&&Math.abs(la-ra)>0.001)return false;
+      return true;
+    });
+    if(candidate){
+      mergeInto(candidate,lp);
+    }
+  }
+  filtered=filtered.filter(p=>!removedToKept.has(String(p.id)));
+
+  if(filtered.length===projects.length)return false;
+  projects=filtered;
+  save(S.projects,projects);
+
+  if(currentId&&removedToKept.has(String(currentId))){
+    const keptId=removedToKept.get(String(currentId));
+    if($("editingProjectId"))$("editingProjectId").value=keptId;
+  }
+  return true;
+}
+
 async function loadProjectsFromSheets({quiet=false}={}){
  try{
    if(!quiet)setSheetSyncStatus("案件一覧を同期中…");
@@ -1578,6 +1657,8 @@ async function loadProjectsFromSheets({quiet=false}={}){
      }
    }
    // Sheetsにある案件はすべて保持。ローカルだけの未同期案件も消さない。
+   // ただし、この端末に旧バージョン由来の同一案件コピーが残っている場合は整理する。
+   cleanupLocalProjectDuplicates();
    save(S.projects,projects);
    renderProjects();renderQuickProjectSwitcher();updateCurrentProjectLabel();
    setSheetSyncStatus(`同期済み ${new Date().toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"})}`,"ok");
@@ -1939,6 +2020,7 @@ renderWaveSelect();
 renderMaster();
 renderSealSelect();
 renderSealMaster();
+cleanupLocalProjectDuplicates();
 renderProjects();
 renderQuickProjectSwitcher();
 updateCurrentProjectLabel();
