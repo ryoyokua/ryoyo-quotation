@@ -2151,3 +2151,61 @@ document.addEventListener("DOMContentLoaded",()=>{
   setTimeout(v107UpdateSealUnentered,50);
 });
 
+
+
+/* v109: integer spinner normalization for step=1 fields */
+const v109SpinnerPrev = new WeakMap();
+
+document.addEventListener("focusin", e=>{
+  const el=e.target;
+  if(el && el.matches && el.matches('input.integer-spinner[type="number"]')){
+    v109SpinnerPrev.set(el, Number(el.value));
+  }
+});
+
+document.addEventListener("keydown", e=>{
+  const el=e.target;
+  if(!el || !el.matches || !el.matches('input.integer-spinner[type="number"]')) return;
+  if(e.key==="ArrowUp" || e.key==="ArrowDown"){
+    e.preventDefault();
+    const cur=Number.isFinite(Number(el.value)) ? Number(el.value) : 0;
+    const base=Math.round(cur);
+    el.value=String(base + (e.key==="ArrowUp" ? 1 : -1));
+    el.dispatchEvent(new Event("input",{bubbles:true}));
+    el.dispatchEvent(new Event("change",{bubbles:true}));
+    v109SpinnerPrev.set(el, Number(el.value));
+  }
+});
+
+/* Mouse/touch spinner buttons: detect browser's native +/-1 result and remove stray decimals. */
+document.addEventListener("input", e=>{
+  const el=e.target;
+  if(!el || !el.matches || !el.matches('input.integer-spinner[type="number"]')) return;
+
+  const now=Number(el.value);
+  const prev=v109SpinnerPrev.get(el);
+  if(!Number.isFinite(now)){
+    v109SpinnerPrev.set(el, now);
+    return;
+  }
+
+  if(Number.isFinite(prev)){
+    const delta=now-prev;
+    // Native stepper interaction should change by about ±1.
+    // If browser keeps a decimal residue (e.g. 10.1 -> 11.1), snap to integer.
+    if(Math.abs(Math.abs(delta)-1) < 0.000001){
+      const snapped = delta > 0 ? Math.floor(now + 1e-9) : Math.ceil(now - 1e-9);
+      if(snapped !== now){
+        el.value=String(snapped);
+      }
+    }
+  }
+  v109SpinnerPrev.set(el, Number(el.value));
+});
+
+document.addEventListener("change", e=>{
+  const el=e.target;
+  if(!el || !el.matches || !el.matches('input.integer-spinner[type="number"]')) return;
+  v109SpinnerPrev.set(el, Number(el.value));
+});
+
