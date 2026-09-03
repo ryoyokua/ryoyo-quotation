@@ -1048,7 +1048,9 @@ let projectAutoSaveBusy=false;
 function currentWorkItemsSnapshot(){
   syncSelectedCalcItem();
   return calcItems.map(x=>({
-    id:x.id,source:x.source,title:x.title,area:Number(x.area)||0,
+    id:x.id,
+    sheetItemId:String(x.sheetItemId||""),
+    source:x.source,title:x.title,area:Number(x.area)||0,
     materialConfigs:cloneSpecRows(x.materialConfigs||[])
   }));
 }
@@ -1447,9 +1449,31 @@ function updateCurrentProjectLabel(){
 $("saveProject").onclick=async()=>{
  const editingId=Number($("editingProjectId").value)||null;
  syncSelectedCalcItem();
- const workItems=calcItems.length?currentWorkItemsSnapshot():[{id:Date.now(),source:state.lastSource||"other",title:"単独計算",area:n("matArea"),materialConfigs:cloneSpecRows()}];
- const p={id:editingId||Date.now(),createdAt:editingId?(projects.find(x=>x.id===editingId)?.createdAt||new Date().toISOString()):new Date().toISOString(),updatedAt:new Date().toISOString(),name:$("projectName").value.trim()||"名称未設定",customer:$("projectCustomer").value.trim(),site:$("projectSite").value.trim(),owner:$("projectOwner").value.trim(),memo:$("projectMemo").value.trim(),area:workItems.reduce((s,x)=>s+Number(x.area||0),0),workItems};
- if(editingId){const idx=projects.findIndex(x=>x.id===editingId);if(idx>=0)projects[idx]=p;else projects.unshift(p);}else projects.unshift(p);
+ const workItems=calcItems.length?currentWorkItemsSnapshot():[{id:Date.now(),sheetItemId:"",source:state.lastSource||"other",title:"単独計算",area:n("matArea"),materialConfigs:cloneSpecRows()}];
+ const now=new Date().toISOString();
+ let p=editingId?projects.find(x=>x.id===editingId):null;
+ if(p){
+   // 既存案件は同じオブジェクトを更新し、Sheets側のPJ-ID・更新時刻を保持する。
+   p.name=$("projectName").value.trim()||"名称未設定";
+   p.customer=$("projectCustomer").value.trim();
+   p.site=$("projectSite").value.trim();
+   p.owner=$("projectOwner").value.trim();
+   p.memo=$("projectMemo").value.trim();
+   p.area=workItems.reduce((sum,x)=>sum+Number(x.area||0),0);
+   p.workItems=workItems;
+   p.updatedAt=now;
+ }else{
+   p={
+     id:Date.now()+Math.floor(Math.random()*100000),
+     sheetId:"",
+     createdAt:now,updatedAt:now,
+     name:$("projectName").value.trim()||"名称未設定",
+     customer:$("projectCustomer").value.trim(),site:$("projectSite").value.trim(),owner:$("projectOwner").value.trim(),memo:$("projectMemo").value.trim(),
+     area:workItems.reduce((sum,x)=>sum+Number(x.area||0),0),workItems,
+     _sheetUpdatedAt:""
+   };
+   projects.unshift(p);
+ }
  save(S.projects,projects);$("editingProjectId").value=p.id;await saveProjectToSheets(p);renderProjects();updateCurrentProjectLabel();alert(editingId?"案件を更新しました":"案件を保存しました");
 };
 
@@ -1521,6 +1545,7 @@ async function openProject(id,{skipAutoSave=false,forceRemote=false,skipBackgrou
  $("projectMemo").value=p.memo||"";
  calcItems=(p.workItems||[]).map((x,i)=>({
    id:x.id||Date.now()+i,
+   sheetItemId:String(x.sheetItemId||""),
    source:x.source||"other",
    title:x.title||`計算${i+1}`,
    area:Number(x.area)||0,
@@ -1550,6 +1575,7 @@ function duplicateProject(id){
    workItems:(src.workItems||[]).map((x,i)=>({
      ...x,
      id:Date.now()+i+Math.floor(Math.random()*100000),
+     sheetItemId:"",
      materialConfigs:cloneSpecRows(x.materialConfigs||[])
    }))
  };
