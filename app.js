@@ -889,7 +889,7 @@ function renderMaster(){
    const ul=mode==="thickness"?(m.usage!=null?`${m.usage}${m.unit}/㎡/mm`:"未設定"):
             mode==="area"?(m.usage!=null?`${m.usage}${m.unit}/㎡`:"未設定"):
             mode==="foam"?(m.foamUsages?Object.keys(m.foamUsages).sort((a,b)=>Number(a)-Number(b)).map(k=>`${k}mm:${m.foamUsages[k]}${m.unit}/㎡`).join(" / "):"厚み別未設定"):"案件ごと";
-   return `<tr><td>${esc(m.series)}</td><td>${esc(m.name)}</td><td>${esc(m.feature||"")}</td><td>${ml}</td><td>${ul}</td><td>${m.standardThickness!=null?m.standardThickness+"mm":"—"}</td><td>${Math.round((m.defaultLoss??0.20)*100)}%</td><td>${m.packages?.join(" / ")||"—"} ${m.packageUnit||""}</td><td><div class="project-actions"><button class="secondary editmat" data-i="${i}">編集</button><button class="delete deletemat" data-i="${i}">削除</button></div></td></tr>`;
+   return `<tr><td>${esc(m.series)}</td><td>${esc(m.name)}</td><td>${esc(m.feature||"")}</td><td>${ml}</td><td>${ul}</td><td>${m.standardThickness!=null?m.standardThickness+"mm":"—"}</td><td>${Math.round((m.defaultLoss??0.20)*100)}%</td><td>${m.packages?.join(" / ")||"—"} ${m.packageUnit||""}</td><td><div class="material-master-actions"><button class="secondary editmat" data-i="${i}">編集</button><button class="delete deletemat" data-i="${i}">削除</button></div></td></tr>`;
  }).join("");
  document.querySelectorAll(".editmat").forEach(b=>b.onclick=()=>openMatEdit(Number(b.dataset.i)));
  document.querySelectorAll(".deletemat").forEach(b=>b.onclick=()=>deleteMaterialMaster(Number(b.dataset.i)));
