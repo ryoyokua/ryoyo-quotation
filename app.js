@@ -1,17 +1,35 @@
 const APP_PIN_HASH="daad2b3adbcb4f72fc3225cb058c64927dc1b2a004b9753892e93080505fd794";
 const APP_AUTH_KEY="ryoyo_material_app_authorized_v1";
+const APP_AUTH_COOKIE="ryoyo_material_app_authorized_v1";
+function hasPersistentAppAuth(){
+ try{
+   if(localStorage.getItem(APP_AUTH_KEY)==="1")return true;
+ }catch(e){}
+ return document.cookie.split(";").some(v=>v.trim()===APP_AUTH_COOKIE+"=1");
+}
+function savePersistentAppAuth(){
+ // localStorageを基本とし、iPhone Safariでタブ終了後にstorageが復元されない場合に備えて
+ // 同一サイトの永続Cookieも併用する。PINそのものは保存しない。
+ try{localStorage.setItem(APP_AUTH_KEY,"1");}catch(e){}
+ document.cookie=APP_AUTH_COOKIE+"=1; Max-Age=31536000; Path=/; SameSite=Lax; Secure";
+}
 async function verifyAppPin(){
  const v=document.getElementById("appPinInput").value;
  const d=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(v));
  const hash=Array.from(new Uint8Array(d)).map(b=>b.toString(16).padStart(2,"0")).join("");
- if(hash===APP_PIN_HASH){localStorage.setItem(APP_AUTH_KEY,"1");document.getElementById("appLock").style.display="none";}
- else document.getElementById("appPinError").style.display="block";
+ if(hash===APP_PIN_HASH){
+   savePersistentAppAuth();
+   document.getElementById("appLock").style.display="none";
+ }else document.getElementById("appPinError").style.display="block";
 }
 document.addEventListener("DOMContentLoaded",()=>{
- if(localStorage.getItem(APP_AUTH_KEY)==="1")document.getElementById("appLock").style.display="none";
- else{
-  document.getElementById("appPinButton").onclick=verifyAppPin;
-  document.getElementById("appPinInput").addEventListener("keydown",e=>{if(e.key==="Enter")verifyAppPin();});
+ if(hasPersistentAppAuth()){
+   // Cookie側だけ残っていた場合はlocalStorageも復元しておく。
+   try{localStorage.setItem(APP_AUTH_KEY,"1");}catch(e){}
+   document.getElementById("appLock").style.display="none";
+ }else{
+   document.getElementById("appPinButton").onclick=verifyAppPin;
+   document.getElementById("appPinInput").addEventListener("keydown",e=>{if(e.key==="Enter")verifyAppPin();});
  }
 });
 const S={materials:"ryoyo_materials_v1",waves:"ryoyo_waves_v1",seals:"ryoyo_seal_products_v1",projects:"ryoyo_projects_v1",trash:"ryoyo_trash_v1",endpoint:"ryoyo_gas_endpoint_v1",remoteHidden:"ryoyo_remote_hidden_v1"};
@@ -1627,6 +1645,23 @@ async function loadProjectsFromSheets({quiet=false}={}){
    remoteHiddenIds=remoteHiddenIds.filter(x=>!remoteIds.has(String(x)));
    save(S.remoteHidden,remoteHiddenIds);
 
+   // Sheetsを保存済み案件の正本として扱う。
+   // PJ-IDを持つローカル案件がSheets一覧に存在しない場合は、
+   // 以前の端末キャッシュ（削除済み・古い重複）として案件一覧から除外する。
+   // sheetIdをまだ持たない未同期の新規案件は保持する。
+   const currentLocalId=Number($("editingProjectId")?.value)||null;
+   const removedActiveIds=[];
+   projects=projects.filter(p=>{
+     const sid=String(p.sheetId||"").trim();
+     if(!sid)return true;
+     if(remoteIds.has(sid))return true;
+     removedActiveIds.push(String(p.id));
+     return false;
+   });
+   if(currentLocalId&&removedActiveIds.includes(String(currentLocalId))){
+     resetProjectForm(true);
+   }
+
    for(const rp of (data.projects||[])){
      const sheetId=String(rp.id||"");
      const legacyId=String(rp.legacyId||"");
@@ -1656,8 +1691,9 @@ async function loadProjectsFromSheets({quiet=false}={}){
        });
      }
    }
-   // Sheetsにある案件はすべて保持。ローカルだけの未同期案件も消さない。
-   // ただし、この端末に旧バージョン由来の同一案件コピーが残っている場合は整理する。
+   // Sheetsにある案件はすべて保持し、sheetId未発行の未同期案件だけローカルに残す。
+   // Sheetsから消えているPJ-ID付き案件は端末キャッシュからも除外済み。
+   // さらに、この端末に旧バージョン由来の同一案件コピーが残っている場合は整理する。
    cleanupLocalProjectDuplicates();
    save(S.projects,projects);
    renderProjects();renderQuickProjectSwitcher();updateCurrentProjectLabel();
