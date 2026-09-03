@@ -757,8 +757,23 @@ function beginCalcTitleEdit(id){
   input.addEventListener("blur",commit);
 }
 
+function clearSelectedCalcState(){
+  selectedCalcItemId=null;
+  state.lastSource="";
+  if($("selectedCalcLabel"))$("selectedCalcLabel").textContent="追加したタイトルを選択すると、材料設定を変更できます。";
+  if($("matArea"))$("matArea").value="0.00";
+  specRows=[];
+  state.specMaterials=[];
+  renderSpecRows();
+  if($("specSummary"))$("specSummary").innerHTML='<div class="info">施工対象を選択すると表示されます。</div>';
+  if($("specDetails"))$("specDetails").innerHTML="";
+}
+
 function renderCalcItems(){
   const list=$("calcItemList"),total=$("calcItemTotal"); if(!list||!total)return;
+  if(!calcItems.length && (selectedCalcItemId!=null || Number($("matArea")?.value||0)!==0)){
+    clearSelectedCalcState();
+  }
   total.textContent=`${fmt(calcItems.reduce((s,x)=>s+Number(x.area||0),0))}㎡`;
   list.innerHTML=calcItems.length?calcItems.map(item=>`<div class="calc-list-item calc-item-clickable ${item.id===selectedCalcItemId?"active":""}" data-select-id="${item.id}" role="button" tabindex="0" aria-label="${esc(item.title)}の材料設定を開く"><div class="calc-list-main"><div><span class="inline-title-wrap" data-title-id="${item.id}"><span class="inline-title-text" data-edit-title="${item.id}" title="クリックして名前を変更">${esc(item.title)}</span><button class="inline-title-edit" type="button" data-edit-title="${item.id}" title="名前を変更" aria-label="名前を変更">✎</button></span><br><small>${esc(MULTI_SOURCE_LABELS[item.source]||item.source)} ｜ ${fmt(item.area)}㎡</small></div><div class="calc-list-actions"><button class="multi-select material-setting-btn" type="button" data-id="${item.id}">材料設定</button><button class="multi-duplicate duplicate-btn" type="button" data-id="${item.id}">複製</button><button class="delete multi-delete" type="button" data-id="${item.id}">削除</button></div></div></div>`).join(""):'<div class="calc-empty-state">まだ追加されていません。</div>';
   document.querySelectorAll(".calc-item-clickable").forEach(row=>{
@@ -802,7 +817,8 @@ function deleteCalcItem(id){
   if(!confirm(`「${item.title}」を削除しますか？\n削除済みから復元できます。`))return;
   trash.calcItems.unshift({...item,deletedAt:new Date().toISOString()});saveTrash();
   calcItems=calcItems.filter(x=>x.id!==id);
-  if(selectedCalcItemId===id){selectedCalcItemId=null;$("selectedCalcLabel").textContent="追加したタイトルを選択すると、材料設定を変更できます。";}
+  if(!calcItems.length)clearSelectedCalcState();
+  else if(selectedCalcItemId===id)clearSelectedCalcState();
   renderCalcItems();renderProjectTrash();
 }
 function addCurrentSourceToMaterial(src){
@@ -862,7 +878,7 @@ function calcAllSpecMaterials(){
 if($("addSpecMaterial")) $("addSpecMaterial").onclick=()=>addSpecMaterial(0);
 if($("matArea")) $("matArea").addEventListener("input",calcAllSpecMaterials);
 if($("goProject")) $("goProject").onclick=()=>show("projects");
-if($("clearAllCalcItems")) $("clearAllCalcItems").onclick=()=>{if(!calcItems.length)return;if(!confirm("追加した計算をすべて削除しますか？"))return;calcItems=[];selectedCalcItemId=null;$("selectedCalcLabel").textContent="追加したタイトルを選択すると、材料設定を変更できます。";renderCalcItems();};
+if($("clearAllCalcItems")) $("clearAllCalcItems").onclick=()=>{if(!calcItems.length)return;if(!confirm("追加した計算をすべて削除しますか？"))return;calcItems=[];clearSelectedCalcState();renderCalcItems();};
 
 document.querySelectorAll(".send").forEach(btn=>{btn.onclick=()=>addCurrentSourceToMaterial(btn.dataset.source);});
 
@@ -1541,8 +1557,8 @@ $("saveProject").onclick=async()=>{
 function resetProjectForm(clearCalculations=false){
  $("editingProjectId").value="";$("projectName").value="";$("projectCustomer").value="";$("projectSite").value="";$("projectOwner").value="";$("projectMemo").value="";
  if(clearCalculations){
-   calcItems=[];selectedCalcItemId=null;
-   $("selectedCalcLabel").textContent="追加したタイトルを選択すると、材料設定を変更できます。";
+   calcItems=[];
+   clearSelectedCalcState();
    renderCalcItems();
  }
  updateCurrentProjectLabel();
@@ -1617,7 +1633,11 @@ async function openProject(id,{skipAutoSave=false,forceRemote=false,skipBackgrou
    area:Number(x.area)||0,
    materialConfigs:cloneSpecRows(x.materialConfigs||[])
  }));
- selectedCalcItemId=null;
+ if(calcItems.length){
+   selectedCalcItemId=null;
+ }else{
+   clearSelectedCalcState();
+ }
  renderCalcItems();updateCurrentProjectLabel();
  setProjectAutoSaveStatus("変更内容は自動保存されます");
  // openProjectが完了する前にユーザーが別画面（HOME等）へ移動した場合は画面を奪わない。
