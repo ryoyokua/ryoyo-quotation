@@ -585,7 +585,7 @@ function calcProduct(){const sh=$("productShape").value,q=Math.max(1,n("productQ
 $("productShape").addEventListener("change",updateProductFields);["productQty","productA","productB","productC","productD","productDirect"].forEach(id=>$(id).addEventListener("input",calcProduct));if($("calcProductBtn"))$("calcProductBtn").onclick=calcProduct;
 
 // その他
-function calcOther(){state.otherArea=Math.max(0,n("otherAreaInput"));$("otherArea").textContent=`${fmt(state.otherArea)}㎡`;}
+function calcOther(){const raw=Math.max(0,n("otherAreaInput")),roundUnit=Number($("otherRound")?.value||0),adopted=ceilUnit(raw,roundUnit);state.otherRawArea=raw;state.otherArea=adopted;$("otherArea").textContent=roundUnit===1?`${fmt(adopted,0)}㎡`:`${fmt(adopted,roundUnit===0.1?1:2)}㎡`;}
 $("otherAreaInput").addEventListener("input",calcOther);
 
 
