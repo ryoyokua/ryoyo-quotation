@@ -673,16 +673,47 @@
 }
 
 
-/* v126: 貯水槽の施工除外部「控除面積」を他の通常表示に合わせる */
-@media (max-width:700px){
-  #tank #tankDeductionRows .do{
-    background:transparent!important;
-    border:0!important;
-    border-radius:0!important;
-    padding:0!important;
-    color:#17365d!important;
-    font-size:18px!important;
-    font-weight:700!important;
+
+/* v127: スマホの控除面積表示を緑色・全幅・同一形状に統一 */
+@media(max-width:700px){
+  .deduction-card .deduction-area,
+  .deduction-card .deduction-result,
+  .deduction-card .deduct-result,
+  .deduction-card [data-role="deduction-area"],
+  .mobile-deduction-card .deduction-area,
+  .mobile-deduction-card .deduction-result{
+    width:100% !important;
+    box-sizing:border-box !important;
+    display:block !important;
+    background:#e6f0d8 !important;
+    border:0 !important;
+    border-radius:16px !important;
+    padding:12px 16px !important;
+    margin-top:6px !important;
+    color:#2f5f2f !important;
+    box-shadow:none !important;
+  }
+
+  .deduction-card .deduction-area strong,
+  .deduction-card .deduction-result strong,
+  .deduction-card .deduct-result strong,
+  .deduction-card [data-role="deduction-area"] strong,
+  .mobile-deduction-card .deduction-area strong,
+  .mobile-deduction-card .deduction-result strong{
+    display:block !important;
+    margin-top:4px !important;
+    font-size:22px !important;
+    line-height:1.25 !important;
+    color:#2f5f2f !important;
+  }
+
+  .deduction-card .deduction-area *,
+  .deduction-card .deduction-result *,
+  .deduction-card .deduct-result *,
+  .deduction-card [data-role="deduction-area"] *,
+  .mobile-deduction-card .deduction-area *,
+  .mobile-deduction-card .deduction-result *{
+    max-width:100% !important;
   }
 }
 
@@ -1626,5 +1657,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=125"></script>
+<script src="app.js?v=127"></script>
 </body></html>
