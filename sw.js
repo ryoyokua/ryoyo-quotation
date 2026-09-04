@@ -54,3 +54,4 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // - keep v130 direct sealing-length synchronization
 // app revision v133 - tank additional sealing
 // automatic panel/corner sealing + manually added sealing = total sealing length
+// app revision v134 - clearer tank-to-material transfer action

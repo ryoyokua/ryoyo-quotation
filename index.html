@@ -775,6 +775,50 @@
   #tankJointRows .delete{width:100%}
 }
 
+
+/* v134: 貯水槽 → 材料計算への導線を明確化 */
+.tank-material-transfer{
+  margin-top:24px;
+  padding:18px;
+  border:2px solid var(--accent);
+  border-radius:16px;
+  background:#fff;
+}
+.tank-material-transfer-title{
+  font-size:18px;
+  font-weight:800;
+  margin-bottom:12px;
+}
+.tank-material-transfer-summary{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-bottom:14px;
+}
+.tank-material-transfer-summary>div{
+  padding:12px;
+  border-radius:12px;
+  background:#f5f7fa;
+}
+.tank-material-transfer-summary span{
+  display:block;
+  font-size:13px;
+  color:var(--muted);
+  margin-bottom:3px;
+}
+.tank-material-transfer-summary b{font-size:18px}
+.tank-material-transfer .send{
+  width:100%;
+  min-height:52px;
+  font-size:17px;
+  font-weight:800;
+}
+@media(max-width:700px){
+  .tank-material-transfer{padding:14px;margin-top:20px}
+  .tank-material-transfer-summary{grid-template-columns:1fr}
+  .tank-material-transfer .send{min-height:56px}
+}
+
 </style>
 
 <style>
@@ -1415,7 +1459,15 @@ input,select,textarea,button{max-width:100%}
 
 <div class="send-to-material">
 <label>タイトル<input id="tankTitle" type="text" placeholder="例：貯水槽①"></label>
-<button class="primary send" type="button" data-source="tank">材料計算へ追加</button>
+
+<div class="tank-material-transfer">
+  <div class="tank-material-transfer-title">計算結果を材料計算へ追加</div>
+  <div class="tank-material-transfer-summary">
+    <div><span>概算施工面積</span><b id="tankTransferArea">—</b></div>
+    <div><span>シーリング延長</span><b id="tankTransferSeal">—</b></div>
+  </div>
+  <button class="primary send" type="button" data-source="tank">この内容で材料計算へ追加</button>
+</div>
 </div></div></div>
 <div class="card"><h3>シーリング材 必要本数</h3>
 <div class="info"><b>計算方法：</b> 使用する製品を選択し、容量・目地幅・目地深さから1本あたりの施工可能長さを自動計算します。</div>
@@ -1729,5 +1781,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=133"></script>
+<script src="app.js?v=134"></script>
 </body></html>
