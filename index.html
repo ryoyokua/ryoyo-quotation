@@ -659,6 +659,19 @@
   overflow-wrap:anywhere;
 }
 
+
+/* v125: 施工除外部・シーリングの追加ボタンを少し下げる */
+#roof #addRoofDeduction,
+#roof #addRoofJoint{
+  transform: translateY(8px);
+}
+@media(max-width:700px){
+  #roof #addRoofDeduction,
+  #roof #addRoofJoint{
+    transform: translateY(6px);
+  }
+}
+
 </style>
 
 <style>
@@ -1599,5 +1612,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=124"></script>
+<script src="app.js?v=125"></script>
 </body></html>
