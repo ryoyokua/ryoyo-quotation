@@ -370,9 +370,16 @@ function renderSealSelect(){
 function calcTank(){
   const L=n("tankL"),W=n("tankW"),H=n("tankH"),pw=n("panelW"),ph=n("panelH"),pd=n("panelD");
   if(!pw||!ph||!pd){
+    state.tankGrossArea=0;
+    state.tankDeduction=0;
+    state.tankRawArea=0;
+    state.tankArea=0;
+    state.tankPanels=0;
+    state.tankSeal=0;
     $("tankArea").textContent="—";
     $("tankPanels").textContent="—";
     $("tankSeal").textContent="—";
+    calcSealCount(false);
     return;
   }
 
@@ -807,6 +814,28 @@ function restoreSourceData(src,data){
   return true;
 }
 
+function restoreSealConfig(src,cfg){
+  if(!cfg)return;
+  const enabled=$(src+"SealEnabled");
+  if(enabled) enabled.checked=!!cfg.enabled;
+  const product=$(src+"SealProduct");
+  if(product && cfg.productIndex!=null){
+    const idx=String(cfg.productIndex);
+    if([...product.options].some(o=>o.value===idx)) product.value=idx;
+  }
+  const values={
+    SealVolume:cfg.volume,
+    SealWidth:cfg.width,
+    SealDepth:cfg.depth,
+    SealReserve:cfg.reserve
+  };
+  Object.entries(values).forEach(([suffix,value])=>{
+    const el=$(src+suffix);
+    if(el && value!=null) el.value=String(value);
+  });
+  calcCommonSeal(src);
+}
+
 function recalcSource(src){
   if(src==="roof"){
     updateRoofCoefficientUI();
@@ -853,6 +882,9 @@ function beginQuantityEdit(id){
   if(!restoreSourceData(item.source,item.sourceData)){
     alert("数量入力データを復元できませんでした。");
     return;
+  }
+  if(item.sealConfig && ["roof","flat","vessel"].includes(item.source)){
+    restoreSealConfig(item.source,item.sealConfig);
   }
   const titleInput=$(item.source+"Title");if(titleInput)titleInput.value=item.title||"";
   setQuantityEditMode(item);

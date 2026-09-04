@@ -48,3 +48,7 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // app revision v129 - compact collapsible sealing material calculator
 // app revision v130 - sync sealing total length into material calculator; flat recalc fixed
 // app revision v131 - remove roof "current calculation" display only
+// app revision v132 - stability audit
+// - restore common sealing config during quantity edit
+// - clear stale tank area/sealing state when required dimensions are missing
+// - keep v130 direct sealing-length synchronization
