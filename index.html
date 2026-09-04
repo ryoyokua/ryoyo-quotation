@@ -881,6 +881,40 @@
   }
 }
 
+
+/* v139: 全施工画面「材料計算へ追加」導線を統一 */
+.unified-send-to-material{
+  display:grid !important;
+  grid-template-columns:minmax(220px,1fr) minmax(220px,280px) !important;
+  gap:12px !important;
+  align-items:end !important;
+  margin-top:18px !important;
+  padding-top:16px !important;
+  border-top:1px solid var(--bd) !important;
+}
+.unified-send-to-material .send-title-field{
+  margin:0 !important;
+}
+.unified-send-to-material .send-title-field input{
+  width:100% !important;
+}
+.unified-send-to-material .send{
+  width:100% !important;
+  min-height:48px !important;
+  white-space:nowrap !important;
+  font-size:16px !important;
+  font-weight:800 !important;
+}
+@media(max-width:700px){
+  .unified-send-to-material{
+    grid-template-columns:1fr !important;
+    gap:10px !important;
+  }
+  .unified-send-to-material .send{
+    min-height:52px !important;
+  }
+}
+
 </style>
 
 <style>
@@ -1468,7 +1502,7 @@ input,select,textarea,button{max-width:100%}
 <div class="seal-panel"><label class="checks"><input id="roofSealEnabled" type="checkbox"> シーリング材の必要本数を計算する</label><div id="roofSealBox" class="hidden"><div class="info"><b>対象延長：</b>上の「シーリング延長合計」から必要本数を計算します。</div><div class="seal-settings-grid" style="margin-top:10px"><label>シーリング材<select id="roofSealProduct"></select><small>製品は「マスタ」画面から登録できます</small></label><label>容量 (mL)<input id="roofSealVolume" type="number" value="320" min="1" step="1" class="integer-spinner"><small>&nbsp;</small></label><label>目地幅 (mm)<input id="roofSealWidth" type="number" value="10" min="0.1" step="1" class="integer-spinner"></label><label>目地深さ (mm)<input id="roofSealDepth" type="number" value="10" min="0.1" step="1" class="integer-spinner"></label><label>予備率<select id="roofSealReserve"><option value="0">0%</option><option value=".05">5%</option><option value=".1" selected>10%</option><option value=".15">15%</option><option value=".2">20%</option></select></label></div><div class="metrics"><div><span>対象延長</span><strong id="roofSealLength">0.00m</strong></div><div><span>1本あたり</span><strong id="roofSealEach">—</strong></div><div><span>必要本数</span><strong id="roofSealCount">—</strong></div><div><span>予備込み</span><strong id="roofSealCountReserve">—</strong></div></div></div></div></div>
 
 </div>
-<div class="card result quantity-result-card"><div class="quantity-summary"><h3>結果</h3><div class="result-group"><h4>施工面積</h4><div class="resultline"><span>本体・部位面積</span><b id="roofGrossSummary">0.00㎡</b></div><div class="resultline"><span>施工除外部</span><b id="roofDeductionSummary">− 0.00㎡</b></div><div class="big"><span>概算施工面積</span><strong id="roofArea">—</strong></div></div><div class="result-group sealing-result-group"><h4>シーリング</h4><div class="resultline"><span>シーリング延長</span><b id="roofJointTotal">0.00m</b></div><div class="resultline"><span>必要本数</span><b id="roofResultSealCount">—</b></div><div class="resultline"><span>予備込み</span><b id="roofResultSealReserve">—</b></div></div><div id="roofDetail" class="hidden"></div><pre id="roofFormula" class="hidden"></pre><span id="roofRawArea" class="hidden"></span></div><div class="send-to-material"><label>タイトル<input id="roofTitle" type="text" placeholder="例：屋根①"></label><button class="primary send" type="button" data-source="roof">材料計算へ追加</button></div></div>
+<div class="card result quantity-result-card"><div class="quantity-summary"><h3>結果</h3><div class="result-group"><h4>施工面積</h4><div class="resultline"><span>本体・部位面積</span><b id="roofGrossSummary">0.00㎡</b></div><div class="resultline"><span>施工除外部</span><b id="roofDeductionSummary">− 0.00㎡</b></div><div class="big"><span>概算施工面積</span><strong id="roofArea">—</strong></div></div><div class="result-group sealing-result-group"><h4>シーリング</h4><div class="resultline"><span>シーリング延長</span><b id="roofJointTotal">0.00m</b></div><div class="resultline"><span>必要本数</span><b id="roofResultSealCount">—</b></div><div class="resultline"><span>予備込み</span><b id="roofResultSealReserve">—</b></div></div><div id="roofDetail" class="hidden"></div><pre id="roofFormula" class="hidden"></pre><span id="roofRawArea" class="hidden"></span></div><div class="send-to-material unified-send-to-material"><label class="send-title-field">タイトル<input id="roofTitle" type="text" placeholder="例：屋根①"></label><button class="primary send" type="button" data-source="roof">材料計算へ追加</button></div></div>
 </div>
 </section>
 
@@ -1520,11 +1554,11 @@ input,select,textarea,button{max-width:100%}
 </div>
 
 
-<div class="tank-send-to-material">
-  <label class="tank-title-field">タイトル
+<div class="send-to-material unified-send-to-material">
+  <label class="send-title-field">タイトル
     <input id="tankTitle" type="text" placeholder="例：貯水槽①">
   </label>
-  <button class="primary send tank-send-button" type="button" data-source="tank">材料計算へ追加</button>
+  <button class="primary send" type="button" data-source="tank">材料計算へ追加</button>
 </div></div></div>
 <div class="card"><h3>シーリング材 必要本数</h3>
 <div class="info"><b>計算方法：</b> 使用する製品を選択し、容量・目地幅・目地深さから1本あたりの施工可能長さを自動計算します。</div>
@@ -1581,7 +1615,7 @@ input,select,textarea,button{max-width:100%}
 <div class="seal-panel"><label class="checks"><input id="flatSealEnabled" type="checkbox"> シーリング材の必要本数を計算する</label><div id="flatSealBox" class="hidden"><div class="info"><b>対象延長：</b>上の「シーリング延長合計」から必要本数を計算します。</div><div class="seal-settings-grid" style="margin-top:10px"><label>シーリング材<select id="flatSealProduct"></select><small>製品は「マスタ」画面から登録できます</small></label><label>容量 (mL)<input id="flatSealVolume" type="number" value="320" min="1" step="1" class="integer-spinner"><small>&nbsp;</small></label><label>目地幅 (mm)<input id="flatSealWidth" type="number" value="10" min="0.1" step="1" class="integer-spinner"></label><label>目地深さ (mm)<input id="flatSealDepth" type="number" value="10" min="0.1" step="1" class="integer-spinner"></label><label>予備率<select id="flatSealReserve"><option value="0">0%</option><option value=".05">5%</option><option value=".1" selected>10%</option><option value=".15">15%</option><option value=".2">20%</option></select></label></div><div class="metrics"><div><span>対象延長</span><strong id="flatSealLength">0.00m</strong></div><div><span>1本あたり</span><strong id="flatSealEach">—</strong></div><div><span>必要本数</span><strong id="flatSealCount">—</strong></div><div><span>予備込み</span><strong id="flatSealCountReserve">—</strong></div></div></div></div></div>
 
 </div>
-<div class="card result quantity-result-card"><div class="quantity-summary"><h3>結果</h3><div class="result-group"><h4>施工面積</h4><div class="resultline"><span>本体・部位面積</span><b id="flatGrossArea">0.00㎡</b></div><div class="resultline"><span>施工除外部</span><b id="flatDeductionTotal">− 0.00㎡</b></div><div class="big"><span>概算施工面積</span><strong id="flatArea">0.00㎡</strong></div></div><div class="result-group sealing-result-group"><h4>シーリング</h4><div class="resultline"><span>シーリング延長</span><b id="flatJointTotal">0.00m</b></div><div class="resultline"><span>必要本数</span><b id="flatResultSealCount">—</b></div><div class="resultline"><span>予備込み</span><b id="flatResultSealReserve">—</b></div></div></div><div class="send-to-material"><label>タイトル<input id="flatTitle" type="text" placeholder="例：屋上・床・壁①"></label><button class="primary send" type="button" data-source="flat">材料計算へ追加</button></div></div>
+<div class="card result quantity-result-card"><div class="quantity-summary"><h3>結果</h3><div class="result-group"><h4>施工面積</h4><div class="resultline"><span>本体・部位面積</span><b id="flatGrossArea">0.00㎡</b></div><div class="resultline"><span>施工除外部</span><b id="flatDeductionTotal">− 0.00㎡</b></div><div class="big"><span>概算施工面積</span><strong id="flatArea">0.00㎡</strong></div></div><div class="result-group sealing-result-group"><h4>シーリング</h4><div class="resultline"><span>シーリング延長</span><b id="flatJointTotal">0.00m</b></div><div class="resultline"><span>必要本数</span><b id="flatResultSealCount">—</b></div><div class="resultline"><span>予備込み</span><b id="flatResultSealReserve">—</b></div></div></div><div class="send-to-material unified-send-to-material"><label class="send-title-field">タイトル<input id="flatTitle" type="text" placeholder="例：屋上・床・壁①"></label><button class="primary send" type="button" data-source="flat">材料計算へ追加</button></div></div>
 </div>
 </section>
 
@@ -1603,7 +1637,7 @@ input,select,textarea,button{max-width:100%}
 <div class="seal-panel"><label class="checks"><input id="vesselSealEnabled" type="checkbox"> シーリング材の必要本数を計算する</label><div id="vesselSealBox" class="hidden"><div class="info"><b>対象延長：</b>上の「シーリング延長合計」から必要本数を計算します。</div><div class="seal-settings-grid" style="margin-top:10px"><label>シーリング材<select id="vesselSealProduct"></select><small>製品は「マスタ」画面から登録できます</small></label><label>容量 (mL)<input id="vesselSealVolume" type="number" value="320" min="1" step="1" class="integer-spinner"><small>&nbsp;</small></label><label>目地幅 (mm)<input id="vesselSealWidth" type="number" value="10" min="0.1" step="1" class="integer-spinner"></label><label>目地深さ (mm)<input id="vesselSealDepth" type="number" value="10" min="0.1" step="1" class="integer-spinner"></label><label>予備率<select id="vesselSealReserve"><option value="0">0%</option><option value=".05">5%</option><option value=".1" selected>10%</option><option value=".15">15%</option><option value=".2">20%</option></select></label></div><div class="metrics"><div><span>対象延長</span><strong id="vesselSealLength">0.00m</strong></div><div><span>1本あたり</span><strong id="vesselSealEach">—</strong></div><div><span>必要本数</span><strong id="vesselSealCount">—</strong></div><div><span>予備込み</span><strong id="vesselSealCountReserve">—</strong></div></div></div></div></div>
 
 </div>
-<div class="card result quantity-result-card"><div class="quantity-summary"><h3>結果</h3><div class="result-group"><h4>施工面積</h4><div class="resultline"><span>本体・部位面積</span><b id="vesselGrossArea">—</b></div><div class="resultline"><span>施工除外部</span><b id="vesselDeductionTotal">− 0.00㎡</b></div><div class="big"><span>概算施工面積</span><strong id="vesselArea">—</strong></div></div><div class="result-group sealing-result-group"><h4>シーリング</h4><div class="resultline"><span>シーリング延長</span><b id="vesselJointTotal">0.00m</b></div><div class="resultline"><span>必要本数</span><b id="vesselResultSealCount">—</b></div><div class="resultline"><span>予備込み</span><b id="vesselResultSealReserve">—</b></div></div><pre id="vesselFormula" class="hidden"></pre></div><div class="send-to-material"><label>タイトル<input id="vesselTitle" type="text" placeholder="例：他タンク①"></label><button class="primary send" type="button" data-source="vessel">材料計算へ追加</button></div></div>
+<div class="card result quantity-result-card"><div class="quantity-summary"><h3>結果</h3><div class="result-group"><h4>施工面積</h4><div class="resultline"><span>本体・部位面積</span><b id="vesselGrossArea">—</b></div><div class="resultline"><span>施工除外部</span><b id="vesselDeductionTotal">− 0.00㎡</b></div><div class="big"><span>概算施工面積</span><strong id="vesselArea">—</strong></div></div><div class="result-group sealing-result-group"><h4>シーリング</h4><div class="resultline"><span>シーリング延長</span><b id="vesselJointTotal">0.00m</b></div><div class="resultline"><span>必要本数</span><b id="vesselResultSealCount">—</b></div><div class="resultline"><span>予備込み</span><b id="vesselResultSealReserve">—</b></div></div><pre id="vesselFormula" class="hidden"></pre></div><div class="send-to-material unified-send-to-material"><label class="send-title-field">タイトル<input id="vesselTitle" type="text" placeholder="例：他タンク①"></label><button class="primary send" type="button" data-source="vessel">材料計算へ追加</button></div></div>
 </div>
 </section>
 
@@ -1619,8 +1653,8 @@ input,select,textarea,button{max-width:100%}
 <option value="1">1㎡単位で切り上げ</option>
 </select></label>
 </div><div class="info">直管外面の概算です。エルボ・フランジ・バルブ等は必要に応じて別途拾います。</div><button class="primary" id="calcPipeBtn">計算</button></div>
-<div class="card result"><h3>結果</h3><div class="big"><span>施工面積</span><strong id="pipeArea">—</strong></div><pre id="pipeFormula"></pre><div class="send-to-material">
-<label>タイトル<input id="pipeTitle" type="text" placeholder="例：配管①"></label>
+<div class="card result"><h3>結果</h3><div class="big"><span>施工面積</span><strong id="pipeArea">—</strong></div><pre id="pipeFormula"></pre><div class="send-to-material unified-send-to-material">
+<label class="send-title-field">タイトル<input id="pipeTitle" type="text" placeholder="例：配管①"></label>
 <button class="primary send" type="button" data-source="pipe">材料計算へ追加</button>
 </div></div></div>
 </section>
@@ -1640,8 +1674,8 @@ input,select,textarea,button{max-width:100%}
 <option value="0.1" selected>0.1㎡単位で切り上げ</option>
 <option value="1">1㎡単位で切り上げ</option>
 </select></label>
-</div><button class="primary" id="calcProductBtn">計算</button></div><div class="card result"><h3>結果</h3><div class="big"><span>施工面積</span><strong id="productArea">—</strong></div><pre id="productFormula"></pre><div class="send-to-material">
-<label>タイトル<input id="productTitle" type="text" placeholder="例：製品・部品塗装①"></label>
+</div><button class="primary" id="calcProductBtn">計算</button></div><div class="card result"><h3>結果</h3><div class="big"><span>施工面積</span><strong id="productArea">—</strong></div><pre id="productFormula"></pre><div class="send-to-material unified-send-to-material">
+<label class="send-title-field">タイトル<input id="productTitle" type="text" placeholder="例：製品・部品塗装①"></label>
 <button class="primary send" type="button" data-source="product">材料計算へ追加</button>
 </div></div></div>
 </section>
@@ -1654,8 +1688,8 @@ input,select,textarea,button{max-width:100%}
 <option value="0.1" selected>0.1㎡単位で切り上げ</option>
 <option value="1">1㎡単位で切り上げ</option>
 </select></label></div><button class="primary" id="calcOtherBtn">計算</button>
-<div class="big"><span>施工面積</span><strong id="otherArea">100.00㎡</strong></div><div class="send-to-material">
-<label>タイトル<input id="otherTitle" type="text" placeholder="例：面積直接入力①"></label>
+<div class="big"><span>施工面積</span><strong id="otherArea">100.00㎡</strong></div><div class="send-to-material unified-send-to-material">
+<label class="send-title-field">タイトル<input id="otherTitle" type="text" placeholder="例：面積直接入力①"></label>
 <button class="primary send" type="button" data-source="other">材料計算へ追加</button>
 </div></div>
 </section>
@@ -1838,5 +1872,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=138"></script>
+<script src="app.js?v=139"></script>
 </body></html>
