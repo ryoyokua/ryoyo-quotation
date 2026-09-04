@@ -1048,6 +1048,15 @@
   }
 }
 
+
+/* v146: 貯水槽 追加シーリング説明文を施工除外部の例文サイズに統一 */
+#tank .tank-extra-seal-note{
+  font-size:12px !important;
+  line-height:1.5 !important;
+  margin:4px 0 0 !important;
+  color:var(--muted) !important;
+}
+
 </style>
 
 <style>
@@ -1665,7 +1674,7 @@ input,select,textarea,button{max-width:100%}
   <div class="section-head">
     <div>
       <h3>追加シーリング</h3>
-      <p class="muted">配管・マンホール・設備取合いなど、自動計算に含まれないシーリングを追加します。</p>
+      <p class="muted tank-extra-seal-note">配管・マンホール・設備取合いなど、自動計算に含まれないシーリングを追加します。</p>
     </div>
     <button type="button" class="secondary add-extra-btn" id="addTankJoint">＋シーリングを追加</button>
   </div>
@@ -2025,5 +2034,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=145"></script>
+<script src="app.js?v=146"></script>
 </body></html>
