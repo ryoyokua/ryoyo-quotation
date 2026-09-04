@@ -62,3 +62,4 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // app revision v140 - tank material transfer matches other screens
 // preserves pre-v139 button/layout styling
 // app revision v141 - unify tank deduction/additional sealing mobile cards
+// app revision v142 - emphasize material transfer CTA on all quantity screens
