@@ -45,3 +45,4 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // app revision v126 - neutral mobile deduction area display
 // app revision v127 - unify mobile deduction area result boxes in green, full width and same shape
 // app revision v128 - tank deduction result width aligned with other deduction cards
+// app revision v129 - compact collapsible sealing material calculator

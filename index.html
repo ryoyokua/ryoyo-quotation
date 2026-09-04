@@ -733,6 +733,31 @@
   }
 }
 
+
+/* v129: シーリング材計算をコンパクト化 */
+.seal-detail-toggle{
+  display:none;
+  width:100%;
+  margin:10px 0 0;
+  padding:10px 14px;
+  border:1px solid #cfd8e3;
+  border-radius:10px;
+  background:#f7f9fc;
+  color:#17365d;
+  font-weight:700;
+  cursor:pointer;
+}
+.seal-calc-compact .seal-detail-toggle{ display:block; }
+.seal-calc-compact:not(.seal-detail-open) .seal-detail-fields{
+  display:none !important;
+}
+@media(max-width:700px){
+  .seal-detail-toggle{
+    min-height:46px;
+    font-size:15px;
+  }
+}
+
 </style>
 
 <style>
@@ -1673,5 +1698,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=128"></script>
+<script src="app.js?v=129"></script>
 </body></html>

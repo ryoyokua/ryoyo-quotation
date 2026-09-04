@@ -2343,3 +2343,77 @@ document.addEventListener("DOMContentLoaded",()=>{
   });
 });
 
+
+
+// v129: シーリング材計算の詳細入力を折りたたみ表示
+function initCompactSealCalculators(){
+  const checks=[...document.querySelectorAll('input[type="checkbox"]')].filter(cb=>{
+    const txt=(cb.closest("label")?.textContent || cb.parentElement?.textContent || "");
+    return txt.includes("シーリング材の必要本数を計算する");
+  });
+
+  checks.forEach(cb=>{
+    const box=cb.closest(".card, .seal-calc, fieldset, .box") || cb.parentElement?.parentElement;
+    if(!box || box.dataset.compactSealInit==="1") return;
+    box.dataset.compactSealInit="1";
+    box.classList.add("seal-calc-compact");
+
+    // 結果の緑ボックス群より前にある入力要素のまとまりを詳細設定として扱う
+    const all=[...box.children];
+    const cbHost=cb.closest("label") || cb.parentElement;
+    const resultChild=all.find(el=>{
+      const t=(el.textContent||"");
+      return t.includes("対象延長") && t.includes("1本あたり");
+    });
+
+    const start=all.indexOf(cbHost);
+    const end=resultChild ? all.indexOf(resultChild) : -1;
+    if(start>=0 && end>start+1){
+      const detail=document.createElement("div");
+      detail.className="seal-detail-fields";
+      const move=all.slice(start+1,end);
+      move.forEach(el=>detail.appendChild(el));
+      box.insertBefore(detail,resultChild);
+    }else{
+      // DOMが異なる画面用：容量・目地幅・目地深さ・予備率等を含む直下要素をまとめる
+      const candidates=[...box.children].filter(el=>{
+        const t=(el.textContent||"");
+        return /シーリング材|容量\s*\(mL\)|目地幅|目地深さ|予備率/.test(t)
+          && !t.includes("必要本数を計算する");
+      });
+      if(candidates.length){
+        const detail=document.createElement("div");
+        detail.className="seal-detail-fields";
+        candidates[0].before(detail);
+        candidates.forEach(el=>detail.appendChild(el));
+      }
+    }
+
+    const detail=box.querySelector(".seal-detail-fields");
+    if(detail){
+      const btn=document.createElement("button");
+      btn.type="button";
+      btn.className="seal-detail-toggle";
+      btn.textContent="詳細設定を開く";
+      detail.before(btn);
+      btn.addEventListener("click",()=>{
+        const open=box.classList.toggle("seal-detail-open");
+        btn.textContent=open ? "詳細設定を閉じる" : "詳細設定を開く";
+      });
+    }
+
+    const sync=()=>{
+      // 未使用時はチェック1行だけ。使用時も詳細設定は初期状態で閉じる。
+      if(!cb.checked){
+        box.classList.remove("seal-detail-open");
+        const b=box.querySelector(".seal-detail-toggle");
+        if(b) b.textContent="詳細設定を開く";
+      }
+    };
+    cb.addEventListener("change",sync);
+    sync();
+  });
+}
+document.addEventListener("DOMContentLoaded",()=>setTimeout(initCompactSealCalculators,0));
+setTimeout(initCompactSealCalculators,300);
+
