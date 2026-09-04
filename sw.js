@@ -34,3 +34,4 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // app revision v113 - roof wave UI alignment and legacy direct-area cleanup
 // app revision v114 - selectable/direct/auto roof coefficients
 // app revision v115 - roof coefficient UI rebuilt and runtime fix
+// app revision v116 - grouped roof slope/wave coefficient cards
