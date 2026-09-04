@@ -72,3 +72,4 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // app revision v149 - tank help mobile card UI without horizontal scrolling
 // app revision v150 - align tank deduction add-button spacing with sealing section on mobile
 // app revision v151 - lower tank deduction/sealing add buttons
+// app revision v152 - align tank headings/button height and improve sealing note wrapping
