@@ -717,6 +717,22 @@
   }
 }
 
+
+/* v128: 貯水槽の施工除外部「控除面積」の幅・位置だけ他画面に統一 */
+@media(max-width:700px){
+  #tank #tankDeductionRows .deduction-area,
+  #tank #tankDeductionRows .deduction-result,
+  #tank #tankDeductionRows .deduct-result,
+  #tank #tankDeductionRows [data-role="deduction-area"]{
+    width:auto !important;
+    max-width:none !important;
+    margin-left:0 !important;
+    margin-right:0 !important;
+    box-sizing:border-box !important;
+    align-self:stretch !important;
+  }
+}
+
 </style>
 
 <style>
@@ -1657,5 +1673,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=127"></script>
+<script src="app.js?v=128"></script>
 </body></html>
