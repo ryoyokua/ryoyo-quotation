@@ -1003,46 +1003,19 @@
 }
 
 
-/* v143: 貯水槽CTAにも全画面共通の材料追加UIを確実に適用 */
-#tank .tank-material-cta{
-  display:block !important;
-  width:100% !important;
-  margin-top:18px !important;
-  padding:16px !important;
-  border:1px solid #cfd8e3 !important;
-  border-radius:14px !important;
-  background:#f8fafc !important;
-  box-sizing:border-box !important;
+
+
+/* v144: 貯水槽の材料計算追加を他画面と同じ全幅CTAに統一 */
+#tank .tank-material-cta-card{
+  margin-top:16px;
 }
-#tank .tank-material-cta .material-cta-title{
-  display:block !important;
-  margin:0 0 10px !important;
-  font-size:18px !important;
-  font-weight:800 !important;
-  color:#17365D !important;
-}
-#tank .tank-material-cta label{
-  display:block !important;
-  width:100% !important;
-  margin:0 0 12px !important;
-}
-#tank .tank-material-cta input{
-  display:block !important;
-  width:100% !important;
-  margin-top:6px !important;
-  box-sizing:border-box !important;
-}
-#tank .tank-material-cta .material-cta-button{
-  display:block !important;
-  width:100% !important;
-  min-height:50px !important;
-  font-size:16px !important;
-  font-weight:800 !important;
-  white-space:nowrap !important;
+#tank .tank-material-cta-card .material-cta{
+  margin-top:0 !important;
 }
 @media(max-width:700px){
-  #tank .tank-material-cta{padding:14px !important}
-  #tank .tank-material-cta .material-cta-button{min-height:54px !important}
+  #tank .tank-material-cta-card{
+    margin-top:14px;
+  }
 }
 
 </style>
@@ -1686,13 +1659,14 @@ input,select,textarea,button{max-width:100%}
 <div class="info" style="margin-top:10px">
 <b>シーリング延長とは：</b> パネル同士の継目、床と壁の入隅、壁同士の四隅など、シーリングを施工する部分の合計長さです。
 </div>
-
-
-<div class="send-to-material material-cta tank-material-cta">
-  <div class="material-cta-title">材料計算へ追加</div>
-  <label>タイトル<input id="tankTitle" type="text" placeholder="例：貯水槽①"></label>
-  <button class="primary send material-cta-button" type="button" data-source="tank">材料計算へ追加</button>
-</div></div></div>
+</div></div>
+<div class="card tank-material-cta-card">
+  <div class="send-to-material material-cta">
+    <div class="material-cta-title">材料計算へ追加</div>
+    <label>タイトル<input id="tankTitle" type="text" placeholder="例：貯水槽①"></label>
+    <button class="primary send material-cta-button" type="button" data-source="tank">材料計算へ追加</button>
+  </div>
+</div>
 <div class="card"><h3>シーリング材 必要本数</h3>
 <div class="info"><b>計算方法：</b> 使用する製品を選択し、容量・目地幅・目地深さから1本あたりの施工可能長さを自動計算します。</div>
 
@@ -2016,5 +1990,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=143"></script>
+<script src="app.js?v=144"></script>
 </body></html>
