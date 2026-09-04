@@ -68,4 +68,5 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // app revision v145 - link tank total seal length to standalone seal-count calculator
 // app revision v146 - match tank extra-sealing note font size to deduction example text
 // app revision v147 - match tank extra sealing note color and size to deduction example text
-// app revision v148 - move tank deduction example above add button on mobile
+// app revision v148 - improve mobile help dialog and tank help table
+// app revision v149 - tank help mobile card UI without horizontal scrolling

@@ -84,15 +84,19 @@ roof:`<p><b>基本式：</b>平面面積 × 勾配係数 × 波型係数</p>
 <p>L字や段違いはA面・B面・C面に分けて計算します。</p>`,
 tank:`<p><b>貯水槽は「面積」と「シーリング」を別々に拾います。</b></p>
 <p>シーリングは「パネル枚数×4辺」ではありません。<b>隣り合うパネル同士の境界線だけ</b>を拾います。</p>
-<pre>4m×3mの床・1mパネル
-┌─┬─┬─┬─┐
+
+<div class="tank-help-diagram">
+  <div class="tank-help-diagram-title">4m×3mの床・1mパネル</div>
+  <pre>┌─┬─┬─┬─┐
 │ │ │ │ │
 ├─┼─┼─┼─┤
 │ │ │ │ │
 ├─┼─┼─┼─┤
 │ │ │ │ │
 └─┴─┴─┴─┘</pre>
-<table>
+</div>
+
+<table class="tank-help-desktop-table">
 <tr><th>拾う部分</th><th>考え方</th><th>例</th></tr>
 <tr><td>床の縦継目</td><td>列数−1</td><td>4列 → 3本 × 3m = 9m</td></tr>
 <tr><td>床の横継目</td><td>段数−1</td><td>3段 → 2本 × 4m = 8m</td></tr>
@@ -100,7 +104,16 @@ tank:`<p><b>貯水槽は「面積」と「シーリング」を別々に拾い�
 <tr><td>壁のパネル継目</td><td>各壁で列間・段間を拾う</td><td>長辺壁・短辺壁ごとに計算</td></tr>
 <tr><td>壁四隅</td><td>高さ×4箇所</td><td>高さ2m → 8m</td></tr>
 </table>
-<p><b>シーリング延長</b>＝上記を施工対象ごとに合計した長さです。</p>
+
+<div class="tank-help-mobile-cards">
+  <div class="tank-help-row"><b>床の縦継目</b><span>列数−1</span><small>4列 → 3本 × 3m = 9m</small></div>
+  <div class="tank-help-row"><b>床の横継目</b><span>段数−1</span><small>3段 → 2本 × 4m = 8m</small></div>
+  <div class="tank-help-row"><b>床と壁の入隅</b><span>床の外周</span><small>(4+3)×2 = 14m</small></div>
+  <div class="tank-help-row"><b>壁のパネル継目</b><span>各壁で列間・段間を拾う</span><small>長辺壁・短辺壁ごとに計算</small></div>
+  <div class="tank-help-row"><b>壁四隅</b><span>高さ×4箇所</span><small>高さ2m → 8m</small></div>
+</div>
+
+<p class="tank-help-total"><b>シーリング延長</b>＝上記を施工対象ごとに合計した長さです。</p>
 <p>マンホール、配管貫通、内部柱、補強材、特殊なパネル割などはこの自動計算に含めず、必要に応じて別途確認します。</p>`,
 flat:`<table><tr><th>部位</th><th>式</th></tr><tr><td>平場</td><td>長さ×幅</td></tr><tr><td>壁</td><td>幅×高さ×面数</td></tr>
 <tr><td>立上り</td><td>周長×高さ</td></tr><tr><td>仕切り</td><td>長さ×高さ×面数</td></tr><tr><td>設備基礎</td><td>周長×高さ</td></tr><tr><td>控除</td><td>未施工面積をマイナス</td></tr></table>`,
@@ -197,7 +210,7 @@ document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{
 });
 document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>show(b.dataset.go));
 
-document.querySelectorAll(".help").forEach(b=>b.onclick=()=>{$("helpTitle").textContent=b.dataset.help==="tank"?"貯水槽・シーリングの拾い方":"拾い方・計算方法";$("helpBody").innerHTML=HELP[b.dataset.help];$("helpDialog").showModal()});
+document.querySelectorAll(".help").forEach(b=>b.onclick=()=>{const key=b.dataset.help;$("helpTitle").textContent=key==="tank"?"貯水槽・シーリングの拾い方":"拾い方・計算方法";$("helpBody").className=`help-body help-${key}`;$("helpBody").innerHTML=HELP[key];$("helpDialog").showModal()});
 $("closeHelp").onclick=()=>$("helpDialog").close();
 
 function addDeductionRow(tbodyId,d={}){const body=$(tbodyId);if(!body)return;const tr=document.createElement("tr");tr.innerHTML=`<td data-label="名称"><input class="dn" value="${esc(d.name||"")}"></td><td data-label="長さ(m)"><input class="da" type="number" step="1" min="0" value="${d.a??""}"></td><td data-label="幅(m)"><input class="db" type="number" step="1" min="0" value="${d.b??""}"></td><td data-label="数量"><input class="dq" type="number" step="1" min="1" value="${d.q??1}"></td><td class="do" data-label="控除面積">0.00㎡</td><td data-label=""><button class="delete">削除</button></td>`;body.appendChild(tr);tr.querySelectorAll("input").forEach(x=>x.oninput=()=>recalcExtraByBody(tbodyId));tr.querySelector(".delete").onclick=()=>{tr.remove();recalcExtraByBody(tbodyId)};recalcExtraByBody(tbodyId)}

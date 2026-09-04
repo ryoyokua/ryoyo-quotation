@@ -1067,39 +1067,193 @@
 }
 
 
-/* v148: 貯水槽「施工除外部」の例文を追加ボタンの上へ */
-#tank .tank-deduction-head{
-  display:grid;
-  grid-template-columns:1fr auto;
-  align-items:end;
-  gap:4px 12px;
-}
-#tank .tank-deduction-head > b{
-  grid-column:1;
-  grid-row:1;
-}
-#tank .tank-deduction-head > small{
-  grid-column:1;
-  grid-row:2;
-}
-#tank .tank-deduction-head > button{
-  grid-column:2;
-  grid-row:1 / span 2;
-  align-self:end;
-}
+/* v148: ヘルプダイアログのスマホUI改善 */
 @media(max-width:700px){
-  #tank .tank-deduction-head{
-    grid-template-columns:1fr;
-    gap:6px;
+  #helpDialog{
+    width:calc(100vw - 24px) !important;
+    max-width:calc(100vw - 24px) !important;
+    max-height:88dvh !important;
+    margin:auto !important;
+    padding:0 !important;
+    border-radius:16px !important;
+    overflow:hidden !important;
   }
-  #tank .tank-deduction-head > b,
-  #tank .tank-deduction-head > small,
-  #tank .tank-deduction-head > button{
-    grid-column:1;
-    grid-row:auto;
+  #helpDialog .dialoghead{
+    position:sticky;
+    top:0;
+    z-index:2;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:14px 16px !important;
+    background:#fff;
+    border-bottom:1px solid var(--bd);
   }
-  #tank .tank-deduction-head > button{
+  #helpDialog .dialoghead h3{
+    margin:0 !important;
+    font-size:18px !important;
+    line-height:1.35 !important;
+  }
+  #helpDialog #closeHelp{
+    flex:0 0 40px;
+    width:40px !important;
+    min-width:40px !important;
+    height:40px;
+    padding:0 !important;
+    font-size:24px !important;
+    line-height:1;
+  }
+  #helpBody{
+    max-height:calc(88dvh - 69px);
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+    padding:14px 16px 20px !important;
+    font-size:15px !important;
+    line-height:1.65 !important;
+  }
+  #helpBody p{margin:0 0 12px !important;}
+
+  #helpBody.help-tank pre{
     width:100% !important;
+    max-width:100% !important;
+    margin:12px 0 16px !important;
+    padding:14px !important;
+    overflow:hidden !important;
+    white-space:pre !important;
+    font-size:13px !important;
+    line-height:1.25 !important;
+    border-radius:12px !important;
+    box-sizing:border-box !important;
+  }
+
+  #helpBody.help-tank table{
+    display:block !important;
+    width:100% !important;
+    min-width:0 !important;
+    border:0 !important;
+  }
+  #helpBody.help-tank tbody{
+    display:block !important;
+    width:100% !important;
+  }
+  #helpBody.help-tank tr:first-child{display:none !important;}
+  #helpBody.help-tank tr{
+    display:block !important;
+    width:100% !important;
+    margin:0 0 10px !important;
+    padding:12px !important;
+    border:1px solid var(--bd) !important;
+    border-radius:12px !important;
+    background:#f8fafc !important;
+    box-sizing:border-box !important;
+  }
+  #helpBody.help-tank td{
+    display:grid !important;
+    grid-template-columns:88px minmax(0,1fr) !important;
+    gap:8px !important;
+    width:100% !important;
+    padding:5px 0 !important;
+    border:0 !important;
+    white-space:normal !important;
+    word-break:break-word !important;
+    box-sizing:border-box !important;
+  }
+  #helpBody.help-tank td:nth-child(1)::before{content:"拾う部分";}
+  #helpBody.help-tank td:nth-child(2)::before{content:"考え方";}
+  #helpBody.help-tank td:nth-child(3)::before{content:"例";}
+  #helpBody.help-tank td::before{
+    font-weight:700;
+    color:#667085;
+    font-size:12px;
+  }
+}
+
+
+/* v149: 貯水槽ヘルプのスマホUIを横スクロールなしのカード表示へ */
+.tank-help-mobile-cards{display:none}
+
+@media(max-width:700px){
+  #helpDialog{
+    width:calc(100vw - 20px) !important;
+    max-width:calc(100vw - 20px) !important;
+    max-height:86dvh !important;
+    border-radius:16px !important;
+  }
+  #helpDialog .dialoghead{
+    padding:12px 14px !important;
+  }
+  #helpBody{
+    max-height:calc(86dvh - 64px) !important;
+    padding:14px !important;
+    overflow-x:hidden !important;
+    overscroll-behavior:contain;
+  }
+
+  #helpBody.help-tank .tank-help-diagram{
+    width:100%;
+    margin:12px 0 14px;
+    padding:12px;
+    border-radius:12px;
+    background:#f6f8fa;
+    box-sizing:border-box;
+    overflow:hidden;
+  }
+  #helpBody.help-tank .tank-help-diagram-title{
+    margin-bottom:8px;
+    font-size:14px;
+    font-weight:700;
+  }
+  #helpBody.help-tank .tank-help-diagram pre{
+    margin:0 !important;
+    padding:0 !important;
+    background:transparent !important;
+    border:0 !important;
+    width:auto !important;
+    max-width:100% !important;
+    overflow:hidden !important;
+    white-space:pre !important;
+    font-size:12px !important;
+    line-height:1.2 !important;
+  }
+
+  #helpBody.help-tank .tank-help-desktop-table{
+    display:none !important;
+  }
+  #helpBody.help-tank .tank-help-mobile-cards{
+    display:block !important;
+    width:100%;
+  }
+  #helpBody.help-tank .tank-help-row{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:5px;
+    width:100%;
+    margin:0 0 10px;
+    padding:12px;
+    border:1px solid var(--bd);
+    border-radius:12px;
+    background:#fff;
+    box-sizing:border-box;
+  }
+  #helpBody.help-tank .tank-help-row b{
+    font-size:15px;
+    color:#17365D;
+  }
+  #helpBody.help-tank .tank-help-row span{
+    font-size:14px;
+  }
+  #helpBody.help-tank .tank-help-row small{
+    display:block;
+    font-size:13px;
+    line-height:1.5;
+    color:#667085;
+  }
+  #helpBody.help-tank .tank-help-total{
+    margin-top:14px !important;
+    padding:12px;
+    border-radius:10px;
+    background:var(--green);
   }
 }
 
@@ -1715,11 +1869,7 @@ input,select,textarea,button{max-width:100%}
 </select></label></div>
 <div class="checks"><label><input id="tankFloor" type="checkbox" checked>床</label><label><input id="tankWalls" type="checkbox" checked>壁</label>
 <label><input id="tankCeiling" type="checkbox">天井</label><label><input id="tankInternal" type="checkbox" checked>パネル継目</label><label><input id="tankCorners" type="checkbox" checked>入隅・四隅</label></div>
-<div class="tank-deduction-head" style="margin-top:16px">
-  <b>施工除外部</b>
-  <small>例：マンホール、開口部、施工しない箇所など</small>
-  <button class="secondary" type="button" id="addTankDeduction">＋施工除外部を追加</button>
-</div><div class="tablewrap quantity-card-tablewrap tank-deduction-wrap"><table class="quantity-card-table tank-deduction-table"><thead><tr><th>名称</th><th>長さ(m)</th><th>幅(m)</th><th>数量</th><th>控除面積</th><th></th></tr></thead><tbody id="tankDeductionRows"></tbody></table></div>
+<div class="headrow" style="margin-top:16px"><b>施工除外部</b><button class="secondary" type="button" id="addTankDeduction">＋施工除外部を追加</button></div><small>例：マンホール、開口部、施工しない箇所など</small><div class="tablewrap quantity-card-tablewrap tank-deduction-wrap"><table class="quantity-card-table tank-deduction-table"><thead><tr><th>名称</th><th>長さ(m)</th><th>幅(m)</th><th>数量</th><th>控除面積</th><th></th></tr></thead><tbody id="tankDeductionRows"></tbody></table></div>
 <div class="subsection tank-extra-seal-section">
   <div class="section-head">
     <div>
@@ -2084,5 +2234,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=148"></script>
+<script src="app.js?v=149"></script>
 </body></html>
