@@ -206,8 +206,8 @@ function deductionRows(id){const body=$(id);if(!body)return[];return [...body.ch
 function jointRows(id){const body=$(id);if(!body)return[];return [...body.children].map(tr=>{const name=tr.querySelector(".jn")?.value||"",a=Number(tr.querySelector(".ja")?.value)||0,q=Math.max(1,Number(tr.querySelector(".jq")?.value)||1),length=a*q;tr.querySelector(".jo").textContent=`${fmt(length)}m`;return{name,a,q,length}})}
 function deductionTotal(id){return deductionRows(id).reduce((s,x)=>s+x.area,0)} function jointTotal(id){return jointRows(id).reduce((s,x)=>s+x.length,0)}
 function recalcExtraByBody(id){if(id.startsWith("roof"))calcRoof();else if(id.startsWith("flat"))calcFlat();else if(id.startsWith("vessel"))calcVessel();else if(id.startsWith("tank"))calcTank()}
-function captureExtraRows(src,data){const m={roof:["roofDeductionRows","roofJointRows"],flat:["flatDeductionRows","flatJointRows"],vessel:["vesselDeductionRows","vesselJointRows"],tank:["tankDeductionRows",null]}[src];if(!m)return;data.deductions=deductionRows(m[0]).map(({name,a,b,q})=>({name,a,b,q}));if(m[1])data.joints=jointRows(m[1]).map(({name,a,q})=>({name,a,q}))}
-function restoreExtraRows(src,data){const m={roof:["roofDeductionRows","roofJointRows"],flat:["flatDeductionRows","flatJointRows"],vessel:["vesselDeductionRows","vesselJointRows"],tank:["tankDeductionRows",null]}[src];if(!m)return;if($(m[0])){$(m[0]).innerHTML="";(data.deductions||[]).forEach(r=>addDeductionRow(m[0],r))}if(m[1]&&$(m[1])){$(m[1]).innerHTML="";(data.joints||[]).forEach(r=>addJointRow(m[1],r))}}
+function captureExtraRows(src,data){const m={roof:["roofDeductionRows","roofJointRows"],flat:["flatDeductionRows","flatJointRows"],vessel:["vesselDeductionRows","vesselJointRows"],tank:["tankDeductionRows","tankJointRows"]}[src];if(!m)return;data.deductions=deductionRows(m[0]).map(({name,a,b,q})=>({name,a,b,q}));if(m[1])data.joints=jointRows(m[1]).map(({name,a,q})=>({name,a,q}))}
+function restoreExtraRows(src,data){const m={roof:["roofDeductionRows","roofJointRows"],flat:["flatDeductionRows","flatJointRows"],vessel:["vesselDeductionRows","vesselJointRows"],tank:["tankDeductionRows","tankJointRows"]}[src];if(!m)return;if($(m[0])){$(m[0]).innerHTML="";(data.deductions||[]).forEach(r=>addDeductionRow(m[0],r))}if(m[1]&&$(m[1])){$(m[1]).innerHTML="";(data.joints||[]).forEach(r=>addJointRow(m[1],r))}}
 
 function renderWaveSelect(){
   // v124: 屋根材は「大波スレート / 小波スレート / 折板・その他」の3択。
@@ -435,19 +435,21 @@ function calcTank(){
   const sealLength=
     floorSeams+longWallSeams+shortWallSeams+ceilingSeams+
     floorWallCorner+wallVerticalCorners+ceilingWallCorner;
+  const extraSealLength=jointTotal("tankJointRows");
+  const totalSealLength=sealLength+extraSealLength;
 
   const adopted=adoptedArea(area,"tankRound");
   state.tankGrossArea=grossArea;
   state.tankDeduction=deduction;
   state.tankRawArea=area;
   state.tankArea=adopted;
-  state.tankSeal=sealLength;
+  state.tankSeal=totalSealLength;
   if($("tankDeductionTotal"))$("tankDeductionTotal").textContent=`− ${fmt(deduction)}㎡`;
   state.tankPanels=panels;
 
   $("tankArea").textContent=`${fmt(adopted)}㎡`;
   $("tankPanels").textContent=`${fmt(panels,0)}枚`;
-  $("tankSeal").textContent=`${fmt(sealLength,1)}m`;
+  $("tankSeal").textContent=`${fmt(totalSealLength,1)}m`;if($("tankJointTotal"))$("tankJointTotal").textContent=`${fmt(extraSealLength)}m`;
 
   const rows=[
     ["床",floorArea,floorPanels,floorSeams,floorWallCorner],
@@ -475,7 +477,9 @@ function calcTank(){
     <div class="resultline"><span>床－壁 入隅</span><b>${fmt(floorWallCorner,1)}m</b></div>
     <div class="resultline"><span>壁四隅</span><b>${fmt(wallVerticalCorners,1)}m</b></div>
     ${ceil?`<div class="resultline"><span>天井－壁 入隅</span><b>${fmt(ceilingWallCorner,1)}m</b></div>`:""}
-    <div class="resultline"><span><b>合計 シーリング延長</b></span><b>${fmt(sealLength,1)}m</b></div>
+    <div class="resultline"><span>自動算出シーリング延長</span><b>${fmt(sealLength,1)}m</b></div>
+    ${extraSealLength>0?`<div class="resultline"><span>追加シーリング延長</span><b>${fmt(extraSealLength,1)}m</b></div>`:""}
+    <div class="resultline"><span><b>合計 シーリング延長</b></span><b>${fmt(totalSealLength,1)}m</b></div>
   `;
 
   // シーリング本数側も入力済みなら同時更新
@@ -543,6 +547,7 @@ if($("addFlatJoint"))$("addFlatJoint").onclick=()=>addJointRow("flatJointRows");
 if($("addVesselDeduction"))$("addVesselDeduction").onclick=()=>addDeductionRow("vesselDeductionRows");
 if($("addVesselJoint"))$("addVesselJoint").onclick=()=>addJointRow("vesselJointRows");
 if($("addTankDeduction"))$("addTankDeduction").onclick=()=>addDeductionRow("tankDeductionRows");
+if($("addTankJoint"))$("addTankJoint").onclick=()=>addJointRow("tankJointRows");
 
 // 他タンク
 function calcVessel(){const shape=$("vesselShape").value,scope=$("vesselScope").value,q=Math.max(1,n("vesselQty"));let gross=0,formula="";if(shape==="cylinder"){const D=n("vesselD"),H=n("vesselH"),side=Math.PI*D*H,disc=Math.PI*D*D/4;gross=(scope==="side"?side:scope==="inside"?side+disc:side+2*disc)*q;formula=`円筒：側面 π×${fmt(D)}×${fmt(H)}${scope==="side"?"":scope==="inside"?" ＋ 底面":" ＋ 上下面"} × ${q}基`}else{const L=n("vesselL"),W=n("vesselW"),H=n("vesselRH"),side=2*(L+W)*H,base=L*W;gross=(scope==="side"?side:scope==="inside"?side+base:side+2*base)*q;formula=`角型：側面 2×(${fmt(L)}＋${fmt(W)})×${fmt(H)}${scope==="side"?"":scope==="inside"?" ＋ 底面":" ＋ 上下面"} × ${q}基`}const deduction=deductionTotal("vesselDeductionRows"),joint=jointTotal("vesselJointRows"),area=Math.max(0,gross-deduction),adopted=adoptedArea(area,"vesselRound");state.vesselGrossArea=gross;state.vesselDeduction=deduction;state.vesselJoint=joint;state.vesselRawArea=area;state.vesselArea=adopted;$("vesselArea").textContent=`${fmt(adopted)}㎡`;if($("vesselGrossArea"))$("vesselGrossArea").textContent=`${fmt(gross)}㎡`;if($("vesselDeductionTotal"))$("vesselDeductionTotal").textContent=`− ${fmt(deduction)}㎡`;if($("vesselJointTotal"))$("vesselJointTotal").textContent=`${fmt(joint)}m`;calcCommonSeal("vessel");$("vesselFormula").textContent=formula+`\n本体 ${fmt(gross)}㎡ − 控除 ${fmt(deduction)}㎡ = ${fmt(area)}㎡`}

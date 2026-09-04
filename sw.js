@@ -52,3 +52,5 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // - restore common sealing config during quantity edit
 // - clear stale tank area/sealing state when required dimensions are missing
 // - keep v130 direct sealing-length synchronization
+// app revision v133 - tank additional sealing
+// automatic panel/corner sealing + manually added sealing = total sealing length

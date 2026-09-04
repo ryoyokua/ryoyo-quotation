@@ -758,6 +758,23 @@
   }
 }
 
+
+/* v133: 貯水槽 追加シーリング */
+.tank-extra-seal-section{margin-top:18px}
+.tank-extra-seal-section .section-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.tank-extra-seal-section .section-head h3{margin-bottom:4px}
+.tank-extra-seal-total{margin-top:10px}
+@media(max-width:700px){
+  .tank-extra-seal-section .section-head{display:block}
+  .tank-extra-seal-section .add-extra-btn{width:100%;margin-top:8px}
+  #tankJointRows tr{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;padding:12px;border:1px solid #dfe5ec;border-radius:12px}
+  #tankJointRows td{display:block!important;padding:0!important;border:0!important}
+  #tankJointRows td:first-child{grid-column:1/-1}
+  #tankJointRows td:nth-child(4),#tankJointRows td:nth-child(5){grid-column:1/-1}
+  #tankJointRows .jo{background:var(--green)!important;border-radius:10px!important;padding:10px 12px!important;font-size:18px!important;font-weight:700!important;color:#1f4e29!important}
+  #tankJointRows .delete{width:100%}
+}
+
 </style>
 
 <style>
@@ -1366,7 +1383,24 @@ input,select,textarea,button{max-width:100%}
 </select></label></div>
 <div class="checks"><label><input id="tankFloor" type="checkbox" checked>床</label><label><input id="tankWalls" type="checkbox" checked>壁</label>
 <label><input id="tankCeiling" type="checkbox">天井</label><label><input id="tankInternal" type="checkbox" checked>パネル継目</label><label><input id="tankCorners" type="checkbox" checked>入隅・四隅</label></div>
-<div class="headrow" style="margin-top:16px"><b>施工除外部</b><button class="secondary" type="button" id="addTankDeduction">＋施工除外部を追加</button></div><small>例：マンホール、開口部、施工しない箇所など</small><div class="tablewrap quantity-card-tablewrap tank-deduction-wrap"><table class="quantity-card-table tank-deduction-table"><thead><tr><th>名称</th><th>長さ(m)</th><th>幅(m)</th><th>数量</th><th>控除面積</th><th></th></tr></thead><tbody id="tankDeductionRows"></tbody></table></div><button class="primary" id="calcTank">計算</button></div>
+<div class="headrow" style="margin-top:16px"><b>施工除外部</b><button class="secondary" type="button" id="addTankDeduction">＋施工除外部を追加</button></div><small>例：マンホール、開口部、施工しない箇所など</small><div class="tablewrap quantity-card-tablewrap tank-deduction-wrap"><table class="quantity-card-table tank-deduction-table"><thead><tr><th>名称</th><th>長さ(m)</th><th>幅(m)</th><th>数量</th><th>控除面積</th><th></th></tr></thead><tbody id="tankDeductionRows"></tbody></table></div>
+<div class="subsection tank-extra-seal-section">
+  <div class="section-head">
+    <div>
+      <h3>追加シーリング</h3>
+      <p class="muted">配管・マンホール・設備取合いなど、自動計算に含まれないシーリングを追加します。</p>
+    </div>
+    <button type="button" class="secondary add-extra-btn" id="addTankJoint">＋追加シーリングを入力</button>
+  </div>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>名称</th><th>長さ(m)</th><th>箇所数</th><th>シーリング延長</th><th></th></tr></thead>
+      <tbody id="tankJointRows"></tbody>
+    </table>
+  </div>
+  <div class="resultline tank-extra-seal-total"><span>追加シーリング延長</span><b id="tankJointTotal">0.00m</b></div>
+</div>
+<button class="primary" id="calcTank">計算</button></div>
 <div class="card result"><h3>結果</h3><div class="metrics"><div><span>施工面積</span><strong id="tankArea">—</strong></div><div><span>パネル</span><strong id="tankPanels">—</strong></div><div><span>シーリング延長</span><strong id="tankSeal">—</strong></div></div>
 <div class="resultline"><span>施工除外部</span><b id="tankDeductionTotal">0.00㎡</b></div><div class="tablewrap"><table><thead><tr><th>部位</th><th>面積</th><th>パネル</th><th>パネル継目</th><th>入隅・四隅</th></tr></thead><tbody id="tankRows"></tbody></table></div>
 
@@ -1695,5 +1729,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=132"></script>
+<script src="app.js?v=133"></script>
 </body></html>
