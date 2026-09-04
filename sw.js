@@ -70,3 +70,5 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // app revision v147 - match tank extra sealing note color and size to deduction example text
 // app revision v148 - improve mobile help dialog and tank help table
 // app revision v149 - tank help mobile card UI without horizontal scrolling
+// app revision v150 - align tank deduction add-button spacing with sealing section on mobile
+// app revision v151 - lower tank deduction/sealing add buttons

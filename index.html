@@ -1257,6 +1257,43 @@
   }
 }
 
+
+/* v150: 貯水槽「施工除外部を追加」ボタン余白を追加シーリングと統一 */
+@media(max-width:700px){
+  #tank #addTankDeduction{
+    width:100% !important;
+    margin-top:8px !important;
+    margin-bottom:0 !important;
+  }
+  #tank .headrow:has(#addTankDeduction){
+    display:block !important;
+    margin-top:16px !important;
+    margin-bottom:0 !important;
+  }
+  #tank .headrow:has(#addTankDeduction) + small{
+    display:block !important;
+    margin-top:8px !important;
+    margin-bottom:0 !important;
+  }
+  #tank .tank-deduction-wrap{
+    margin-top:10px !important;
+  }
+}
+
+
+/* v151: 貯水槽の追加ボタン位置を下げる */
+#tank #addTankDeduction,
+#tank #addTankJoint{
+  position:relative !important;
+  top:8px !important;
+}
+@media(max-width:700px){
+  #tank #addTankDeduction,
+  #tank #addTankJoint{
+    top:6px !important;
+  }
+}
+
 </style>
 
 <style>
@@ -2234,5 +2271,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=149"></script>
+<script src="app.js?v=151"></script>
 </body></html>
