@@ -76,3 +76,4 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // app revision v153 - remove manual sealing count calculate button; keep automatic recalculation
 // app revision v154 - final-check cleanup; remove stale duplicate seal-count listeners
 // app revision v156 - unify add-section order across all applicable quantity screens
+// app revision v157 - remove unnecessary flat-screen helper text
