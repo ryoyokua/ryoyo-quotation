@@ -37,3 +37,4 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // app revision v116 - grouped roof slope/wave coefficient cards
 // app revision v117 - five roof slope input methods and conversion display
 // app revision v118 - roof slope fixed to percent input
+// app revision v119 - roof default 0% slope, wave guidance, live formula, round placement

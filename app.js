@@ -266,8 +266,19 @@ function updateRoofCoefficientUI(){
   const conv=getRoofSlopeConversions();
   if($("roofSlopeFactorDisplay")) $("roofSlopeFactorDisplay").value=slope.toFixed(3);
   if($("roofSlopeConversion")) $("roofSlopeConversion").textContent=
-    `${conv.sun.toFixed(1)}寸 ｜ ${conv.angle.toFixed(2)}° ｜ ${conv.percent.toFixed(1)}%`;
+    `${conv.percent.toFixed(1)}%勾配 ＝ ${conv.sun.toFixed(1)}寸 ｜ ${conv.angle.toFixed(2)}°`;
   if($("roofWaveFactor")) $("roofWaveFactor").value=wave.toFixed(3);
+
+  const note=$("roofWaveNote");
+  if(note){
+    if(type===1){
+      note.textContent="大波スレート：標準係数 1.140 を自動適用します。";
+    }else if(type===2){
+      note.textContent="小波スレート：標準係数 1.150 を自動適用します。";
+    }else{
+      note.textContent="折板・その他は形状によって係数が異なるため、メーカー資料の係数を直接入力するか、断面寸法から簡易自動計算してください。";
+    }
+  }
 }
 function getRoofSlopeLabel(){
   const c=getRoofSlopeConversions();
@@ -275,7 +286,7 @@ function getRoofSlopeLabel(){
 }
 function ceilUnit(value,unit){if(!unit||unit<=0)return value;return Math.ceil((value-1e-12)/unit)*unit}
 function adoptedArea(value,roundId){const el=$(roundId);const unit=el?Number(el.value):0;return ceilUnit(value,unit)}
-function calcRoof(){updateRoofCoefficientUI();const projection=n("roofL")*n("roofW")*Math.max(1,n("roofFaces")),slope=getRoofSlopeFactor(),wave=getRoofWaveFactor(),gross=projection*slope*wave,deduction=deductionTotal("roofDeductionRows"),joint=jointTotal("roofJointRows"),raw=Math.max(0,gross-deduction),roundUnit=Number($("roofRound").value),adopted=ceilUnit(raw,roundUnit);state.roofGrossArea=gross;state.roofDeduction=deduction;state.roofJoint=joint;state.roofRawArea=raw;state.roofArea=adopted;if($("roofGrossSummary"))$("roofGrossSummary").textContent=`${fmt(gross,2)}㎡`;if($("roofDeductionSummary"))$("roofDeductionSummary").textContent=`− ${fmt(deduction,2)}㎡`;$("roofArea").textContent=roundUnit===1?`${fmt(adopted,0)}㎡`:`${fmt(adopted,1)}㎡`;if($("roofJointTotal"))$("roofJointTotal").textContent=`${fmt(joint)}m`;calcCommonSeal("roof");$("roofDetail").innerHTML=`<div class="resultline"><span>平面面積</span><b>${fmt(projection,2)}㎡</b></div><div class="resultline"><span>勾配の求め方</span><b>${esc(getRoofSlopeLabel())}</b></div><div class="resultline"><span>勾配係数</span><b>${fmt(slope,3)}</b></div><div class="resultline"><span>波型係数</span><b>${fmt(wave,3)}</b></div><div class="resultline"><span>屋根本体面積</span><b>${fmt(gross,2)}㎡</b></div><div class="resultline"><span>施工除外部</span><b>− ${fmt(deduction,2)}㎡</b></div>`;$("roofFormula").textContent=`${fmt(projection,2)} × ${fmt(slope,3)} × ${fmt(wave,3)} = ${fmt(gross,2)}㎡\n− 控除 ${fmt(deduction,2)}㎡ = ${fmt(raw,2)}㎡`+(roundUnit>0?`\n→ ${roundUnit===1?"1㎡":"0.1㎡"}単位切り上げ = ${roundUnit===1?fmt(adopted,0):fmt(adopted,1)}㎡`:"")}
+function calcRoof(){updateRoofCoefficientUI();const projection=n("roofL")*n("roofW")*Math.max(1,n("roofFaces")),slope=getRoofSlopeFactor(),wave=getRoofWaveFactor(),gross=projection*slope*wave,deduction=deductionTotal("roofDeductionRows"),joint=jointTotal("roofJointRows"),raw=Math.max(0,gross-deduction),roundUnit=Number($("roofRound").value),adopted=ceilUnit(raw,roundUnit);state.roofGrossArea=gross;state.roofDeduction=deduction;state.roofJoint=joint;state.roofRawArea=raw;state.roofArea=adopted;if($("roofLiveFormula"))$("roofLiveFormula").textContent=`${fmt(projection,2)}㎡ × ${fmt(slope,3)} × ${fmt(wave,3)} ＝ ${fmt(gross,2)}㎡`;if($("roofGrossSummary"))$("roofGrossSummary").textContent=`${fmt(gross,2)}㎡`;if($("roofDeductionSummary"))$("roofDeductionSummary").textContent=`− ${fmt(deduction,2)}㎡`;$("roofArea").textContent=roundUnit===1?`${fmt(adopted,0)}㎡`:`${fmt(adopted,1)}㎡`;if($("roofJointTotal"))$("roofJointTotal").textContent=`${fmt(joint)}m`;calcCommonSeal("roof");$("roofDetail").innerHTML=`<div class="resultline"><span>平面面積</span><b>${fmt(projection,2)}㎡</b></div><div class="resultline"><span>勾配の求め方</span><b>${esc(getRoofSlopeLabel())}</b></div><div class="resultline"><span>勾配係数</span><b>${fmt(slope,3)}</b></div><div class="resultline"><span>波型係数</span><b>${fmt(wave,3)}</b></div><div class="resultline"><span>屋根本体面積</span><b>${fmt(gross,2)}㎡</b></div><div class="resultline"><span>施工除外部</span><b>− ${fmt(deduction,2)}㎡</b></div>`;$("roofFormula").textContent=`${fmt(projection,2)} × ${fmt(slope,3)} × ${fmt(wave,3)} = ${fmt(gross,2)}㎡\n− 控除 ${fmt(deduction,2)}㎡ = ${fmt(raw,2)}㎡`+(roundUnit>0?`\n→ ${roundUnit===1?"1㎡":"0.1㎡"}単位切り上げ = ${roundUnit===1?fmt(adopted,0):fmt(adopted,1)}㎡`:"")}
 if($("calcRoof"))$("calcRoof").onclick=calcRoof;
 ["roofL","roofW","roofFaces","roofSlopePercent","roofWaveDirectFactor","roofWavePitch","roofWaveSurface"].forEach(id=>$(id)?.addEventListener("input",calcRoof));
 ["roofRound","roofWaveType","roofWaveMode"].forEach(id=>$(id)?.addEventListener("change",calcRoof));

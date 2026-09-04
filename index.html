@@ -625,6 +625,58 @@
   #roof .roof-coeff-title small{display:block;margin-top:3px}
 }
 
+
+/* v119: 屋根入力フロー改善 */
+#roof .coeff-note{
+  grid-column:1 / -1;
+  padding:10px 12px;
+  border-radius:9px;
+  background:#fff7db;
+  border:1px solid #ead79a;
+  color:#5a4b18;
+  font-size:13px;
+  line-height:1.5;
+}
+#roof .roof-live-calc{
+  margin-top:14px;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(220px,320px);
+  gap:14px;
+  align-items:end;
+  border:1px solid var(--bd);
+  border-radius:12px;
+  background:#f8fafc;
+  padding:14px;
+}
+#roof .roof-live-calc-main{
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+}
+#roof .roof-live-calc-main span{
+  font-size:13px;
+  color:#667085;
+  font-weight:700;
+}
+#roof .roof-live-calc-main strong{
+  font-size:18px;
+  color:#17365d;
+  line-height:1.45;
+}
+#roof .roof-live-calc label{
+  display:flex;
+  flex-direction:column;
+  margin:0;
+}
+#roof .roof-live-calc select{
+  width:100%;
+  min-height:42px;
+  box-sizing:border-box;
+}
+@media(max-width:700px){
+  #roof .roof-live-calc{grid-template-columns:1fr}
+}
+
 </style>
 
 <style>
@@ -1151,15 +1203,15 @@ input,select,textarea,button{max-width:100%}
 <label>長さ L(m)<input id="roofL" type="number" value="10" step="1" class="integer-spinner"><small>図面・真上から見た平面寸法</small></label>
 <label>幅 W(m)<input id="roofW" type="number" value="10" step="1" class="integer-spinner"><small>図面・真上から見た平面寸法</small></label>
 <label>面数<input id="roofFaces" type="number" value="1" min="1"></label>
-<label>面積の端数処理<select id="roofRound"><option value="1" selected>1㎡単位で切り上げ</option><option value="0.1">0.1㎡単位で切り上げ</option><option value="0">端数処理なし</option></select></label>
+
 </div>
 
 <div class="roof-coeff-stack">
   <div class="roof-coeff-card">
     <div class="roof-coeff-title"><b>勾配係数</b><small>屋根全体の傾きを補正</small></div>
     <div class="roof-coeff-grid">
-      <label class="full">勾配 (%)<input id="roofSlopePercent" type="number" value="30" min="0" step=".1"><small>水平100に対する高さの割合</small></label>
-      <label class="coeff-output">算出した勾配係数<input id="roofSlopeFactorDisplay" type="number" value="1.044" step=".001" readonly><small id="roofSlopeConversion">3.0寸 ｜ 16.70° ｜ 30.0%</small></label>
+      <label class="full">勾配 (%)<input id="roofSlopePercent" type="number" value="0" min="0" step=".1"><small>水平100に対する高さの割合　例：3寸勾配＝30%</small></label>
+      <label class="coeff-output">算出した勾配係数<input id="roofSlopeFactorDisplay" type="number" value="1.000" step=".001" readonly><small id="roofSlopeConversion">0.0%勾配 ＝ 0.0寸 ｜ 0.00°</small></label>
     </div>
   </div>
 
@@ -1176,8 +1228,16 @@ input,select,textarea,button{max-width:100%}
       <label id="roofWavePitchWrap" class="hidden">1ピッチ水平幅 (mm)<input id="roofWavePitch" type="number" value="500" min="1" step="1" class="integer-spinner"></label>
       <label id="roofWaveSurfaceWrap" class="hidden">1ピッチ表面実長 (mm)<input id="roofWaveSurface" type="number" value="500" min="1" step="1" class="integer-spinner"><small>断面の凹凸に沿った実長</small></label>
       <label class="coeff-output">算出した波型係数<input id="roofWaveFactor" type="number" value="1.000" step=".001" readonly><small>屋根材・入力内容から自動表示</small></label>
+      <div id="roofWaveNote" class="coeff-note full"></div>
     </div>
   </div>
+</div>
+<div class="roof-live-calc">
+  <div class="roof-live-calc-main">
+    <span>今回の計算</span>
+    <strong id="roofLiveFormula">100.00㎡ × 1.000 × 1.000 ＝ 100.00㎡</strong>
+  </div>
+  <label>面積の端数処理<select id="roofRound"><option value="1" selected>1㎡単位で切り上げ</option><option value="0.1">0.1㎡単位で切り上げ</option><option value="0">端数処理なし</option></select></label>
 </div>
 <div class="info" style="margin-top:10px"><b>寸法入力：</b>斜面そのものを実測した長さではなく、図面・平面上の長さと幅を入力します。<br><b>係数：</b>勾配は「勾配（%）」から自動計算します。波型係数は「屋根材／直接入力／簡易自動計算」に対応しています。<br><b>面積：</b>平面積 × 勾配係数 × 波型係数 で概算します。</div>
 
@@ -1537,5 +1597,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=118"></script>
+<script src="app.js?v=119"></script>
 </body></html>
