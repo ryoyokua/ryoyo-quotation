@@ -1018,6 +1018,36 @@
   }
 }
 
+
+/* v145: 貯水槽シーリング延長 → 独立シーリング材計算へ連動 */
+.tank-seal-linked-length{
+  display:grid;
+  grid-template-columns:auto 1fr;
+  gap:3px 12px;
+  align-items:center;
+  margin:0 0 14px;
+  padding:12px 14px;
+  border-radius:10px;
+  background:var(--green);
+}
+.tank-seal-linked-length span{
+  font-weight:700;
+}
+.tank-seal-linked-length b{
+  justify-self:end;
+  font-size:20px;
+  color:#1f4e29;
+}
+.tank-seal-linked-length small{
+  grid-column:1 / -1;
+  color:#667085;
+}
+@media(max-width:700px){
+  .tank-seal-linked-length{
+    grid-template-columns:1fr auto;
+  }
+}
+
 </style>
 
 <style>
@@ -1668,6 +1698,11 @@ input,select,textarea,button{max-width:100%}
   </div>
 </div>
 <div class="card"><h3>シーリング材 必要本数</h3>
+<div class="tank-seal-linked-length">
+  <span>計算対象シーリング延長</span>
+  <b id="sealTargetLength">—</b>
+  <small>貯水槽で算出した「合計シーリング延長」と連動</small>
+</div>
 <div class="info"><b>計算方法：</b> 使用する製品を選択し、容量・目地幅・目地深さから1本あたりの施工可能長さを自動計算します。</div>
 
 <div class="formgrid" style="margin-top:12px">
@@ -1990,5 +2025,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=144"></script>
+<script src="app.js?v=145"></script>
 </body></html>

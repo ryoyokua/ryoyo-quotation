@@ -65,3 +65,4 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // app revision v142 - emphasize material transfer CTA on all quantity screens
 // app revision v143 - force common material CTA styling on tank screen
 // app revision v144 - tank material CTA moved to full-width card below two-column results
+// app revision v145 - link tank total seal length to standalone seal-count calculator

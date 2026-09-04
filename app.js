@@ -500,7 +500,10 @@ if($("tankRound"))$("tankRound").addEventListener("change",calcTank);
 function calcSealCount(showAlert=true){
   if(!$("sealVolume") || !$("sealWidth") || !$("sealDepth")) return;
 
-  if(!state.tankSeal){
+  const targetLength=Number(state.tankSeal)||0;
+  if($("sealTargetLength")) $("sealTargetLength").textContent=targetLength?`${fmt(targetLength,1)}m`:"—";
+
+  if(!targetLength){
     $("sealEach").textContent="—";
     $("sealCount").textContent="—";
     $("sealCountReserve").textContent="—";
@@ -521,7 +524,7 @@ function calcSealCount(showAlert=true){
     return;
   }
 
-  const count=Math.ceil(state.tankSeal/each);
+  const count=Math.ceil(targetLength/each);
   const reserveRate=Number($("sealReserve").value);
   const withReserve=Math.ceil(count*(1+reserveRate));
 
@@ -531,6 +534,10 @@ function calcSealCount(showAlert=true){
 }
 
 $("sealReserve").addEventListener("change",()=>calcSealCount(false));
+["sealVolume","sealWidth","sealDepth"].forEach(id=>{
+  const el=$(id);
+  if(el) el.addEventListener("input",()=>calcSealCount(false));
+});
 
 // flat
 const types={"平場":1,"壁":1,"立上り":1,"仕切り":1,"設備基礎":1,"直接入力":1,"控除":-1};
