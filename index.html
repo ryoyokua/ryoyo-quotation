@@ -819,6 +819,21 @@
   .tank-material-transfer .send{min-height:56px}
 }
 
+
+/* v136: 貯水槽「シーリングを追加」ボタンを1行表示 */
+#addTankJoint{
+  white-space:nowrap !important;
+  width:auto !important;
+  min-width:max-content;
+}
+@media(max-width:700px){
+  #addTankJoint{
+    width:auto !important;
+    max-width:100%;
+    white-space:nowrap !important;
+  }
+}
+
 </style>
 
 <style>
@@ -1781,5 +1796,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=135"></script>
+<script src="app.js?v=136"></script>
 </body></html>

@@ -56,3 +56,4 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // automatic panel/corner sealing + manually added sealing = total sealing length
 // app revision v134 - clearer tank-to-material transfer action
 // app revision v135 - tank sealing add button wording
+// app revision v136 - keep tank add sealing button on one line
