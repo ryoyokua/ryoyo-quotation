@@ -210,19 +210,30 @@ function captureExtraRows(src,data){const m={roof:["roofDeductionRows","roofJoin
 function restoreExtraRows(src,data){const m={roof:["roofDeductionRows","roofJointRows"],flat:["flatDeductionRows","flatJointRows"],vessel:["vesselDeductionRows","vesselJointRows"],tank:["tankDeductionRows",null]}[src];if(!m)return;if($(m[0])){$(m[0]).innerHTML="";(data.deductions||[]).forEach(r=>addDeductionRow(m[0],r))}if(m[1]&&$(m[1])){$(m[1]).innerHTML="";(data.joints||[]).forEach(r=>addJointRow(m[1],r))}}
 
 function renderWaveSelect(){
-  // v114: roof choices are fixed to four practical categories.
-  // Preserve the master screen elsewhere, but normalize roof selection here.
+  // v122: 実務上使う順に表示。value は既存保存データとの互換性を維持。
   const presets=[
-    {name:"折板",factor:null,note:"係数を直接入力、または断面寸法から簡易自動計算"},
-    {name:"大波スレート",factor:1.14,note:"標準係数 1.14"},
-    {name:"小波スレート",factor:1.15,note:"標準係数 1.15"},
-    {name:"その他",factor:null,note:"係数を直接入力、または断面寸法から簡易自動計算"}
+    {value:1,name:"大波スレート",factor:1.14},
+    {value:2,name:"小波スレート",factor:1.15},
+    {value:0,name:"折板",factor:null},
+    {value:3,name:"その他",factor:null}
   ];
   const sel=$("roofWaveType");
   const previous=sel.value;
-  sel.innerHTML=presets.map((w,i)=>`<option value="${i}">${w.name}</option>`).join("");
-  if(previous!=="" && Number(previous)<presets.length) sel.value=previous;
-  sel.onchange=()=>{ updateRoofCoefficientUI(); calcRoof(); };
+  sel.innerHTML=presets.map(w=>`<option value="${w.value}">${w.name}</option>`).join("");
+
+  // 新規表示は大波スレート。既存値があればそのまま維持。
+  const valid=presets.some(w=>String(w.value)===String(previous));
+  sel.value=valid ? previous : "1";
+
+  sel.onchange=()=>{
+    const type=Number(sel.value);
+    const mode=$("roofWaveMode");
+    // 大波・小波は選択時の初期設定を「屋根材から選択」にする。
+    // 折板・その他は固定係数を持たないため「直接入力」にする。
+    if(mode) mode.value=(type===1||type===2) ? "preset" : "direct";
+    updateRoofCoefficientUI();
+    calcRoof();
+  };
   updateRoofCoefficientUI();
 }
 function getRoofSlopeRatio(){
@@ -296,9 +307,9 @@ function updateRoofCoefficientUI(){
   const note=$("roofWaveNote");
   if(note){
     if(type===1){
-      note.textContent="大波スレート：標準係数 1.140 を自動適用します。";
+      note.textContent="大波スレート：初期設定で「屋根材から選択」とし、標準係数 1.140 を自動表示します。";
     }else if(type===2){
-      note.textContent="小波スレート：標準係数 1.150 を自動適用します。";
+      note.textContent="小波スレート：初期設定で「屋根材から選択」とし、標準係数 1.150 を自動表示します。";
     }else{
       note.textContent="折板・その他は形状によって係数が異なるため、メーカー資料の係数を直接入力するか、断面寸法から簡易自動計算してください。";
     }

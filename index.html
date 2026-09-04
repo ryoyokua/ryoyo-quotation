@@ -1223,7 +1223,7 @@ input,select,textarea,button{max-width:100%}
   <div class="roof-coeff-card">
     <div class="roof-coeff-title"><b>波型係数</b><small>屋根材の凹凸を補正</small></div>
     <div class="roof-coeff-grid">
-      <label>屋根材<select id="roofWaveType"><option value="0">折板</option><option value="1">大波スレート</option><option value="2">小波スレート</option><option value="3">その他</option></select></label>
+      <label>屋根材<select id="roofWaveType"><option value="1" selected>大波スレート</option><option value="2">小波スレート</option><option value="0">折板</option><option value="3">その他</option></select></label>
       <label>求め方<select id="roofWaveMode">
         <option value="preset" selected>屋根材から選択</option>
         <option value="direct">波型係数を直接入力</option>
@@ -1232,14 +1232,14 @@ input,select,textarea,button{max-width:100%}
       <label id="roofWaveDirectWrap" class="hidden">波型係数 直接入力<input id="roofWaveDirectFactor" type="number" value="1.000" min="1" step=".001"><small>メーカー資料等で係数が分かる場合</small></label>
       <label id="roofWavePitchWrap" class="hidden">1ピッチ水平幅 (mm)<input id="roofWavePitch" type="number" value="500" min="1" step="1" class="integer-spinner"></label>
       <label id="roofWaveSurfaceWrap" class="hidden">1ピッチ表面実長 (mm)<input id="roofWaveSurface" type="number" value="500" min="1" step="1" class="integer-spinner"><small>断面の凹凸に沿った実長</small></label>
-      <label class="coeff-output">算出した波型係数<input id="roofWaveFactor" type="number" value="1.000" step=".001" readonly><small>屋根材・入力内容から自動表示</small></label>
+      <label class="coeff-output">算出した波型係数<input id="roofWaveFactor" type="number" value="1.140" step=".001" readonly><small>屋根材・入力内容から自動表示</small></label>
       <div id="roofWaveNote" class="coeff-note full"></div>
     </div>
   </div>
 </div>
 <div class="roof-live-calc">
   <span>今回の計算</span>
-  <strong id="roofLiveFormula">100.00㎡ × 1.044 × 1.000 ＝ 104.40㎡</strong>
+  <strong id="roofLiveFormula">100.00㎡ × 1.044 × 1.140 ＝ 119.02㎡</strong>
 </div>
 <div class="info" style="margin-top:10px"><b>寸法入力：</b>斜面そのものを実測した長さではなく、図面・平面上の長さと幅を入力します。<br><b>係数：</b>勾配は「寸勾配／角度／％勾配／水平距離＋高低差／係数直接入力」、波型係数は「屋根材／直接入力／簡易自動計算」に対応しています。<br><b>面積：</b>平面積 × 勾配係数 × 波型係数 で概算します。</div>
 
@@ -1599,5 +1599,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=121"></script>
+<script src="app.js?v=122"></script>
 </body></html>
