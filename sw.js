@@ -63,3 +63,4 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // preserves pre-v139 button/layout styling
 // app revision v141 - unify tank deduction/additional sealing mobile cards
 // app revision v142 - emphasize material transfer CTA on all quantity screens
+// app revision v143 - force common material CTA styling on tank screen
