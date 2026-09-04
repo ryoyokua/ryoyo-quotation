@@ -1159,15 +1159,30 @@ input,select,textarea,button{max-width:100%}
     <div class="roof-coeff-title"><b>勾配係数</b><small>屋根全体の傾きを補正</small></div>
     <div class="roof-coeff-grid">
       <label class="coeff-method full">求め方<select id="roofSlopeMode">
-        <option value="select" selected>寸勾配から選択</option>
+        <option value="sun" selected>寸勾配から選択</option>
+        <option value="angle">角度から計算</option>
+        <option value="percent">％勾配から計算</option>
+        <option value="auto">水平距離＋高低差から計算</option>
         <option value="direct">勾配係数を直接入力</option>
-        <option value="auto">簡易自動計算（水平距離＋高低差）</option>
       </select></label>
-      <label id="roofSlopeSelectWrap">勾配<select id="roofSun"><option value="2.5">2.5寸</option><option value="3" selected>3.0寸</option><option value="3.5">3.5寸</option><option value="4">4.0寸</option><option value="4.5">4.5寸</option><option value="5">5.0寸</option><option value="5.5">5.5寸</option><option value="6">6.0寸</option></select></label>
-      <label id="roofSlopeDirectWrap" class="hidden">勾配係数 直接入力<input id="roofSlopeDirectFactor" type="number" value="1.044" min="1" step=".001"><small>図面・仕様書等で係数が分かる場合</small></label>
+
+      <label id="roofSlopeSelectWrap">寸勾配<select id="roofSun">
+        <option value="0.5">0.5寸</option><option value="1">1.0寸</option><option value="1.5">1.5寸</option>
+        <option value="2">2.0寸</option><option value="2.5">2.5寸</option><option value="3" selected>3.0寸</option>
+        <option value="3.5">3.5寸</option><option value="4">4.0寸</option><option value="4.5">4.5寸</option>
+        <option value="5">5.0寸</option><option value="5.5">5.5寸</option><option value="6">6.0寸</option>
+        <option value="6.5">6.5寸</option><option value="7">7.0寸</option><option value="7.5">7.5寸</option>
+        <option value="8">8.0寸</option><option value="8.5">8.5寸</option><option value="9">9.0寸</option>
+        <option value="9.5">9.5寸</option><option value="10">矩勾配（10寸）</option>
+      </select></label>
+
+      <label id="roofSlopeAngleWrap" class="hidden">角度 (°)<input id="roofSlopeAngle" type="number" value="16.70" min="0" max="89.9" step=".01"><small>水平面からの角度</small></label>
+      <label id="roofSlopePercentWrap" class="hidden">勾配 (%)<input id="roofSlopePercent" type="number" value="30" min="0" step=".1"><small>水平100に対する高さの割合</small></label>
       <label id="roofSlopeRunWrap" class="hidden">水平距離 (m)<input id="roofSlopeRun" type="number" value="5" min=".001" step=".1"><small>例：軒から棟まで</small></label>
       <label id="roofSlopeRiseWrap" class="hidden">高低差 (m)<input id="roofSlopeRise" type="number" value="1.5" min="0" step=".1"><small>例：棟高－軒高</small></label>
-      <label class="coeff-output">算出した勾配係数<input id="roofSlopeFactorDisplay" type="number" value="1.044" step=".001" readonly><small>選択・入力内容から自動表示</small></label>
+      <label id="roofSlopeDirectWrap" class="hidden">勾配係数 直接入力<input id="roofSlopeDirectFactor" type="number" value="1.044" min="1" step=".001"><small>図面・仕様書等で係数が分かる場合</small></label>
+
+      <label class="coeff-output">算出した勾配係数<input id="roofSlopeFactorDisplay" type="number" value="1.044" step=".001" readonly><small id="roofSlopeConversion">3.0寸 ｜ 16.70° ｜ 30.0%</small></label>
     </div>
   </div>
 
@@ -1187,7 +1202,7 @@ input,select,textarea,button{max-width:100%}
     </div>
   </div>
 </div>
-<div class="info" style="margin-top:10px"><b>寸法入力：</b>斜面そのものを実測した長さではなく、図面・平面上の長さと幅を入力します。<br><b>係数：</b>勾配・波型係数は「選択／直接入力／簡易自動計算」に対応しています。<br><b>面積：</b>平面積 × 勾配係数 × 波型係数 で概算します。</div>
+<div class="info" style="margin-top:10px"><b>寸法入力：</b>斜面そのものを実測した長さではなく、図面・平面上の長さと幅を入力します。<br><b>係数：</b>勾配は「寸勾配／角度／％勾配／水平距離＋高低差／係数直接入力」、波型係数は「屋根材／直接入力／簡易自動計算」に対応しています。<br><b>面積：</b>平面積 × 勾配係数 × 波型係数 で概算します。</div>
 
 <div class="quantity-section"><div class="headrow"><b>施工除外部</b><button class="secondary" type="button" id="addRoofDeduction">＋施工除外部を追加</button></div><small>例：トップライト、換気設備、架台、ダクト、開口部など施工しない箇所</small><div class="tablewrap"><table><thead><tr><th>名称</th><th>長さ(m)</th><th>幅(m)</th><th>数量</th><th>控除面積</th><th></th></tr></thead><tbody id="roofDeductionRows"></tbody></table></div></div>
 
@@ -1545,5 +1560,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=116"></script>
+<script src="app.js?v=117"></script>
 </body></html>

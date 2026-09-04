@@ -225,15 +225,35 @@ function renderWaveSelect(){
   sel.onchange=()=>{ updateRoofCoefficientUI(); calcRoof(); };
   updateRoofCoefficientUI();
 }
-function getRoofSlopeFactor(){
-  const mode=$("roofSlopeMode")?.value||"select";
-  if(mode==="direct") return Math.max(1,n("roofSlopeDirectFactor")||1);
+function getRoofSlopeRatio(){
+  const mode=$("roofSlopeMode")?.value||"sun";
+  if(mode==="angle"){
+    const deg=Math.max(0,Math.min(89.9,n("roofSlopeAngle")));
+    return Math.tan(deg*Math.PI/180);
+  }
+  if(mode==="percent") return Math.max(0,n("roofSlopePercent"))/100;
   if(mode==="auto"){
     const run=n("roofSlopeRun"), rise=n("roofSlopeRise");
-    return run>0 ? Math.sqrt(1+(rise/run)**2) : 1;
+    return run>0 ? Math.max(0,rise/run) : 0;
   }
-  const sun=Number($("roofSun").value)||0;
-  return Math.sqrt(1+(sun/10)**2);
+  if(mode==="direct"){
+    const factor=Math.max(1,n("roofSlopeDirectFactor")||1);
+    return Math.sqrt(Math.max(0,factor*factor-1));
+  }
+  return Math.max(0,Number($("roofSun")?.value)||0)/10;
+}
+function getRoofSlopeFactor(){
+  const mode=$("roofSlopeMode")?.value||"sun";
+  if(mode==="direct") return Math.max(1,n("roofSlopeDirectFactor")||1);
+  const ratio=getRoofSlopeRatio();
+  return Math.sqrt(1+ratio*ratio);
+}
+function getRoofSlopeConversions(){
+  const ratio=getRoofSlopeRatio();
+  const sun=ratio*10;
+  const angle=Math.atan(ratio)*180/Math.PI;
+  const percent=ratio*100;
+  return {ratio,sun,angle,percent};
 }
 function getRoofWaveFactor(){
   const type=Number($("roofWaveType").value)||0;
@@ -249,11 +269,13 @@ function getRoofWaveFactor(){
   return Math.max(1,n("roofWaveDirectFactor")||1);
 }
 function updateRoofCoefficientUI(){
-  const sm=$("roofSlopeMode")?.value||"select";
-  $("roofSlopeSelectWrap")?.classList.toggle("hidden",sm!=="select");
-  $("roofSlopeDirectWrap")?.classList.toggle("hidden",sm!=="direct");
+  const sm=$("roofSlopeMode")?.value||"sun";
+  $("roofSlopeSelectWrap")?.classList.toggle("hidden",sm!=="sun");
+  $("roofSlopeAngleWrap")?.classList.toggle("hidden",sm!=="angle");
+  $("roofSlopePercentWrap")?.classList.toggle("hidden",sm!=="percent");
   $("roofSlopeRunWrap")?.classList.toggle("hidden",sm!=="auto");
   $("roofSlopeRiseWrap")?.classList.toggle("hidden",sm!=="auto");
+  $("roofSlopeDirectWrap")?.classList.toggle("hidden",sm!=="direct");
 
   const type=Number($("roofWaveType")?.value)||0;
   const wm=$("roofWaveMode");
@@ -265,20 +287,26 @@ function updateRoofCoefficientUI(){
 
   const slope=getRoofSlopeFactor();
   const wave=getRoofWaveFactor();
+  const conv=getRoofSlopeConversions();
   if($("roofSlopeFactorDisplay")) $("roofSlopeFactorDisplay").value=slope.toFixed(3);
+  if($("roofSlopeConversion")) $("roofSlopeConversion").textContent=
+    `${conv.sun.toFixed(1)}寸 ｜ ${conv.angle.toFixed(2)}° ｜ ${conv.percent.toFixed(1)}%`;
   if($("roofWaveFactor")) $("roofWaveFactor").value=wave.toFixed(3);
 }
 function getRoofSlopeLabel(){
-  const mode=$("roofSlopeMode")?.value||"select";
-  if(mode==="direct") return "勾配係数を直接入力";
-  if(mode==="auto") return `簡易自動計算（水平 ${fmt(n("roofSlopeRun"),2)}m / 高低差 ${fmt(n("roofSlopeRise"),2)}m）`;
-  return `${Number($("roofSun")?.value||0).toFixed(1)}寸`;
+  const mode=$("roofSlopeMode")?.value||"sun";
+  const c=getRoofSlopeConversions();
+  if(mode==="angle") return `${c.angle.toFixed(2)}°`;
+  if(mode==="percent") return `${c.percent.toFixed(1)}%`;
+  if(mode==="auto") return `水平 ${fmt(n("roofSlopeRun"),2)}m / 高低差 ${fmt(n("roofSlopeRise"),2)}m`;
+  if(mode==="direct") return `係数 ${getRoofSlopeFactor().toFixed(3)} を直接入力`;
+  return `${c.sun.toFixed(1)}寸`;
 }
 function ceilUnit(value,unit){if(!unit||unit<=0)return value;return Math.ceil((value-1e-12)/unit)*unit}
 function adoptedArea(value,roundId){const el=$(roundId);const unit=el?Number(el.value):0;return ceilUnit(value,unit)}
 function calcRoof(){updateRoofCoefficientUI();const projection=n("roofL")*n("roofW")*Math.max(1,n("roofFaces")),slope=getRoofSlopeFactor(),wave=getRoofWaveFactor(),gross=projection*slope*wave,deduction=deductionTotal("roofDeductionRows"),joint=jointTotal("roofJointRows"),raw=Math.max(0,gross-deduction),roundUnit=Number($("roofRound").value),adopted=ceilUnit(raw,roundUnit);state.roofGrossArea=gross;state.roofDeduction=deduction;state.roofJoint=joint;state.roofRawArea=raw;state.roofArea=adopted;if($("roofGrossSummary"))$("roofGrossSummary").textContent=`${fmt(gross,2)}㎡`;if($("roofDeductionSummary"))$("roofDeductionSummary").textContent=`− ${fmt(deduction,2)}㎡`;$("roofArea").textContent=roundUnit===1?`${fmt(adopted,0)}㎡`:`${fmt(adopted,1)}㎡`;if($("roofJointTotal"))$("roofJointTotal").textContent=`${fmt(joint)}m`;calcCommonSeal("roof");$("roofDetail").innerHTML=`<div class="resultline"><span>平面面積</span><b>${fmt(projection,2)}㎡</b></div><div class="resultline"><span>勾配の求め方</span><b>${esc(getRoofSlopeLabel())}</b></div><div class="resultline"><span>勾配係数</span><b>${fmt(slope,3)}</b></div><div class="resultline"><span>波型係数</span><b>${fmt(wave,3)}</b></div><div class="resultline"><span>屋根本体面積</span><b>${fmt(gross,2)}㎡</b></div><div class="resultline"><span>施工除外部</span><b>− ${fmt(deduction,2)}㎡</b></div>`;$("roofFormula").textContent=`${fmt(projection,2)} × ${fmt(slope,3)} × ${fmt(wave,3)} = ${fmt(gross,2)}㎡\n− 控除 ${fmt(deduction,2)}㎡ = ${fmt(raw,2)}㎡`+(roundUnit>0?`\n→ ${roundUnit===1?"1㎡":"0.1㎡"}単位切り上げ = ${roundUnit===1?fmt(adopted,0):fmt(adopted,1)}㎡`:"")}
 if($("calcRoof"))$("calcRoof").onclick=calcRoof;
-["roofL","roofW","roofFaces","roofSlopeDirectFactor","roofSlopeRun","roofSlopeRise","roofWaveDirectFactor","roofWavePitch","roofWaveSurface"].forEach(id=>$(id)?.addEventListener("input",calcRoof));
+["roofL","roofW","roofFaces","roofSlopeAngle","roofSlopePercent","roofSlopeDirectFactor","roofSlopeRun","roofSlopeRise","roofWaveDirectFactor","roofWavePitch","roofWaveSurface"].forEach(id=>$(id)?.addEventListener("input",calcRoof));
 ["roofRound","roofSun","roofSlopeMode","roofWaveType","roofWaveMode"].forEach(id=>$(id)?.addEventListener("change",calcRoof));
 
 
