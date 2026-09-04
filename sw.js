@@ -36,3 +36,4 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // app revision v115 - roof coefficient UI rebuilt and runtime fix
 // app revision v116 - grouped roof slope/wave coefficient cards
 // app revision v117 - five roof slope input methods and conversion display
+// app revision v118 - roof slope fixed to percent input
