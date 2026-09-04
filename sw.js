@@ -42,3 +42,4 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // app revision v123 - default area rounding: ceil to 0.1 square meter
 // app revision v124 - merge roof wave material choices: folded plate and other
 // app revision v125 - lower roof deduction and sealing add buttons slightly
+// app revision v126 - normalize tank deduction area display
