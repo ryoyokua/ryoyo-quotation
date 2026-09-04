@@ -74,3 +74,4 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // app revision v151 - lower tank deduction/sealing add buttons
 // app revision v152 - align tank headings/button height and improve sealing note wrapping
 // app revision v153 - remove manual sealing count calculate button; keep automatic recalculation
+// app revision v154 - final-check cleanup; remove stale duplicate seal-count listeners

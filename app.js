@@ -2227,9 +2227,7 @@ renderCalcItems();
 addFlat({type:"平場",name:"A面",a:10,b:8,q:1});
 if($("calcOtherBtn"))$("calcOtherBtn").onclick=calcOther;calcRoof();calcTank();calcFlat();updateVesselFields();calcPipe();updateProductFields();calcOther();
 addSpecMaterial(0);
-if($("calcSealCount"))
-["sealVolume","sealWidth","sealDepth"].forEach(id=>{if($(id))$(id).addEventListener("input",()=>calcSealCount(false));});
-if($("sealReserve"))$("sealReserve").addEventListener("change",()=>calcSealCount(false));
+// シーリング材必要本数は入力変更時に自動再計算（手動計算ボタンなし）。
 // ページ更新・アプリ更新後も、このタブで最後に開いていた画面を維持する。
 restoreLastView();
 
