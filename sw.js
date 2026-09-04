@@ -39,3 +39,4 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // app revision v120 - restore v117 roof UI; percent field label fixed as 勾配（%）
 // app revision v121 - roof wave guidance and live calculation formula
 // app revision v122 - roof material order and slate preset coefficient defaults
+// app revision v123 - default area rounding: ceil to 0.1 square meter
