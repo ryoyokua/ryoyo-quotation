@@ -847,6 +847,121 @@
   }
 }
 
+
+/* v141: 貯水槽「施工除外部」「追加シーリング」スマホUI統一 */
+@media(max-width:700px){
+  /* 横スクロール用のPCテーブル幅指定を、この2表だけ解除 */
+  #tank .tank-deduction-wrap,
+  #tank .tank-extra-seal-section .tablewrap{
+    overflow:visible !important;
+    max-width:100% !important;
+  }
+  #tank .tank-deduction-table,
+  #tank .tank-extra-seal-section .tablewrap table{
+    width:100% !important;
+    min-width:0 !important;
+    table-layout:fixed !important;
+  }
+
+  #tank .tank-deduction-table thead,
+  #tank .tank-extra-seal-section thead{
+    display:none !important;
+  }
+
+  /* 共通カード */
+  #tank #tankDeductionRows tr,
+  #tank #tankJointRows tr{
+    display:grid !important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important;
+    gap:10px 12px !important;
+    width:100% !important;
+    margin:10px 0 14px !important;
+    padding:14px !important;
+    border:1px solid #d7dde5 !important;
+    border-radius:14px !important;
+    background:#fff !important;
+    box-sizing:border-box !important;
+  }
+
+  #tank #tankDeductionRows td,
+  #tank #tankJointRows td{
+    display:block !important;
+    width:auto !important;
+    min-width:0 !important;
+    max-width:none !important;
+    padding:0 !important;
+    border:0 !important;
+    box-sizing:border-box !important;
+  }
+
+  #tank #tankDeductionRows td::before,
+  #tank #tankJointRows td::before{
+    content:attr(data-label) !important;
+    display:block !important;
+    min-height:20px !important;
+    margin:0 0 5px !important;
+    font-size:14px !important;
+    line-height:1.3 !important;
+    font-weight:700 !important;
+    color:#667085 !important;
+  }
+  #tank #tankDeductionRows td[data-label=""]::before,
+  #tank #tankJointRows td[data-label=""]::before{
+    display:none !important;
+  }
+
+  #tank #tankDeductionRows input,
+  #tank #tankJointRows input{
+    width:100% !important;
+    min-width:0 !important;
+    max-width:100% !important;
+    box-sizing:border-box !important;
+  }
+
+  /* 名称は全幅 */
+  #tank #tankDeductionRows td:nth-child(1),
+  #tank #tankJointRows td:nth-child(1){
+    grid-column:1 / -1 !important;
+  }
+
+  /* 控除：長さ・幅は2列、数量は次段全幅 */
+  #tank #tankDeductionRows td:nth-child(4){
+    grid-column:1 / -1 !important;
+  }
+
+  /* 結果は緑の全幅 */
+  #tank #tankDeductionRows td:nth-child(5),
+  #tank #tankJointRows td:nth-child(4){
+    grid-column:1 / -1 !important;
+  }
+  #tank #tankDeductionRows .do,
+  #tank #tankJointRows .jo{
+    width:100% !important;
+    padding:12px 14px !important;
+    border-radius:12px !important;
+    background:var(--green) !important;
+    color:#1f4e29 !important;
+    font-size:18px !important;
+    font-weight:800 !important;
+  }
+
+  /* 削除は最下段全幅 */
+  #tank #tankDeductionRows td:nth-child(6),
+  #tank #tankJointRows td:nth-child(5){
+    grid-column:1 / -1 !important;
+  }
+  #tank #tankDeductionRows .delete,
+  #tank #tankJointRows .delete{
+    width:100% !important;
+    min-height:46px !important;
+  }
+
+  /* セクション合計 */
+  #tank .tank-extra-seal-total{
+    margin-top:6px !important;
+  }
+}
+
 </style>
 
 <style>
@@ -1802,5 +1917,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=140"></script>
+<script src="app.js?v=141"></script>
 </body></html>

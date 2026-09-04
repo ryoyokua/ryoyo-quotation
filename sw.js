@@ -61,3 +61,4 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // app revision v138 - align tank add sealing button with deduction add button on mobile
 // app revision v140 - tank material transfer matches other screens
 // preserves pre-v139 button/layout styling
+// app revision v141 - unify tank deduction/additional sealing mobile cards
