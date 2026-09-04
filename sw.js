@@ -59,4 +59,5 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // app revision v136 - keep tank add sealing button on one line
 // app revision v137 - simplify tank material transfer layout
 // app revision v138 - align tank add sealing button with deduction add button on mobile
-// app revision v139 - unify material-transfer UI across all quantity screens
+// app revision v140 - tank material transfer matches other screens
+// preserves pre-v139 button/layout styling
