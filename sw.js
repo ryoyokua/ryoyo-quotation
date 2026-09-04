@@ -57,3 +57,4 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // app revision v134 - clearer tank-to-material transfer action
 // app revision v135 - tank sealing add button wording
 // app revision v136 - keep tank add sealing button on one line
+// app revision v137 - simplify tank material transfer layout

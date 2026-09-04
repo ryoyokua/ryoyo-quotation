@@ -379,8 +379,6 @@ function calcTank(){
     $("tankArea").textContent="—";
     $("tankPanels").textContent="—";
     $("tankSeal").textContent="—";
-    if($("tankTransferArea"))$("tankTransferArea").textContent="—";
-    if($("tankTransferSeal"))$("tankTransferSeal").textContent="—";
     calcSealCount(false);
     return;
   }
@@ -451,7 +449,7 @@ function calcTank(){
 
   $("tankArea").textContent=`${fmt(adopted)}㎡`;
   $("tankPanels").textContent=`${fmt(panels,0)}枚`;
-  $("tankSeal").textContent=`${fmt(totalSealLength,1)}m`;if($("tankJointTotal"))$("tankJointTotal").textContent=`${fmt(extraSealLength)}m`;if($("tankTransferArea"))$("tankTransferArea").textContent=`${fmt(adopted)}㎡`;if($("tankTransferSeal"))$("tankTransferSeal").textContent=`${fmt(totalSealLength,1)}m`;
+  $("tankSeal").textContent=`${fmt(totalSealLength,1)}m`;if($("tankJointTotal"))$("tankJointTotal").textContent=`${fmt(extraSealLength)}m`;
 
   const rows=[
     ["床",floorArea,floorPanels,floorSeams,floorWallCorner],

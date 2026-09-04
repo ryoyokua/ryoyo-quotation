@@ -834,6 +834,40 @@
   }
 }
 
+
+/* v137: 貯水槽の材料計算導線をシンプルに統一 */
+.tank-send-to-material{
+  margin-top:18px;
+  padding-top:16px;
+  border-top:1px solid var(--bd);
+  display:grid;
+  grid-template-columns:minmax(220px,1fr) minmax(220px,280px);
+  gap:12px;
+  align-items:end;
+}
+.tank-title-field{
+  margin:0;
+}
+.tank-title-field input{
+  width:100%;
+}
+.tank-send-button{
+  width:100%;
+  min-height:48px;
+  white-space:nowrap;
+  font-size:16px;
+  font-weight:800;
+}
+@media(max-width:700px){
+  .tank-send-to-material{
+    grid-template-columns:1fr;
+    gap:10px;
+  }
+  .tank-send-button{
+    min-height:52px;
+  }
+}
+
 </style>
 
 <style>
@@ -1472,17 +1506,12 @@ input,select,textarea,button{max-width:100%}
 <b>シーリング延長とは：</b> パネル同士の継目、床と壁の入隅、壁同士の四隅など、シーリングを施工する部分の合計長さです。
 </div>
 
-<div class="send-to-material">
-<label>タイトル<input id="tankTitle" type="text" placeholder="例：貯水槽①"></label>
 
-<div class="tank-material-transfer">
-  <div class="tank-material-transfer-title">計算結果を材料計算へ追加</div>
-  <div class="tank-material-transfer-summary">
-    <div><span>概算施工面積</span><b id="tankTransferArea">—</b></div>
-    <div><span>シーリング延長</span><b id="tankTransferSeal">—</b></div>
-  </div>
-  <button class="primary send" type="button" data-source="tank">この内容で材料計算へ追加</button>
-</div>
+<div class="tank-send-to-material">
+  <label class="tank-title-field">タイトル
+    <input id="tankTitle" type="text" placeholder="例：貯水槽①">
+  </label>
+  <button class="primary send tank-send-button" type="button" data-source="tank">材料計算へ追加</button>
 </div></div></div>
 <div class="card"><h3>シーリング材 必要本数</h3>
 <div class="info"><b>計算方法：</b> 使用する製品を選択し、容量・目地幅・目地深さから1本あたりの施工可能長さを自動計算します。</div>
@@ -1796,5 +1825,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=136"></script>
+<script src="app.js?v=137"></script>
 </body></html>
