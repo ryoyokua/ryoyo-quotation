@@ -1565,6 +1565,7 @@ const DEFAULT_GAS_ENDPOINT="https://script.google.com/macros/s/AKfycbxcq_MAMSH1w
 let sheetSyncTimer=null;
 let remoteHiddenIds=load(S.remoteHidden,[]);
 if(!Array.isArray(remoteHiddenIds))remoteHiddenIds=[];
+let remoteDeletedProjects=[];
 
 function getGasEndpoint(){
  return ($("gasEndpoint")?.value||localStorage.getItem(S.endpoint)||DEFAULT_GAS_ENDPOINT).trim();
@@ -1658,6 +1659,19 @@ async function sheetPostRaw(action,payload={}){
  const endpoint=getGasEndpoint();if(!endpoint)throw new Error("Apps Script URLが設定されていません。");
  const r=await fetch(endpoint,{method:"POST",redirect:"follow",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action,...payload})});
  if(!r.ok)throw new Error(`通信エラー ${r.status}`);const data=await r.json();if(!data||data.ok===false)throw new Error(data?.error||"Google Sheets処理に失敗しました。");return data;
+}
+
+async function loadDeletedProjectsFromSheets({quiet=true}={}){
+ try{
+   const data=await sheetGet("listDeletedProjects");
+   remoteDeletedProjects=Array.isArray(data.projects)?data.projects:[];
+   renderProjectTrash();
+   return true;
+ }catch(err){
+   console.error("Deleted projects load failed",err);
+   if(!quiet)setSheetSyncStatus("削除済み案件の同期失敗","error");
+   return false;
+ }
 }
 function scheduleSheetProjectSave(project){
  clearTimeout(sheetSyncTimer);
@@ -2067,17 +2081,45 @@ function duplicateProject(id){
  projects.unshift(copy);save(S.projects,projects);scheduleSheetProjectSave(copy);renderProjects();openProject(copy.id);
 }
 
-function deleteProject(id){
+async function deleteProject(id){
  const p=projects.find(x=>x.id===id);if(!p)return;
- if(!confirm(`「${p.name}」を削除しますか？\n削除済みから復元できます。`))return;
+ if(!confirm(`「${p.name}」を削除しますか？\n削除済み案件へ移動します。`))return;
+
+ // Sheets保存済み案件は、Sheets側の「削除済案件」へ移動して正本管理する。
+ if(p.sheetId){
+   try{
+     setSheetSyncStatus("削除済み案件へ移動中…");
+
+     // 詳細を読み込んでいる案件だけ、削除前に最新状態をSheetsへ反映。
+     // メタ情報だけの案件は空のworkItemsで上書きしない。
+     if(Array.isArray(p.workItems)){
+       const saved=await saveProjectToSheets(p,{quiet:true,force:true});
+       if(!saved)throw new Error("削除前の保存に失敗しました。");
+     }
+
+     await sheetPostRaw("archiveProject",{projectId:String(p.sheetId)});
+     remoteHiddenIds=remoteHiddenIds.filter(x=>String(x)!==String(p.sheetId));
+     save(S.remoteHidden,remoteHiddenIds);
+     projects=projects.filter(x=>String(x.id)!==String(id));
+     save(S.projects,projects);
+     if(Number($("editingProjectId").value)===id)resetProjectForm(true);
+     await loadDeletedProjectsFromSheets({quiet:true});
+     renderProjects();renderQuickProjectSwitcher();renderProjectTrash();
+     setSheetSyncStatus("削除済み案件へ移動済み","ok");
+     return;
+   }catch(err){
+     console.error("Project archive failed",err);
+     setSheetSyncStatus("案件削除に失敗","error");
+     alert("Googleスプレッドシートの「削除済案件」への移動に失敗しました。\n案件は削除していません。\n\n"+err.message);
+     return;
+   }
+ }
+
+ // 未同期のローカル案件は従来どおり端末内の削除済みに保持。
  trash.projects.unshift({...p,deletedAt:new Date().toISOString()});saveTrash();
- const remoteKey=String(p.sheetId||id);
- if(!remoteHiddenIds.map(String).includes(remoteKey))remoteHiddenIds.unshift(remoteKey);
- remoteHiddenIds=remoteHiddenIds.slice(0,200);
- save(S.remoteHidden,remoteHiddenIds);
  projects=projects.filter(x=>String(x.id)!==String(id));
  save(S.projects,projects);
- if(Number($("editingProjectId").value)===id) resetProjectForm(true);
+ if(Number($("editingProjectId").value)===id)resetProjectForm(true);
  renderProjects();renderProjectTrash();
 }
 
@@ -2086,10 +2128,23 @@ function restoreDeletedProject(idx){
  const restored={...p,updatedAt:new Date().toISOString()};delete restored.deletedAt;
  if(projects.some(x=>x.id===restored.id))restored.id=Date.now()+Math.floor(Math.random()*100000);
  projects.unshift(restored);trash.projects.splice(idx,1);
- const restoreKeys=new Set([String(restored.id||""),String(restored.sheetId||"")]);
- remoteHiddenIds=remoteHiddenIds.filter(x=>!restoreKeys.has(String(x)));
- save(S.remoteHidden,remoteHiddenIds);
  save(S.projects,projects);saveTrash();scheduleSheetProjectSave(restored);renderProjects();renderQuickProjectSwitcher();renderProjectTrash();
+}
+
+async function restoreRemoteDeletedProject(projectId){
+ if(!projectId)return;
+ try{
+   setSheetSyncStatus("案件を復元中…");
+   await sheetPostRaw("restoreProject",{projectId:String(projectId)});
+   await loadProjectsFromSheets({quiet:true});
+   await loadDeletedProjectsFromSheets({quiet:true});
+   renderProjects();renderQuickProjectSwitcher();renderProjectTrash();
+   setSheetSyncStatus("案件を復元しました","ok");
+ }catch(err){
+   console.error("Project restore failed",err);
+   setSheetSyncStatus("案件復元に失敗","error");
+   alert("削除済み案件の復元に失敗しました。\n\n"+err.message);
+ }
 }
 function restoreDeletedCalcItem(idx){
  const item=trash.calcItems[idx];if(!item)return;
@@ -2098,13 +2153,21 @@ function restoreDeletedCalcItem(idx){
 }
 function renderProjectTrash(){
  const w=$("projectTrashList");if(!w)return;
- const pHtml=trash.projects.map((p,i)=>`<div class="trash-item"><div><b>案件｜${esc(p.name||"名称未設定")}</b><br><small>削除：${new Date(p.deletedAt).toLocaleString("ja-JP")}</small></div><button class="secondary restore-btn restore-project" data-i="${i}">復元</button></div>`).join("");
+ const remoteHtml=remoteDeletedProjects.map(p=>`<div class="trash-item"><div><b>削除済案件｜${esc(p.name||"名称未設定")}</b><br><small>${esc(p.id||"")} ｜ 施工対象 ${Number(p.itemCount)||0}件 ｜ 削除：${p.deletedAt?new Date(p.deletedAt).toLocaleString("ja-JP"):""}</small></div><button class="secondary restore-btn restore-remote-project" data-id="${esc(p.id||"")}">案件に復活</button></div>`).join("");
+ const pHtml=trash.projects.map((p,i)=>`<div class="trash-item"><div><b>端末内削除済み｜${esc(p.name||"名称未設定")}</b><br><small>未同期案件 ｜ 削除：${new Date(p.deletedAt).toLocaleString("ja-JP")}</small></div><button class="secondary restore-btn restore-project" data-i="${i}">復元</button></div>`).join("");
  const cHtml=trash.calcItems.map((p,i)=>`<div class="trash-item"><div><b>施工対象｜${esc(p.title||"計算")}</b><br><small>${fmt(p.area||0)}㎡ ｜ 削除：${new Date(p.deletedAt).toLocaleString("ja-JP")}</small></div><button class="secondary restore-btn restore-calc" data-i="${i}">現在の作業へ復元</button></div>`).join("");
- w.innerHTML=(pHtml+cHtml)||'<div class="info">削除済みの案件・施工対象はありません。</div>';
+ w.innerHTML=(remoteHtml+pHtml+cHtml)||'<div class="info">削除済みの案件・施工対象はありません。</div>';
+ document.querySelectorAll(".restore-remote-project").forEach(b=>b.onclick=()=>restoreRemoteDeletedProject(b.dataset.id));
  document.querySelectorAll(".restore-project").forEach(b=>b.onclick=()=>restoreDeletedProject(Number(b.dataset.i)));
  document.querySelectorAll(".restore-calc").forEach(b=>b.onclick=()=>restoreDeletedCalcItem(Number(b.dataset.i)));
 }
-if($("toggleProjectTrash"))$("toggleProjectTrash").onclick=()=>{const w=$("projectTrashList");w.hidden=!w.hidden;if(!w.hidden)renderProjectTrash();};
+if($("toggleProjectTrash"))$("toggleProjectTrash").onclick=async()=>{
+ const w=$("projectTrashList");w.hidden=!w.hidden;
+ if(!w.hidden){
+   await loadDeletedProjectsFromSheets({quiet:true});
+   renderProjectTrash();
+ }
+};
 if($("projectSearch"))$("projectSearch").addEventListener("input",renderProjects);
 
 function renderProjects(){
@@ -2216,6 +2279,7 @@ renderProjects();
 renderQuickProjectSwitcher();
 updateCurrentProjectLabel();
 loadProjectsFromSheets({quiet:true}).then(ok=>{
+ loadDeletedProjectsFromSheets({quiet:true});
   if(ok){
     renderQuickProjectSwitcher();
     renderProjects();
