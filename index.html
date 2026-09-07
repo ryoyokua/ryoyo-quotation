@@ -1396,6 +1396,121 @@
   }
 }
 
+
+/* v165: 全体余白ルール統一
+   余白のみ調整。計算ロジック・入力仕様は変更しない。 */
+:root{
+  --ui-space-xs: 8px;
+  --ui-space-sm: 12px;
+  --ui-space-md: 16px;
+  --ui-space-lg: 20px;
+  --ui-space-xl: 24px;
+  --ui-space-2xl: 32px;
+}
+
+/* ページ内の大きなカード間 */
+main .card + .card,
+.view .card + .card{
+  margin-top: var(--ui-space-xl);
+}
+
+/* 見出しと直後の内容 */
+.card > h2,
+.card > h3,
+.card > .section-title{
+  margin-bottom: var(--ui-space-md);
+}
+
+/* フォーム項目間 */
+.formgrid{
+  row-gap: var(--ui-space-md);
+  column-gap: var(--ui-space-md);
+}
+.formgrid label{
+  gap: var(--ui-space-xs);
+}
+
+/* 動的入力カード内部 */
+.flat-row,
+.deduction-row,
+.joint-row,
+.tank-deduction-row,
+.tank-joint-row,
+.input-row-card{
+  padding: var(--ui-space-lg);
+}
+
+/* 追加ボタンと、追加された入力カードの間 */
+#flatAddRowBtn,
+#flatAddDeductionBtn,
+#flatAddJointBtn,
+#tankAddDeductionBtn,
+#tankAddJointBtn{
+  margin-bottom: var(--ui-space-lg);
+}
+
+/* 入力カード → 次の設定・見出し */
+#flat .flat-round-block{
+  margin-top: var(--ui-space-xl) !important;
+}
+
+/* セクション同士の間隔 */
+.section-block + .section-block,
+.form-section + .form-section{
+  margin-top: var(--ui-space-2xl);
+}
+
+/* 結果・操作ボタン周辺 */
+.result-box,
+.result,
+.calc-result,
+.summary-box{
+  margin-top: var(--ui-space-lg);
+}
+.actions,
+.action-row,
+.button-row{
+  gap: var(--ui-space-sm);
+}
+
+/* スマホは詰まりやすい箇所を少し明確に */
+@media(max-width:700px){
+  main .card + .card,
+  .view .card + .card{
+    margin-top: var(--ui-space-xl);
+  }
+
+  .card{
+    padding-top: var(--ui-space-xl);
+    padding-bottom: var(--ui-space-xl);
+  }
+
+  .formgrid{
+    row-gap: var(--ui-space-md);
+  }
+
+  #flatAddRowBtn,
+  #flatAddDeductionBtn,
+  #flatAddJointBtn,
+  #tankAddDeductionBtn,
+  #tankAddJointBtn{
+    margin-bottom: var(--ui-space-lg) !important;
+  }
+
+  #flat .flat-round-block{
+    margin-top: var(--ui-space-2xl) !important;
+  }
+
+  .flat-row,
+  .deduction-row,
+  .joint-row,
+  .tank-deduction-row,
+  .tank-joint-row,
+  .input-row-card{
+    margin-bottom: var(--ui-space-lg);
+  }
+}
+
 </style>
 
 <style>
@@ -2371,5 +2486,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=164"></script>
+<script src="app.js?v=165"></script>
 </body></html>
