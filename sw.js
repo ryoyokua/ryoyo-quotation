@@ -82,3 +82,4 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // app revision v160 - remote deleted project archive/restore sync
 // app revision v161 - flat rounding spacing
 // app revision v162 - unify title label to construction location name
+// app revision v163 - optimistic project deletion UI

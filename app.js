@@ -2082,11 +2082,27 @@ function duplicateProject(id){
 }
 
 async function deleteProject(id){
- const p=projects.find(x=>x.id===id);if(!p)return;
+ const originalIndex=projects.findIndex(x=>String(x.id)===String(id));
+ if(originalIndex<0)return;
+ const p=projects[originalIndex];
  if(!confirm(`「${p.name}」を削除しますか？\n削除済み案件へ移動します。`))return;
+
+ // v163: 削除確定を待たず、確認直後に一覧から消して体感ラグをなくす。
+ // Sheets処理に失敗した場合だけ元の位置へ戻す。
+ const wasEditing=Number($("editingProjectId").value)===Number(id);
+ projects.splice(originalIndex,1);
+ save(S.projects,projects);
+ if(wasEditing)resetProjectForm(true);
+ renderProjects();
+ renderQuickProjectSwitcher();
 
  // Sheets保存済み案件は、Sheets側の「削除済案件」へ移動して正本管理する。
  if(p.sheetId){
+   const sheetId=String(p.sheetId);
+   if(!remoteHiddenIds.some(x=>String(x)===sheetId)){
+     remoteHiddenIds.push(sheetId);
+     save(S.remoteHidden,remoteHiddenIds);
+   }
    try{
      setSheetSyncStatus("削除済み案件へ移動中…");
 
@@ -2097,30 +2113,37 @@ async function deleteProject(id){
        if(!saved)throw new Error("削除前の保存に失敗しました。");
      }
 
-     await sheetPostRaw("archiveProject",{projectId:String(p.sheetId)});
-     remoteHiddenIds=remoteHiddenIds.filter(x=>String(x)!==String(p.sheetId));
+     await sheetPostRaw("archiveProject",{projectId:sheetId});
+     remoteHiddenIds=remoteHiddenIds.filter(x=>String(x)!==sheetId);
      save(S.remoteHidden,remoteHiddenIds);
-     projects=projects.filter(x=>String(x.id)!==String(id));
-     save(S.projects,projects);
-     if(Number($("editingProjectId").value)===id)resetProjectForm(true);
+
+     // 削除済み一覧の取得は表示反映後に行うため、案件一覧を待たせない。
      await loadDeletedProjectsFromSheets({quiet:true});
-     renderProjects();renderQuickProjectSwitcher();renderProjectTrash();
+     renderProjectTrash();
      setSheetSyncStatus("削除済み案件へ移動済み","ok");
      return;
    }catch(err){
      console.error("Project archive failed",err);
+
+     // Sheets側で失敗した場合のみ、削除前の案件を元の位置へ戻す。
+     remoteHiddenIds=remoteHiddenIds.filter(x=>String(x)!==sheetId);
+     save(S.remoteHidden,remoteHiddenIds);
+     if(!projects.some(x=>String(x.id)===String(p.id))){
+       projects.splice(Math.min(originalIndex,projects.length),0,p);
+       save(S.projects,projects);
+     }
+     renderProjects();
+     renderQuickProjectSwitcher();
      setSheetSyncStatus("案件削除に失敗","error");
-     alert("Googleスプレッドシートの「削除済案件」への移動に失敗しました。\n案件は削除していません。\n\n"+err.message);
+     alert("Googleスプレッドシートの「削除済案件」への移動に失敗しました。\n案件を一覧へ戻しました。\n\n"+err.message);
      return;
    }
  }
 
  // 未同期のローカル案件は従来どおり端末内の削除済みに保持。
- trash.projects.unshift({...p,deletedAt:new Date().toISOString()});saveTrash();
- projects=projects.filter(x=>String(x.id)!==String(id));
- save(S.projects,projects);
- if(Number($("editingProjectId").value)===id)resetProjectForm(true);
- renderProjects();renderProjectTrash();
+ trash.projects.unshift({...p,deletedAt:new Date().toISOString()});
+ saveTrash();
+ renderProjectTrash();
 }
 
 function restoreDeletedProject(idx){
