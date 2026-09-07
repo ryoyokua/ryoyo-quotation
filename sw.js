@@ -85,3 +85,4 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // app revision v163 - optimistic project deletion UI
 // app revision v164 - spacing below flat add-row button
 // app revision v165 - unified spacing system
+// app revision v166 - flat spacing corrected with actual element IDs
