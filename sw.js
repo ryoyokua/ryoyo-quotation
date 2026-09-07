@@ -89,3 +89,4 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // app revision v167 - final quantity-page UI spacing consistency
 // app revision v169 - seal panel dashed top border fixed
 // app revision v170 - seal panel perimeter border fully removed
+// app revision v171 - seal panel solid perimeter restored
