@@ -1603,6 +1603,187 @@ main .card + .card,
   }
 }
 
+
+/* v167: 全数量ページ UI最終統一（余白・配置のみ）
+   計算ロジック、保存処理、材料計算には変更なし。 */
+:root{
+  --ui-page-gap:24px;
+  --ui-section-gap:32px;
+  --ui-card-gap:24px;
+  --ui-field-gap:16px;
+  --ui-label-gap:8px;
+  --ui-action-gap:12px;
+}
+
+/* 数量ページ：タイトルと最初のカード */
+#roof > .card,
+#flat > .card,
+#tank > .card,
+#vessel > .card,
+#pipe > .card,
+#product > .card,
+#other > .card{
+  margin-top:var(--ui-page-gap);
+}
+
+/* カード内部の基本リズム */
+#roof .card,
+#flat .card,
+#tank .card,
+#vessel .card,
+#pipe .card,
+#product .card,
+#other .card{
+  box-sizing:border-box;
+}
+
+#roof .formgrid,
+#flat .formgrid,
+#tank .formgrid,
+#vessel .formgrid,
+#pipe .formgrid,
+#product .formgrid,
+#other .formgrid{
+  row-gap:var(--ui-field-gap);
+  column-gap:var(--ui-field-gap);
+}
+
+#roof label,
+#flat label,
+#tank label,
+#vessel label,
+#pipe label,
+#product label,
+#other label{
+  gap:var(--ui-label-gap);
+}
+
+/* 同一ページ内のカード間 */
+#roof .card + .card,
+#flat .card + .card,
+#tank .card + .card,
+#vessel .card + .card,
+#pipe .card + .card,
+#product .card + .card,
+#other .card + .card{
+  margin-top:var(--ui-card-gap);
+}
+
+/* セクション見出し周辺 */
+#roof .headrow,
+#flat .headrow,
+#tank .headrow,
+#vessel .headrow,
+#pipe .headrow,
+#product .headrow,
+#other .headrow{
+  align-items:center;
+  gap:var(--ui-action-gap);
+}
+
+/* 追加・操作ボタン群 */
+#roof .actions,
+#flat .actions,
+#tank .actions,
+#vessel .actions,
+#pipe .actions,
+#product .actions,
+#other .actions,
+#roof .button-row,
+#flat .button-row,
+#tank .button-row,
+#vessel .button-row,
+#pipe .button-row,
+#product .button-row,
+#other .button-row{
+  gap:var(--ui-action-gap);
+}
+
+/* 表・結果・補助領域の前後を統一 */
+#roof .tablewrap,
+#flat .tablewrap,
+#tank .tablewrap,
+#vessel .tablewrap,
+#pipe .tablewrap,
+#product .tablewrap,
+#other .tablewrap{
+  box-sizing:border-box;
+}
+
+#roof .result-box,
+#flat .result-box,
+#tank .result-box,
+#vessel .result-box,
+#pipe .result-box,
+#product .result-box,
+#other .result-box{
+  margin-top:20px;
+}
+
+/* PCで横幅や配置を無理に変えず、縦のリズムだけ揃える */
+@media(min-width:701px){
+  #roof .card,
+  #flat .card,
+  #vessel .card,
+  #pipe .card,
+  #product .card,
+  #other .card{
+    padding-top:24px;
+    padding-bottom:24px;
+  }
+}
+
+/* スマホ：各数量ページで同じ余白感に統一 */
+@media(max-width:700px){
+  #roof > .card,
+  #flat > .card,
+  #tank > .card,
+  #vessel > .card,
+  #pipe > .card,
+  #product > .card,
+  #other > .card{
+    margin-top:20px;
+  }
+
+  #roof .card,
+  #flat .card,
+  #tank .card,
+  #vessel .card,
+  #pipe .card,
+  #product .card,
+  #other .card{
+    padding-top:24px;
+    padding-bottom:24px;
+  }
+
+  #roof .formgrid,
+  #flat .formgrid,
+  #tank .formgrid,
+  #vessel .formgrid,
+  #pipe .formgrid,
+  #product .formgrid,
+  #other .formgrid{
+    row-gap:16px;
+  }
+
+  #roof .headrow,
+  #flat .headrow,
+  #tank .headrow,
+  #vessel .headrow,
+  #pipe .headrow,
+  #product .headrow,
+  #other .headrow{
+    gap:12px;
+  }
+
+  /* スマホのセクション追加ボタンは押しやすい幅を維持 */
+  #flat #addFlat,
+  #flat #addFlatDeduction,
+  #flat #addFlatJoint{
+    min-height:44px;
+  }
+}
+
 </style>
 
 <style>
@@ -2578,5 +2759,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=166"></script>
+<script src="app.js?v=167"></script>
 </body></html>
