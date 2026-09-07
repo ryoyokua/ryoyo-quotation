@@ -87,4 +87,5 @@ self.addEventListener("activate",e=>e.waitUntil(self.registration.unregister()))
 // app revision v165 - unified spacing system
 // app revision v166 - flat spacing corrected with actual element IDs
 // app revision v167 - final quantity-page UI spacing consistency
-// app revision v168 - sealing checkbox dashed border removed
+// app revision v169 - seal panel dashed top border fixed
+// app revision v170 - seal panel perimeter border fully removed

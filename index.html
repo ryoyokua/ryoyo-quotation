@@ -1785,10 +1785,17 @@ main .card + .card,
 }
 
 
-/* v168: シーリング必要本数チェック欄の点線枠を廃止 */
-#flat label:has(#roofSealEnabled){
-  border-style:solid !important;
-  border-color:#d7dee8 !important;
+/* v169: シーリング必要本数欄の上辺だけ点線になる旧CSSを修正 */
+.quantity-input-card .seal-panel{
+  border-top:1px solid var(--bd) !important;
+}
+
+
+/* v170: シーリング材必要本数欄の外周線を完全に削除 */
+.quantity-input-card .seal-panel{
+  border:none !important;
+  outline:none !important;
+  box-shadow:none !important;
 }
 
 </style>
@@ -2766,5 +2773,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=167"></script>
+<script src="app.js?v=170"></script>
 </body></html>
