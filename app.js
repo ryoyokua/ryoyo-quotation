@@ -1023,7 +1023,7 @@ function beginCalcTitleEdit(id){
   const wrap=document.querySelector(`.inline-title-wrap[data-title-id="${id}"]`);
   if(!wrap) return;
   const old=item.title||"名称未設定";
-  wrap.innerHTML=`<input class="inline-title-input" type="text" value="${esc(old)}" aria-label="施工対象タイトル">`;
+  wrap.innerHTML=`<input class="inline-title-input" type="text" value="${esc(old)}" aria-label="施工箇所名">`;
   const input=wrap.querySelector("input");
   input.focus(); input.select();
   let finished=false;
@@ -1047,7 +1047,7 @@ function beginCalcTitleEdit(id){
 function clearSelectedCalcState(){
   selectedCalcItemId=null;
   state.lastSource="";
-  if($("selectedCalcLabel"))$("selectedCalcLabel").textContent="追加したタイトルを選択すると、材料設定を変更できます。";
+  if($("selectedCalcLabel"))$("selectedCalcLabel").textContent="追加した施工箇所を選択すると、材料設定を変更できます。";
   if($("matArea"))$("matArea").value="0.00";
   specRows=[];
   state.specMaterials=[];
@@ -1506,7 +1506,7 @@ async function createQuickNewProject(){
   $("editingProjectId").value=p.id;$("projectName").value=p.name;
   $("projectCustomer").value="";$("projectSite").value="";$("projectOwner").value="";$("projectMemo").value="";
   calcItems=[];selectedCalcItemId=null;specRows=[];
-  $("selectedCalcLabel").textContent="追加したタイトルを選択すると、材料設定を変更できます。";
+  $("selectedCalcLabel").textContent="追加した施工箇所を選択すると、材料設定を変更できます。";
   renderCalcItems();updateCurrentProjectLabel();renderProjects();renderQuickProjectSwitcher();
   setProjectAutoSaveStatus("新規案件を作成しました","saved");show("material");
 }

@@ -1974,7 +1974,7 @@ input,select,textarea,button{max-width:100%}
 </div>
 <div class="card result quantity-result-card"><div class="quantity-summary"><h3>結果</h3><div class="result-group"><h4>施工面積</h4><div class="resultline"><span>本体・部位面積</span><b id="roofGrossSummary">0.00㎡</b></div><div class="resultline"><span>施工除外部</span><b id="roofDeductionSummary">− 0.00㎡</b></div><div class="big"><span>概算施工面積</span><strong id="roofArea">—</strong></div></div><div class="result-group sealing-result-group"><h4>シーリング</h4><div class="resultline"><span>シーリング延長</span><b id="roofJointTotal">0.00m</b></div><div class="resultline"><span>必要本数</span><b id="roofResultSealCount">—</b></div><div class="resultline"><span>予備込み</span><b id="roofResultSealReserve">—</b></div></div><div id="roofDetail" class="hidden"></div><pre id="roofFormula" class="hidden"></pre><span id="roofRawArea" class="hidden"></span></div><div class="send-to-material material-cta">
   <div class="material-cta-title">材料計算へ追加</div>
-  <label>タイトル<input id="roofTitle" type="text" placeholder="例：屋根①"></label>
+  <label>施工箇所名<input id="roofTitle" type="text" placeholder="例：屋根①"></label>
   <button class="primary send material-cta-button" type="button" data-source="roof">材料計算へ追加</button>
 </div></div>
 </div>
@@ -2028,7 +2028,7 @@ input,select,textarea,button{max-width:100%}
 <div class="card tank-material-cta-card">
   <div class="send-to-material material-cta">
     <div class="material-cta-title">材料計算へ追加</div>
-    <label>タイトル<input id="tankTitle" type="text" placeholder="例：貯水槽①"></label>
+    <label>施工箇所名<input id="tankTitle" type="text" placeholder="例：貯水槽①"></label>
     <button class="primary send material-cta-button" type="button" data-source="tank">材料計算へ追加</button>
   </div>
 </div>
@@ -2094,7 +2094,7 @@ input,select,textarea,button{max-width:100%}
 </div>
 <div class="card result quantity-result-card"><div class="quantity-summary"><h3>結果</h3><div class="result-group"><h4>施工面積</h4><div class="resultline"><span>本体・部位面積</span><b id="flatGrossArea">0.00㎡</b></div><div class="resultline"><span>施工除外部</span><b id="flatDeductionTotal">− 0.00㎡</b></div><div class="big"><span>概算施工面積</span><strong id="flatArea">0.00㎡</strong></div></div><div class="result-group sealing-result-group"><h4>シーリング</h4><div class="resultline"><span>シーリング延長</span><b id="flatJointTotal">0.00m</b></div><div class="resultline"><span>必要本数</span><b id="flatResultSealCount">—</b></div><div class="resultline"><span>予備込み</span><b id="flatResultSealReserve">—</b></div></div></div><div class="send-to-material material-cta">
   <div class="material-cta-title">材料計算へ追加</div>
-  <label>タイトル<input id="flatTitle" type="text" placeholder="例：屋上・床・壁①"></label>
+  <label>施工箇所名<input id="flatTitle" type="text" placeholder="例：屋上・床・壁①"></label>
   <button class="primary send material-cta-button" type="button" data-source="flat">材料計算へ追加</button>
 </div></div>
 </div>
@@ -2120,7 +2120,7 @@ input,select,textarea,button{max-width:100%}
 </div>
 <div class="card result quantity-result-card"><div class="quantity-summary"><h3>結果</h3><div class="result-group"><h4>施工面積</h4><div class="resultline"><span>本体・部位面積</span><b id="vesselGrossArea">—</b></div><div class="resultline"><span>施工除外部</span><b id="vesselDeductionTotal">− 0.00㎡</b></div><div class="big"><span>概算施工面積</span><strong id="vesselArea">—</strong></div></div><div class="result-group sealing-result-group"><h4>シーリング</h4><div class="resultline"><span>シーリング延長</span><b id="vesselJointTotal">0.00m</b></div><div class="resultline"><span>必要本数</span><b id="vesselResultSealCount">—</b></div><div class="resultline"><span>予備込み</span><b id="vesselResultSealReserve">—</b></div></div><pre id="vesselFormula" class="hidden"></pre></div><div class="send-to-material material-cta">
   <div class="material-cta-title">材料計算へ追加</div>
-  <label>タイトル<input id="vesselTitle" type="text" placeholder="例：他タンク①"></label>
+  <label>施工箇所名<input id="vesselTitle" type="text" placeholder="例：他タンク①"></label>
   <button class="primary send material-cta-button" type="button" data-source="vessel">材料計算へ追加</button>
 </div></div>
 </div>
@@ -2140,7 +2140,7 @@ input,select,textarea,button{max-width:100%}
 </div><div class="info">直管外面の概算です。エルボ・フランジ・バルブ等は必要に応じて別途拾います。</div><button class="primary" id="calcPipeBtn">計算</button></div>
 <div class="card result"><h3>結果</h3><div class="big"><span>施工面積</span><strong id="pipeArea">—</strong></div><pre id="pipeFormula"></pre><div class="send-to-material material-cta">
   <div class="material-cta-title">材料計算へ追加</div>
-  <label>タイトル<input id="pipeTitle" type="text" placeholder="例：配管①"></label>
+  <label>施工箇所名<input id="pipeTitle" type="text" placeholder="例：配管①"></label>
   <button class="primary send material-cta-button" type="button" data-source="pipe">材料計算へ追加</button>
 </div></div></div>
 </section>
@@ -2162,7 +2162,7 @@ input,select,textarea,button{max-width:100%}
 </select></label>
 </div><button class="primary" id="calcProductBtn">計算</button></div><div class="card result"><h3>結果</h3><div class="big"><span>施工面積</span><strong id="productArea">—</strong></div><pre id="productFormula"></pre><div class="send-to-material material-cta">
   <div class="material-cta-title">材料計算へ追加</div>
-  <label>タイトル<input id="productTitle" type="text" placeholder="例：製品・部品塗装①"></label>
+  <label>施工箇所名<input id="productTitle" type="text" placeholder="例：製品・部品塗装①"></label>
   <button class="primary send material-cta-button" type="button" data-source="product">材料計算へ追加</button>
 </div></div></div>
 </section>
@@ -2177,7 +2177,7 @@ input,select,textarea,button{max-width:100%}
 </select></label></div><button class="primary" id="calcOtherBtn">計算</button>
 <div class="big"><span>施工面積</span><strong id="otherArea">100.00㎡</strong></div><div class="send-to-material material-cta">
   <div class="material-cta-title">材料計算へ追加</div>
-  <label>タイトル<input id="otherTitle" type="text" placeholder="例：面積直接入力①"></label>
+  <label>施工箇所名<input id="otherTitle" type="text" placeholder="例：面積直接入力①"></label>
   <button class="primary send material-cta-button" type="button" data-source="other">材料計算へ追加</button>
 </div></div>
 </section>
@@ -2220,14 +2220,14 @@ input,select,textarea,button{max-width:100%}
 </div>
 <div class="card" id="multiCalcCard">
   <div class="headrow">
-    <div><h3>追加した計算</h3><p>各ページで「タイトル → 数量計算 → 材料計算へ追加」とすると、ここに追加されます。</p></div>
+    <div><h3>追加した計算</h3><p>各ページで「施工箇所名 → 数量計算 → 材料計算へ追加」とすると、ここに追加されます。</p></div>
     <button class="secondary" id="clearAllCalcItems" type="button">一括削除</button>
   </div>
   <div id="calcItemList"><div class="info">まだ追加されていません。</div></div>
   <div class="big" style="margin-top:12px"><span>合計施工面積</span><strong id="calcItemTotal">0.00㎡</strong></div>
 </div>
 <div class="card" id="selectedCalcCard">
-  <div class="headrow"><div><h3>現在選択中</h3><p id="selectedCalcLabel">追加したタイトルを選択すると、材料設定を変更できます。</p></div></div>
+  <div class="headrow"><div><h3>現在選択中</h3><p id="selectedCalcLabel">追加した施工箇所を選択すると、材料設定を変更できます。</p></div></div>
 </div>
 
 
@@ -2259,7 +2259,7 @@ input,select,textarea,button{max-width:100%}
 </div>
 
 <div class="card result" id="aggregateMaterialCard">
-  <div class="headrow"><div><h3>複数計算の必要材料合計</h3><p>追加したタイトルすべての必要材料を合算します。</p></div></div>
+  <div class="headrow"><div><h3>複数計算の必要材料合計</h3><p>追加した施工箇所すべての必要材料を合算します。</p></div></div>
   <div id="aggregateMaterialSummary" class="spec-summary"><div class="info">計算を追加すると表示されます。</div></div>
   <details id="aggregateDetailsWrap" style="margin-top:14px">
     <summary><b>計算根拠を見る</b></summary>
@@ -2360,5 +2360,5 @@ input,select,textarea,button{max-width:100%}
 </div>
 </dialog>
 
-<script src="app.js?v=160"></script>
+<script src="app.js?v=162"></script>
 </body></html>
