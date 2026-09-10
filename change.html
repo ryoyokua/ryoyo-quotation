@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex,nofollow">
+  <title>予約内容の確認・変更｜菱洋株式会社</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    :root {
+      --brand: #123f73;
+      --brand-dark: #0c2d55;
+      --text: #1f2937;
+      --muted: #667085;
+      --line: #dfe3e8;
+      --bg: #f5f7fa;
+      --soft: #f8fafc;
+      --warn-bg: #fff8e8;
+      --warn-line: #f1d58a;
+      --danger: #b42318;
+      --success: #067647;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                   "Noto Sans JP", sans-serif;
+      line-height: 1.65;
+    }
+
+    .wrap {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 28px 16px 56px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 26px;
+      box-shadow: 0 2px 12px rgba(16,24,40,.06);
+      margin-bottom: 16px;
+    }
+
+    .brand {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--brand);
+      margin-bottom: 4px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 25px;
+      line-height: 1.35;
+    }
+
+    h2 {
+      margin: 0 0 16px;
+      font-size: 18px;
+    }
+
+    .lead {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .row {
+      margin: 15px 0;
+    }
+
+    .label {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 3px;
+    }
+
+    .value {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .notice {
+      background: var(--warn-bg);
+      border: 1px solid var(--warn-line);
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 16px;
+      font-size: 13px;
+    }
+
+    .slots {
+      display: grid;
+      gap: 9px;
+    }
+
+    .slot {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      padding: 12px;
+      cursor: pointer;
+    }
+
+    .slot:hover {
+      background: var(--soft);
+    }
+
+    .slot input {
+      width: 18px;
+      height: 18px;
+    }
+
+    button {
+      width: 100%;
+      border-radius: 9px;
+      padding: 14px 18px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .primary {
+      margin-top: 16px;
+      border: 0;
+      background: var(--brand);
+      color: #fff;
+    }
+
+    .primary:hover {
+      background: var(--brand-dark);
+    }
+
+    .danger {
+      margin-top: 10px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--danger);
+    }
+
+    button:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+    }
+
+    .message {
+      display: none;
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 14px;
+    }
+
+    .success {
+      display: block;
+      background: #ecfdf3;
+      color: var(--success);
+    }
+
+    .error {
+      display: block;
+      background: #fef3f2;
+      color: var(--danger);
+    }
+
+    .loading {
+      text-align: center;
+      color: var(--muted);
+      padding: 36px 10px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .bridge-frame {
+      position: fixed;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+      left: -9999px;
+      top: -9999px;
+      border: 0;
+    }
+
+    @media (max-width: 560px) {
+      .wrap {
+        padding-top: 16px;
+      }
+
+      .card {
+        padding: 19px;
+        border-radius: 11px;
+      }
+
+      h1 {
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<iframe
+  id="bridgeFrame"
+  class="bridge-frame"
+  aria-hidden="true">
+</iframe>
+
+<main class="wrap">
+
+  <section class="card">
+
+    <div class="brand">
+      菱洋株式会社｜展示会専用
+    </div>
+
+    <h1>
+      予約内容の確認・変更
+    </h1>
+
+    <p class="lead">
+      展示会でお申し込みいただいた仮予約の確認、日程変更、キャンセルができます。
+    </p>
+
+  </section>
+
+
+  <section
+    id="loading"
+    class="card loading">
+    予約内容を読み込んでいます...
+  </section>
+
+
+  <div
+    id="content"
+    class="hidden">
+
+    <section class="card">
+
+      <h2>
+        現在の予約内容
+      </h2>
+
+      <div class="row">
+        <div class="label">会社名</div>
+        <div id="company" class="value"></div>
+      </div>
+
+      <div class="row">
+        <div class="label">氏名</div>
+        <div id="name" class="value"></div>
+      </div>
+
+      <div class="row">
+        <div class="label">ご希望の対応</div>
+        <div id="action" class="value"></div>
+      </div>
+
+      <div
+        id="locationRow"
+        class="row hidden">
+
+        <div class="label">
+          施工・訪問予定場所
+        </div>
+
+        <div
+          id="location"
+          class="value">
+        </div>
+
+      </div>
+
+      <div class="row">
+        <div class="label">仮予約日</div>
+        <div id="bookingText" class="value"></div>
+      </div>
+
+      <div class="row">
+        <div class="label">状態</div>
+        <div id="status" class="value"></div>
+      </div>
+
+      <div
+        id="editNotice"
+        class="notice hidden">
+      </div>
+
+    </section>
+
+
+    <section
+      id="editCard"
+      class="card hidden">
+
+      <h2>
+        日程を変更する
+      </h2>
+
+      <div
+        id="slots"
+        class="slots">
+      </div>
+
+      <button
+        id="changeButton"
+        class="primary"
+        type="button">
+        この日程に変更する
+      </button>
+
+      <button
+        id="cancelButton"
+        class="danger"
+        type="button">
+        仮予約をキャンセルする
+      </button>
+
+      <div
+        id="message"
+        class="message">
+      </div>
+
+    </section>
+
+  </div>
+
+
+  <section
+    id="fatal"
+    class="card hidden">
+
+    <div
+      id="fatalMessage"
+      class="message error">
+    </div>
+
+  </section>
+
+</main>
+
+
+<script>
+(function () {
+
+  'use strict';
+
+
+  const GAS_BRIDGE_URL =
+    'https://script.google.com/macros/s/AKfycbxu45n5UQnpqGUhqIzNJDTZf2m9gcEQS2kfdQ5x6LvtWpqpAxQA6-8DUjRCMTdN6hI/exec?bridge=1';
+
+
+  const GAS_ORIGIN =
+    'https://script.google.com';
+
+
+  const params =
+    new URLSearchParams(
+      window.location.search
+    );
+
+
+  const CHANGE_ID =
+    params.get('change') || '';
+
+
+  const bridgeFrame =
+    document.getElementById(
+      'bridgeFrame'
+    );
+
+
+  const pending =
+    new Map();
+
+
+  let bridgeReady =
+    false;
+
+
+  let reservation =
+    null;
+
+
+  bridgeFrame.src =
+    GAS_BRIDGE_URL;
+
+
+  window.addEventListener(
+    'message',
+    function (event) {
+
+      if (
+        event.origin !== GAS_ORIGIN &&
+        !event.origin.endsWith(
+          '.googleusercontent.com'
+        )
+      ) {
+        return;
+      }
+
+
+      const msg =
+        event.data || {};
+
+
+      if (
+        msg.type ===
+        'ryoyo-bridge-ready'
+      ) {
+
+        bridgeReady =
+          true;
+
+
+        document.dispatchEvent(
+          new CustomEvent(
+            'bridge-ready'
+          )
+        );
+
+
+        return;
+      }
+
+
+      if (
+        msg.type !==
+        'ryoyo-bridge-response'
+      ) {
+        return;
+      }
+
+
+      const item =
+        pending.get(
+          msg.requestId
+        );
+
+
+      if (!item) {
+        return;
+      }
+
+
+      pending.delete(
+        msg.requestId
+      );
+
+
+      if (msg.ok) {
+
+        item.resolve(
+          msg.data
+        );
+
+      } else {
+
+        item.reject(
+          new Error(
+            msg.error ||
+            '処理に失敗しました。'
+          )
+        );
+      }
+    }
+  );
+
+
+  function api(
+    action,
+    ...args
+  ) {
+
+    return new Promise(
+      function (
+        resolve,
+        reject
+      ) {
+
+        const requestId =
+          crypto.randomUUID
+            ? crypto.randomUUID()
+            : String(Date.now()) +
+              Math.random();
+
+
+        pending.set(
+          requestId,
+          {
+            resolve,
+            reject
+          }
+        );
+
+
+        const send =
+          function () {
+
+            bridgeFrame
+              .contentWindow
+              .postMessage(
+                {
+                  type:
+                    'ryoyo-bridge-request',
+
+                  requestId:
+                    requestId,
+
+                  action:
+                    action,
+
+                  args:
+                    args
+                },
+                '*'
+              );
+          };
+
+
+        if (
+          bridgeReady
+        ) {
+
+          send();
+
+        } else {
+
+          const timer =
+            setTimeout(
+              function () {
+
+                document.removeEventListener(
+                  'bridge-ready',
+                  onReady
+                );
+
+
+                pending.delete(
+                  requestId
+                );
+
+
+                reject(
+                  new Error(
+                    '通信の準備に時間がかかっています。ページを再読み込みしてください。'
+                  )
+                );
+
+              },
+              12000
+            );
+
+
+          function onReady() {
+
+            clearTimeout(
+              timer
+            );
+
+            send();
+          }
+
+
+          document.addEventListener(
+            'bridge-ready',
+            onReady,
+            {
+              once: true
+            }
+          );
+        }
+      }
+    );
+  }
+
+
+  function setText(
+    id,
+    text
+  ) {
+
+    document
+      .getElementById(
+        id
+      )
+      .textContent =
+      text || '';
+  }
+
+
+  function showFatal(
+    error
+  ) {
+
+    document
+      .getElementById(
+        'loading'
+      )
+      .classList
+      .add(
+        'hidden'
+      );
+
+
+    document
+      .getElementById(
+        'fatal'
+      )
+      .classList
+      .remove(
+        'hidden'
+      );
+
+
+    document
+      .getElementById(
+        'fatalMessage'
+      )
+      .textContent =
+      error.message ||
+      String(error);
+  }
+
+
+  function showNotice(
+    text
+  ) {
+
+    const el =
+      document.getElementById(
+        'editNotice'
+      );
+
+
+    el.textContent =
+      text;
+
+
+    el.classList.remove(
+      'hidden'
+    );
+  }
+
+
+  function showMessage(
+    text,
+    success
+  ) {
+
+    const el =
+      document.getElementById(
+        'message'
+      );
+
+
+    el.className =
+      'message ' +
+      (
+        success
+          ? 'success'
+          : 'error'
+      );
+
+
+    el.textContent =
+      text;
+  }
+
+
+  function setBusy(
+    busy
+  ) {
+
+    document
+      .getElementById(
+        'changeButton'
+      )
+      .disabled =
+      busy;
+
+
+    document
+      .getElementById(
+        'cancelButton'
+      )
+      .disabled =
+      busy;
+  }
+
+
+  function formatDate(
+    iso
+  ) {
+
+    const parts =
+      String(
+        iso
+      ).split('-');
+
+
+    if (
+      parts.length !== 3
+    ) {
+
+      return iso;
+    }
+
+
+    const d =
+      new Date(
+        Number(parts[0]),
+        Number(parts[1]) - 1,
+        Number(parts[2])
+      );
+
+
+    const days = [
+      '日',
+      '月',
+      '火',
+      '水',
+      '木',
+      '金',
+      '土'
+    ];
+
+
+    return (
+      Number(parts[1]) +
+      '/' +
+      Number(parts[2]) +
+      '（' +
+      days[
+        d.getDay()
+      ] +
+      '）'
+    );
+  }
+
+
+  function addSlot(
+    box,
+    value,
+    label
+  ) {
+
+    const item =
+      document.createElement(
+        'label'
+      );
+
+
+    item.className =
+      'slot';
+
+
+    const radio =
+      document.createElement(
+        'input'
+      );
+
+
+    radio.type =
+      'radio';
+
+
+    radio.name =
+      'newSlot';
+
+
+    radio.value =
+      value;
+
+
+    const text =
+      document.createElement(
+        'span'
+      );
+
+
+    text.textContent =
+      label;
+
+
+    item.appendChild(
+      radio
+    );
+
+
+    item.appendChild(
+      text
+    );
+
+
+    box.appendChild(
+      item
+    );
+  }
+
+
+  function renderSlots(
+    slots,
+    bookingType
+  ) {
+
+    const box =
+      document.getElementById(
+        'slots'
+      );
+
+
+    box.innerHTML =
+      '';
+
+
+    let count =
+      0;
+
+
+    slots.forEach(
+      function (slot) {
+
+        if (
+          bookingType ===
+          '現調・訪問' &&
+          Number(
+            slot.field
+          ) > 0
+        ) {
+
+          addSlot(
+            box,
+
+            'field|' +
+            slot.date +
+            '|終日',
+
+            formatDate(
+              slot.date
+            ) +
+            '（終日）'
+          );
+
+
+          count++;
+        }
+
+
+        if (
+          bookingType ===
+          'Web'
+        ) {
+
+          if (
+            Number(
+              slot.webAM
+            ) > 0
+          ) {
+
+            addSlot(
+              box,
+
+              'web|' +
+              slot.date +
+              '|AM',
+
+              formatDate(
+                slot.date
+              ) +
+              ' 午前'
+            );
+
+
+            count++;
+          }
+
+
+          if (
+            Number(
+              slot.webPM
+            ) > 0
+          ) {
+
+            addSlot(
+              box,
+
+              'web|' +
+              slot.date +
+              '|PM',
+
+              formatDate(
+                slot.date
+              ) +
+              ' 午後'
+            );
+
+
+            count++;
+          }
+        }
+      }
+    );
+
+
+    if (
+      count === 0
+    ) {
+
+      box.innerHTML =
+        '<div class="notice">現在、変更可能な空き枠がありません。</div>';
+
+
+      document
+        .getElementById(
+          'changeButton'
+        )
+        .disabled =
+        true;
+    }
+  }
+
+
+  function renderReservation(
+    data
+  ) {
+
+    reservation =
+      data;
+
+
+    document
+      .getElementById(
+        'loading'
+      )
+      .classList
+      .add(
+        'hidden'
+      );
+
+
+    document
+      .getElementById(
+        'content'
+      )
+      .classList
+      .remove(
+        'hidden'
+      );
+
+
+    setText(
+      'company',
+      data.company
+    );
+
+
+    setText(
+      'name',
+      data.name
+    );
+
+
+    setText(
+      'action',
+      data.action
+    );
+
+
+    setText(
+      'bookingText',
+      data.bookingText ||
+      '日程未設定'
+    );
+
+
+    setText(
+      'status',
+      data.status
+    );
+
+
+    if (
+      data.location
+    ) {
+
+      document
+        .getElementById(
+          'locationRow'
+        )
+        .classList
+        .remove(
+          'hidden'
+        );
+
+
+      setText(
+        'location',
+        data.location
+      );
+    }
+
+
+    if (
+      data.status ===
+      'キャンセル'
+    ) {
+
+      showNotice(
+        'この仮予約はキャンセル済みです。'
+      );
+
+      return;
+    }
+
+
+    if (
+      !data.hasBooking
+    ) {
+
+      showNotice(
+        '現在、Web上で変更できる仮予約日はありません。'
+      );
+
+      return;
+    }
+
+
+    if (
+      !data.canEdit
+    ) {
+
+      showNotice(
+        'Webでの日程変更・キャンセルは予約日の前日までです。当日の変更・キャンセルは、受付メールへのご返信またはお電話にてご連絡ください。'
+      );
+
+      return;
+    }
+
+
+    document
+      .getElementById(
+        'editCard'
+      )
+      .classList
+      .remove(
+        'hidden'
+      );
+
+
+    renderSlots(
+      data.slots || [],
+      data.bookingType
+    );
+  }
+
+
+  async function loadReservation() {
+
+    if (!CHANGE_ID) {
+
+      showFatal(
+        new Error(
+          '予約情報を確認できません。メールに記載されたURLからアクセスしてください。'
+        )
+      );
+
+      return;
+    }
+
+
+    try {
+
+      const data =
+        await api(
+          'getReservationForChange',
+          CHANGE_ID
+        );
+
+
+      renderReservation(
+        data
+      );
+
+
+    } catch (
+      error
+    ) {
+
+      showFatal(
+        error
+      );
+    }
+  }
+
+
+  async function submitChange() {
+
+    const selected =
+      document.querySelector(
+        'input[name="newSlot"]:checked'
+      );
+
+
+    if (!selected) {
+
+      showMessage(
+        '変更先の日程を選択してください。',
+        false
+      );
+
+      return;
+    }
+
+
+    if (
+      !confirm(
+        '選択した日程に変更しますか？'
+      )
+    ) {
+      return;
+    }
+
+
+    setBusy(
+      true
+    );
+
+
+    try {
+
+      const result =
+        await api(
+          'changeCustomerReservation',
+          CHANGE_ID,
+          selected.value
+        );
+
+
+      showMessage(
+        '日程を変更しました。新しい仮予約日：' +
+        result.bookingText,
+        true
+      );
+
+
+      setTimeout(
+        function () {
+          window.location.reload();
+        },
+        900
+      );
+
+
+    } catch (
+      error
+    ) {
+
+      showMessage(
+        error.message ||
+        String(error),
+        false
+      );
+
+
+      setBusy(
+        false
+      );
+    }
+  }
+
+
+  async function submitCancel() {
+
+    if (
+      !confirm(
+        'この仮予約をキャンセルしますか？\nキャンセル後は元に戻せません。'
+      )
+    ) {
+      return;
+    }
+
+
+    setBusy(
+      true
+    );
+
+
+    try {
+
+      await api(
+        'cancelCustomerReservation',
+        CHANGE_ID
+      );
+
+
+      showMessage(
+        '仮予約をキャンセルしました。',
+        true
+      );
+
+
+      setTimeout(
+        function () {
+          window.location.reload();
+        },
+        900
+      );
+
+
+    } catch (
+      error
+    ) {
+
+      showMessage(
+        error.message ||
+        String(error),
+        false
+      );
+
+
+      setBusy(
+        false
+      );
+    }
+  }
+
+
+  document
+    .getElementById(
+      'changeButton'
+    )
+    .addEventListener(
+      'click',
+      submitChange
+    );
+
+
+  document
+    .getElementById(
+      'cancelButton'
+    )
+    .addEventListener(
+      'click',
+      submitCancel
+    );
+
+
+  document.addEventListener(
+    'bridge-ready',
+    loadReservation,
+    {
+      once: true
+    }
+  );
+
+})();
+</script>
+
+</body>
+</html>
