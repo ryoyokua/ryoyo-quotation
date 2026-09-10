@@ -666,36 +666,36 @@
 
   'use strict';
 
-  const GAS_BRIDGE_URL =
-    'https://script.google.com/macros/s/AKfycbxu45n5UQnpqGUhqIzNJDTZf2m9gcEQS2kfdQ5x6LvtWpqpAxQA6-8DUjRCMTdN6hI/exec?bridge=1';
+  const GAS_WEB_APP_URL =
+    'https://script.google.com/macros/s/AKfycbxu45n5UQnpqGUhqIzNJDTZf2m9gcEQS2kfdQ5x6LvtWpqpAxQA6-8DUjRCMTdN6hI/exec';
 
-  const GAS_ORIGIN =
-    'https://script.google.com';
 
   const bridgeFrame =
-    document.getElementById('bridgeFrame');
+    document.getElementById(
+      'bridgeFrame'
+    );
+
 
   const pending =
     new Map();
 
-  let bridgeReady =
-    false;
 
-  let slots =
-    [];
+  let slots = [];
 
 
-  bridgeFrame.src =
-    GAS_BRIDGE_URL;
-
-
+  /**
+   * Apps Scriptからの返答を受信
+   */
   window.addEventListener(
     'message',
     function (event) {
 
       if (
-        event.origin !== GAS_ORIGIN &&
-        !event.origin.endsWith('.googleusercontent.com')
+        event.origin !==
+          'https://script.google.com' &&
+        !event.origin.endsWith(
+          '.googleusercontent.com'
+        )
       ) {
         return;
       }
@@ -703,22 +703,6 @@
 
       const msg =
         event.data || {};
-
-
-      if (
-        msg.type ===
-        'ryoyo-bridge-ready'
-      ) {
-
-        bridgeReady =
-          true;
-
-        document.dispatchEvent(
-          new CustomEvent('bridge-ready')
-        );
-
-        return;
-      }
 
 
       if (
@@ -738,6 +722,11 @@
       if (!item) {
         return;
       }
+
+
+      clearTimeout(
+        item.timer
+      );
 
 
       pending.delete(
@@ -764,6 +753,9 @@
   );
 
 
+  /**
+   * Apps Script呼び出し
+   */
   function api(
     action,
     ...args
@@ -776,95 +768,148 @@
       ) {
 
         const requestId =
-          crypto.randomUUID
-            ? crypto.randomUUID()
-            : String(Date.now()) +
-              Math.random();
+          (
+            crypto.randomUUID
+              ? crypto.randomUUID()
+              : String(Date.now()) +
+                Math.random()
+          );
+
+
+        const timer =
+          setTimeout(
+            function () {
+
+              pending.delete(
+                requestId
+              );
+
+              reject(
+                new Error(
+                  '通信に時間がかかっています。ページを再読み込みしてください。'
+                )
+              );
+
+            },
+            15000
+          );
 
 
         pending.set(
           requestId,
           {
-            resolve,
-            reject
+            resolve:
+              resolve,
+
+            reject:
+              reject,
+
+            timer:
+              timer
           }
         );
 
 
-        const send =
-          function () {
-
-            bridgeFrame
-              .contentWindow
-              .postMessage(
-                {
-                  type:
-                    'ryoyo-bridge-request',
-
-                  requestId:
-                    requestId,
-
-                  action:
-                    action,
-
-                  args:
-                    args
-                },
-                '*'
-              );
-          };
-
-
+        /**
+         * 空き枠取得はGET
+         */
         if (
-          bridgeReady
+          action ===
+          'getAvailableSlots'
         ) {
 
-          send();
-
-        } else {
-
-          const timer =
-            setTimeout(
-              function () {
-
-                document.removeEventListener(
-                  'bridge-ready',
-                  onReady
-                );
-
-                pending.delete(
-                  requestId
-                );
-
-                reject(
-                  new Error(
-                    '通信の準備に時間がかかっています。ページを再読み込みしてください。'
-                  )
-                );
-
-              },
-              12000
-            );
+          const url =
+            GAS_WEB_APP_URL +
+            '?bridge=1' +
+            '&action=getAvailableSlots' +
+            '&requestId=' +
+            encodeURIComponent(
+              requestId
+            ) +
+            '&t=' +
+            Date.now();
 
 
-          function onReady() {
-
-            clearTimeout(
-              timer
-            );
-
-            send();
-          }
+          bridgeFrame.src =
+            url;
 
 
-          document.addEventListener(
-            'bridge-ready',
-            onReady,
-            {
-              once: true
-            }
-          );
+          return;
         }
+
+
+        /**
+         * 保存・変更・キャンセルはPOST
+         */
+        const form =
+          document.createElement(
+            'form'
+          );
+
+
+        form.method =
+          'POST';
+
+        form.action =
+          GAS_WEB_APP_URL;
+
+        form.target =
+          'bridgeFrame';
+
+        form.style.display =
+          'none';
+
+
+        const params = {
+
+          requestId:
+            requestId,
+
+          action:
+            action,
+
+          payload:
+            JSON.stringify(
+              args
+            )
+        };
+
+
+        Object.keys(
+          params
+        ).forEach(
+          function (key) {
+
+            const input =
+              document.createElement(
+                'input'
+              );
+
+            input.type =
+              'hidden';
+
+            input.name =
+              key;
+
+            input.value =
+              params[key];
+
+            form.appendChild(
+              input
+            );
+          }
+        );
+
+
+        document.body.appendChild(
+          form
+        );
+
+
+        form.submit();
+
+
+        form.remove();
       }
     );
   }
@@ -1562,43 +1607,42 @@
     );
 
 
-  document.addEventListener(
-    'bridge-ready',
-    async function () {
+  (async function loadInitialSlots() {
 
-      try {
+    try {
 
-        slots =
-          await api(
-            'getAvailableSlots'
-          );
+      slots =
+        await api(
+          'getAvailableSlots'
+        );
 
 
-        document
-          .getElementById(
-            'slotLoading'
-          )
-          .textContent =
-          'ご希望の対応を選択すると、空き枠が表示されます。';
+      document
+        .getElementById(
+          'slotLoading'
+        )
+        .textContent =
+        'ご希望の対応を選択すると、空き枠が表示されます。';
 
 
-      } catch (
+    } catch (
+      error
+    ) {
+
+      console.error(
         error
-      ) {
+      );
 
-        document
-          .getElementById(
-            'slotLoading'
-          )
-          .textContent =
-          '空き枠を取得できませんでした。ページを再読み込みしてください。';
-      }
 
-    },
-    {
-      once: true
+      document
+        .getElementById(
+          'slotLoading'
+        )
+        .textContent =
+        '空き枠を取得できませんでした。ページを再読み込みしてください。';
     }
-  );
+
+  })();
 
 })();
 </script>
